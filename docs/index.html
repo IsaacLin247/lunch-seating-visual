@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guaranteed-Friend Lunch Seating — Simulation</title>
+<meta name="description" content="Animated simulation of a guaranteed-friend lunch seating system, played back from real solver traces on synthetic data.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%23e8c9a3'/%3E%3Ccircle cx='50' cy='50' r='26' fill='%23fff7ea'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <h1>Guaranteed-Friend Lunch Seating</h1>
+    </div>
+    <p class="lede">
+      Students confidentially list at least four friends (or none). Every two weeks the solver reseats the whole
+      room so that <strong>everyone who submitted a list sits with exactly one familiar face</strong> and five or six
+      new people, alternating same-grade and mixed-grade rotations. It also avoids repeating tablemates
+      across the year, so students still meet about as many schoolmates as under random seating.
+    </p>
+  </div>
+</header>
+
+<nav class="tabs wrap" role="tablist" aria-label="Simulations">
+  <button class="tab is-active" role="tab" data-tab="room" aria-selected="true"><span class="tab-num">1</span> The Whole Room</button>
+  <button class="tab" role="tab" data-tab="student" aria-selected="false"><span class="tab-num">2</span> One Student's Year</button>
+  <button class="tab" role="tab" data-tab="game" aria-selected="false"><span class="tab-num">3</span> Trying to Game It</button>
+</nav>
+
+<section class="timeline wrap" aria-label="Rotation timeline">
+  <div class="timeline-controls">
+    <button id="btn-first" class="icon-btn" title="First rotation (Home)" aria-label="First rotation">⏮</button>
+    <button id="btn-prev" class="icon-btn" title="Previous rotation (←)" aria-label="Previous rotation">◀</button>
+    <button id="btn-play" class="icon-btn play" title="Play / pause (space)" aria-label="Play">▶</button>
+    <button id="btn-next" class="icon-btn" title="Next rotation (→)" aria-label="Next rotation">▶|</button>
+    <button id="btn-last" class="icon-btn" title="Last rotation (End)" aria-label="Last rotation">⏭</button>
+  </div>
+  <div class="timeline-scrub">
+    <input id="scrub" type="range" min="1" max="16" value="1" step="1" aria-label="Rotation">
+    <div class="ticks" id="ticks" aria-hidden="true"></div>
+  </div>
+  <div class="rotation-badge" id="rotation-badge">
+    <span class="rot-label">Rotation <b id="rot-num">1</b> <span class="of">of 16</span></span>
+    <span class="state-pill" id="state-pill">MIXED GRADES</span>
+    <span class="weeks" id="rot-weeks">weeks 1–2</span>
+  </div>
+</section>
+
+<main class="wrap">
+  <div id="loading" class="loading">Loading solver traces…</div>
+
+  <!-- ============ TAB 1 ============ -->
+  <section id="tab-room" class="panel is-active" role="tabpanel">
+    <div class="two-rooms">
+      <div class="room-col">
+        <h2 class="room-title"><span class="dot muted"></span> Today: random seating</h2>
+        <div class="room-frame"><canvas id="room-random" class="room-canvas"></canvas></div>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-label">Sit with ≥1 listed friend</div><div class="stat-value" id="s-rand-ge1">–</div><div class="stat-sub">of students who listed friends</div></div>
+          <div class="stat"><div class="stat-label">Exactly one familiar face</div><div class="stat-value" id="s-rand-ex1">–</div><div class="stat-sub">one friend, the rest new</div></div>
+          <div class="stat"><div class="stat-label">Distinct schoolmates met</div><div class="stat-value" id="s-rand-met">–</div><div class="stat-sub">average so far this year</div></div>
+        </div>
+      </div>
+      <div class="room-col">
+        <h2 class="room-title"><span class="dot good"></span> Proposed: guaranteed friend</h2>
+        <div class="room-frame"><canvas id="room-proposed" class="room-canvas"></canvas></div>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-label">Sit with ≥1 listed friend</div><div class="stat-value good" id="s-prop-ge1">–</div><div class="stat-sub">of students who listed friends</div></div>
+          <div class="stat"><div class="stat-label">Exactly one familiar face</div><div class="stat-value good" id="s-prop-ex1">–</div><div class="stat-sub">one friend, the rest new</div></div>
+          <div class="stat"><div class="stat-label">Distinct schoolmates met</div><div class="stat-value" id="s-prop-met">–</div><div class="stat-sub">average so far this year</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend-row">
+      <div class="legend">
+        <span><i class="sw" style="background:var(--one)"></i> exactly one listed friend at the table</span>
+        <span><i class="sw" style="background:var(--two)"></i> two or more</span>
+        <span><i class="sw" style="background:var(--none)"></i> none</span>
+        <span class="legend-hint">hover a student to see who they listed</span>
+      </div>
+      <figure class="spark-card">
+        <figcaption>Distinct schoolmates met, average per student, cumulative over the year</figcaption>
+        <div id="spark-met" class="spark"></div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2 ============ -->
+  <section id="tab-student" class="panel" role="tabpanel" hidden>
+    <div class="student-layout">
+      <aside class="hero-col">
+        <label class="picker-label" for="hero-select">Follow a student</label>
+        <div class="picker-row">
+          <select id="hero-select" aria-label="Choose a student"></select>
+          <button id="hero-random" class="small-btn" title="Pick a random student">🎲</button>
+        </div>
+        <div class="hero-card">
+          <div class="hero-avatar" id="hero-avatar"></div>
+          <div class="hero-meta"><div class="hero-id" id="hero-id">S000</div><div class="hero-grade" id="hero-grade">Grade 11</div></div>
+        </div>
+        <h3 class="sub">Their listed friends <span class="count" id="anchor-count">0 of 8 delivered</span></h3>
+        <div class="friend-strip" id="friend-strip"></div>
+        <div class="year-card" id="year-card">
+          <h3 class="sub">This year so far</h3>
+          <ul class="kv">
+            <li><span>Rotations with a listed friend</span><b id="y-guaranteed">0 / 0</b></li>
+            <li><span>…under random seating</span><b id="y-guaranteed-rand" class="muted-b">0 / 0</b></li>
+            <li><span>Different friends delivered</span><b id="y-anchors">0 of 8</b></li>
+            <li><span>Distinct schoolmates met</span><b id="y-met">0</b></li>
+            <li><span>…under random seating</span><b id="y-met-rand" class="muted-b">0</b></li>
+          </ul>
+        </div>
+      </aside>
+      <div class="hero-main">
+        <div class="room-frame tall"><canvas id="room-hero" class="room-canvas"></canvas></div>
+        <div class="anchor-line" id="anchor-line">Rotation 1: guaranteed friend at the table — <b>…</b></div>
+        <div class="wall-head"><h3 class="sub">People met this year</h3><span class="counter" id="wall-count">0</span></div>
+        <div class="avatar-wall" id="avatar-wall"></div>
+        <div class="ghost">
+          <div class="wall-head"><h3 class="sub ghost-title">Same student under random seating</h3><span class="counter muted-b" id="ghost-count">0 met</span></div>
+          <div class="ghost-row" id="ghost-row"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 3 ============ -->
+  <section id="tab-game" class="panel" role="tabpanel" hidden>
+    <div class="mode-row">
+      <div class="segmented" role="group" aria-label="Defenses">
+        <button class="seg is-active" data-mode="coalition_none">1 · No defenses</button>
+        <button class="seg" data-mode="coalition_min4">2 · Min-4 rule</button>
+        <button class="seg" data-mode="coalition_screened">3 · Screens on</button>
+      </div>
+      <p class="explainer" id="mode-explainer"></p>
+    </div>
+    <div class="banner warn" id="screen-banner" hidden></div>
+    <div class="game-layout">
+      <div class="game-main">
+        <div class="room-frame tall"><canvas id="room-game" class="room-canvas"></canvas></div>
+        <div class="wiring-card">
+          <h3 class="sub">Who they listed <span class="count">the six coalition members, red rings in the room</span></h3>
+          <div id="wiring" class="wiring"></div>
+          <p class="wiring-note" id="wiring-note"></p>
+        </div>
+      </div>
+      <aside class="game-side">
+        <div class="banner-intact" id="intact-banner">group intact 0/0</div>
+        <div class="stat-col">
+          <div class="stat"><div class="stat-label">Co-members at each member's table</div><div class="stat-value" id="g-avg">–</div><div class="stat-sub">average cluster size, incl. self · this rotation</div></div>
+          <div class="stat"><div class="stat-label">Largest cluster</div><div class="stat-value" id="g-max">–</div><div class="stat-sub">of 6 members</div></div>
+          <div class="stat"><div class="stat-label">Rotations fully intact</div><div class="stat-value" id="g-intact">–</div><div class="stat-sub">all six at one table</div></div>
+          <div class="stat"><div class="stat-label">Members with ≥1 listed friend</div><div class="stat-value good" id="g-ge1">–</div><div class="stat-sub">the guarantee still holds for them</div></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    Synthetic data at true school scale (257 students, 40 tables, 16 rotations); every chart produced by the actual
+    solver; no real student data. Avatars are generated in the browser from anonymous ids.
+  </div>
+</footer>
+
+<div id="tooltip" class="tooltip" hidden></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
