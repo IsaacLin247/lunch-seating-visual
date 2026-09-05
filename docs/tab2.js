@@ -1,4 +1,4 @@
-// Tab 2 — One Student's Year: follow one student through all 16 rotations.
+// Tab 2, One Student's Year: follow one student through all 16 rotations.
 import { RoomView } from './room.js';
 import { avatarImg } from './avatars.js';
 
@@ -89,7 +89,7 @@ export function createTab2(ctx) {
       $('anchor-line').innerHTML = cur.anchor
         ? `Rotation ${rot + 1} (${trace.rotations[rot].state === 'same' ? 'same grade' : 'mixed grades'}): the guarantee seated ${hero} with <b>${cur.anchor}</b>` +
           (cur.friendsHere.length > 1 ? ` (plus ${cur.friendsHere.length - 1} more listed friend${cur.friendsHere.length > 2 ? 's' : ''})` : '') +
-          `. The other ${others} tablemates were not on their list — ${freshOthers} of them ${freshOthers === 1 ? 'is' : 'are'} new faces this year.`
+          `. The other ${others} tablemates were not on their list; ${freshOthers} of them ${freshOthers === 1 ? 'is' : 'are'} new faces this year.`
         : `Rotation ${rot + 1}: ${hero} listed no friends, so no guarantee applies.`;
 
       // wall of people met

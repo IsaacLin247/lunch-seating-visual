@@ -1,4 +1,4 @@
-// Tab 1 — The Whole Room: random status quo vs. proposed system, side by side.
+// Tab 1, The Whole Room: random status quo vs. proposed system, side by side.
 import { RoomView, COLORS } from './room.js';
 import { renderSparkline } from './sparkline.js';
 

@@ -8,8 +8,8 @@ and what happens when a group tries to game it.
 * `sim/` — Python: synthetic network generator, submission screens, the solver
   pipeline (pod greedy → swap repair → simulated annealing → CP-SAT with complete
   solution hints), scenario runner and JSON export.
-* `docs/` — the site: plain HTML/CSS/JS, D3 (CDN) and DiceBear (CDN, client-side
-  avatars). Reads `docs/data/*.json`.
+* `docs/` — the site: plain HTML/CSS/JS, D3 (CDN), KaTeX (CDN) and DiceBear (CDN,
+  client-side avatars). Reads `docs/data/*.json`.
 * `tests/` — pytest: trace validity (capacities, guarantee, state alternation,
   grade partition), coalition capture in mode 1, scatter in mode 2, screens in
   mode 3, plus fast unit tests of the pipeline.
@@ -47,16 +47,22 @@ solver enforces:
 
 ### Scenarios / tabs
 
-1. **The Whole Room** — random status quo vs. proposed system, side by side,
+1. **The Whole Room**: random status quo vs. proposed system, side by side,
    all 16 rotations, students flying between tables; colour = outcome (green: one
    listed friend at the table, dark green: two or more, grey: none).
-2. **One Student's Year** — follow any student: their table, the friend the
+2. **One Student's Year**: follow any student: their table, the friend the
    guarantee delivered each rotation, the growing wall of people met, and the same
    student under random seating.
-3. **Trying to Game It** — six students coordinate. *No defenses*: k=1 chains
+3. **Trying to Game It**: six students coordinate. *No defenses*: k=1 chains
    capture a table 16/16. *Min-4 rule*: adversarially wired 4-of-5 lists get split
    into pairs. *Screens on*: the group is flagged before rotation 1, resubmits with
    outside names, and the year plays like everyone else's.
+4. **The Math**: a one-screen algorithm page typeset with KaTeX (CDN auto-render,
+   no build step), under 150 words of prose, every equation in display mode.
+
+Site-copy rule: no em dashes anywhere under `docs/` (`grep -rn "—" docs/` must
+return nothing); `tests/test_site.py` enforces it along with the Tab 4 word budget
+and the presence of every equation.
 
 ## Setup
 
@@ -79,7 +85,7 @@ the full export of four scenarios × 16 rotations takes about 12 minutes.
 
 1. Push to GitHub. 2. Settings → Pages → *Deploy from a branch* → branch `main`,
 folder `/docs`. 3. Open the published URL. Everything is static; the only network
-requests after load are the D3 and DiceBear CDNs (avatars fall back to initials
+requests after load are the D3, KaTeX and DiceBear CDNs (avatars fall back to initials
 badges if the CDN is unavailable).
 
 ## Trace format (`docs/data/<scenario>.json`)

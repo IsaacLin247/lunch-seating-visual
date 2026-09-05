@@ -3,6 +3,7 @@ import { initAvatars, avatarImg } from './avatars.js';
 import { createTab1 } from './tab1.js';
 import { createTab2 } from './tab2.js';
 import { createTab3 } from './tab3.js';
+import { createTab4 } from './tab4.js';
 
 const $ = id => document.getElementById(id);
 const SCENARIOS = ['honest', 'coalition_none', 'coalition_min4', 'coalition_screened'];
@@ -27,7 +28,7 @@ function showTooltip(info) {
   const av = document.createElement('div'); av.className = 't-av'; av.appendChild(avatarImg(info.id));
   const txt = document.createElement('div');
   txt.innerHTML = `<b>${info.id}</b> · grade ${info.grade}<div class="t-sub">table ${info.table + 1} · listed friends here: ${listedHere}</div>` +
-    `<div class="t-sub">listed ${info.listed.length}: ${info.listed.join(', ') || '—'}</div>`;
+    `<div class="t-sub">listed ${info.listed.length}: ${info.listed.join(', ') || 'none'}</div>`;
   tooltip.append(av, txt);
   tooltip.hidden = false;
   const x = Math.min(window.innerWidth - 280, info.x + 16), y = Math.min(window.innerHeight - 90, info.y + 16);
@@ -39,7 +40,7 @@ async function main() {
   $('loading').hidden = true;
 
   const ctx = { traces, showTooltip };
-  const tabs = { room: createTab1(ctx), student: createTab2(ctx), game: createTab3(ctx) };
+  const tabs = { room: createTab1(ctx), student: createTab2(ctx), game: createTab3(ctx), math: createTab4(ctx) };
   let active = 'room';
   let rot = 0;
   let playing = false, timer = null;
@@ -92,6 +93,7 @@ async function main() {
     document.querySelectorAll('.panel').forEach(p => { const on = p.id === `tab-${name}`; p.classList.toggle('is-active', on); p.hidden = !on; });
     active = name;
     showTooltip(null);
+    document.querySelector('.timeline').classList.toggle('is-hidden', name === 'math');
     tabs[active].resize();
     tabs[active].render(rot, false);
   }
@@ -106,6 +108,7 @@ async function main() {
     else if (e.key === '1') switchTab('room');
     else if (e.key === '2') switchTab('student');
     else if (e.key === '3') switchTab('game');
+    else if (e.key === '4') switchTab('math');
   });
 
   setRotation(0, false);

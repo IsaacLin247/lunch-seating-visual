@@ -1,4 +1,4 @@
-/* Guaranteed-friend lunch seating — warm, projector-legible */
+/* Guaranteed-friend lunch seating: warm, projector-legible */
 :root {
   --bg: #f7f1e6;
   --bg-2: #efe6d6;
@@ -175,3 +175,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .timeline { grid-template-columns: 1fr; }
   .rotation-badge { justify-content: center; }
 }
+
+/* tab 4: the math */
+.math-col { max-width: 900px; margin: 0 auto; padding: 4px 0 10px; }
+.math-setup { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 20px; font-size: 1.02rem; color: var(--ink-2); line-height: 1.7; margin: 0 0 14px; }
+.eq-block { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 10px 20px 6px; margin-bottom: 12px; }
+.eq-block .lead { margin: 0; color: var(--ink-2); font-size: .98rem; }
+.eq-block .lead.after { margin-top: -6px; padding-bottom: 8px; }
+.eq-block .stage { display: inline-block; background: var(--bg-2); color: var(--accent-ink); font-weight: 700; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; padding: 2px 9px; border-radius: 999px; margin-right: 6px; vertical-align: 1px; }
+.eq { text-align: center; overflow-x: auto; padding: 2px 0; }
+.eq .katex-display { margin: 10px 0 14px; }
+.katex { font-size: 1.14em; }
+.pipeline { text-align: center; font-size: 1.1rem; font-weight: 600; margin: 18px 0 0; }
+.timeline.is-hidden { display: none; }

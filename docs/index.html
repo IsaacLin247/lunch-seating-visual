@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Guaranteed-Friend Lunch Seating — Simulation</title>
+<title>Guaranteed-Friend Lunch Seating: Simulation</title>
 <meta name="description" content="Animated simulation of a guaranteed-friend lunch seating system, played back from real solver traces on synthetic data.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%23e8c9a3'/%3E%3Ccircle cx='50' cy='50' r='26' fill='%23fff7ea'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
 </head>
 <body>
 <header class="site-header">
@@ -29,6 +32,7 @@
   <button class="tab is-active" role="tab" data-tab="room" aria-selected="true"><span class="tab-num">1</span> The Whole Room</button>
   <button class="tab" role="tab" data-tab="student" aria-selected="false"><span class="tab-num">2</span> One Student's Year</button>
   <button class="tab" role="tab" data-tab="game" aria-selected="false"><span class="tab-num">3</span> Trying to Game It</button>
+  <button class="tab" role="tab" data-tab="math" aria-selected="false"><span class="tab-num">4</span> The Math</button>
 </nav>
 
 <section class="timeline wrap" aria-label="Rotation timeline">
@@ -117,7 +121,7 @@
       </aside>
       <div class="hero-main">
         <div class="room-frame tall"><canvas id="room-hero" class="room-canvas"></canvas></div>
-        <div class="anchor-line" id="anchor-line">Rotation 1: guaranteed friend at the table — <b>…</b></div>
+        <div class="anchor-line" id="anchor-line">Rotation 1: guaranteed friend at the table: <b>…</b></div>
         <div class="wall-head"><h3 class="sub">People met this year</h3><span class="counter" id="wall-count">0</span></div>
         <div class="avatar-wall" id="avatar-wall"></div>
         <div class="ghost">
@@ -157,6 +161,52 @@
           <div class="stat"><div class="stat-label">Members with ≥1 listed friend</div><div class="stat-value good" id="g-ge1">–</div><div class="stat-sub">the guarantee still holds for them</div></div>
         </div>
       </aside>
+    </div>
+  </section>
+
+  <!-- ============ TAB 4 ============ -->
+  <section id="tab-math" class="panel math" role="tabpanel" hidden>
+    <div class="math-col">
+      <p class="math-setup">Setup: students \(i \in \{1,\dots,N\}\), tables \(t \in \{1,\dots,40\}\), capacities \(c_t \in \{6,7\}\), \(\sum_t c_t = N\); listed peers \(L_i\) with \(|L_i| \le 8\); \(s_i\) = listed peers at \(i\)'s table; year history \(m_{ab}\) = co-seatings of pair \((a,b)\), \(\alpha_{ab}\) = those where one listed the other.</p>
+
+      <div class="eq-block">
+        <p class="lead">Feasibility:</p>
+        <div class="eq">\[ \sum_{t} x_{i,t} = 1 \ \ \forall i, \qquad \sum_{i} x_{i,t} = c_t \ \ \forall t \]</div>
+      </div>
+
+      <div class="eq-block">
+        <p class="lead">Hard guarantee (restricted to same-grade listed peers on same-grade rotations):</p>
+        <div class="eq">\[ y_{i,t} \le x_{i,t}, \qquad y_{i,t} \le \sum_{j \in L_i} x_{j,t}, \qquad \sum_{t} y_{i,t} \ge 1 \]</div>
+      </div>
+
+      <div class="eq-block">
+        <p class="lead"><span class="stage">Stage 1</span> pods (seed the student running out of options):</p>
+        <div class="eq">\[ i^{*} = \arg\min_{i \in U} \, |L_i \cap U| \]</div>
+      </div>
+
+      <div class="eq-block">
+        <p class="lead"><span class="stage">Stage 2</span> repair (accept swap of \(i, j\) only if):</p>
+        <div class="eq">\[ s'_i \ge 1, \qquad s'_j \ge 1, \qquad \sum_{k \in A} \mathbf{1}[s'_k \ge 1] \ \ge\ \sum_{k \in A} \mathbf{1}[s_k \ge 1] \]</div>
+      </div>
+
+      <div class="eq-block">
+        <p class="lead"><span class="stage">Stage 3</span> annealing (Metropolis, \(T\) geometric \(2.5 \to 0.02\), full-year history):</p>
+        <div class="eq">\[ E = \sum_{i} \Big( 1000\,\mathbf{1}[s_i \ge 1] - \max(0,\, s_i - 1) \Big) - \frac{1}{10} \sum_{(a,b)\ \text{co-seated}} \big( 5\, m_{ab} + 2\, \alpha_{ab} \big) \]</div>
+        <div class="eq">\[ P(\text{accept } \Delta < 0) = e^{\Delta / T} \]</div>
+      </div>
+
+      <div class="eq-block">
+        <p class="lead"><span class="stage">Stage 4</span> exact solve (CP-SAT, seeded with Stage 3's chart as a complete hint; \(y^{(2)}_{i,t} = 1\) exactly when \(i\) sits at \(t\) with two or more listed peers; \(r_{ab} \ge x_{a,t} + x_{b,t} - 1\ \forall t\) for previous-rotation pairs):</p>
+        <div class="eq">\[ \min\ \ 300 \sum_{i,t} y^{(2)}_{i,t} + \sum_{(a,b)} w_{ab}\, r_{ab}, \qquad w_{ab} = 100 \big( 5\, m_{ab} + 2\, \alpha_{ab} \big) \]</div>
+      </div>
+
+      <div class="eq-block">
+        <p class="lead"><span class="stage">Defenses</span> submissions require at least 4 names or none, with at least 2 same-grade; a submitted cluster \(S\) is flagged exactly when</p>
+        <div class="eq">\[ \nexists\ S = A \uplus B:\ |A|, |B| \ge 2,\ A, B\ \text{both closed} \]</div>
+        <p class="lead after">where a part is closed when every member keeps a listed peer inside it.</p>
+      </div>
+
+      <p class="pipeline">Pipeline: pods \(\to\) repair \(\to\) anneal \(\to\) CP-SAT certify and polish.</p>
     </div>
   </section>
 </main>
