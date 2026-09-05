@@ -63,7 +63,7 @@ solver enforces:
 ```bash
 python -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-python sim/export_traces.py          # ~10 min, writes docs/data/*.json (deterministic)
+python sim/export_traces.py          # ~12 min on 8 cores, writes docs/data/*.json (deterministic)
 pytest                                # validates the exported traces + unit tests
 cd docs && python -m http.server 8000 # then open http://localhost:8000
 ```
@@ -72,8 +72,8 @@ cd docs && python -m http.server 8000 # then open http://localhost:8000
 `--fast` (small budgets, for smoke tests), `--wallclock` (multi-threaded CP-SAT
 with a wall-clock limit — faster but not bit-reproducible; the default uses
 CP-SAT's deterministic interleaved search so the same seed always yields the
-same traces). Per-rotation solve time is a few seconds; the full export is
-well under 15 minutes.
+same traces). Per-rotation solve time is 5–12 s (annealing ≈4 s, CP-SAT ≈3–7 s);
+the full export of four scenarios × 16 rotations takes about 12 minutes.
 
 ## Deploy on GitHub Pages
 

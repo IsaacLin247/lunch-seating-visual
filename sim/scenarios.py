@@ -116,7 +116,7 @@ def _pct(num, den):
 
 
 def run_year(net: Network, lists, scenario: str, seed: int = 7, first_state: str = "mixed",
-             anneal_iters: int = 300_000, cpsat_time: float = 4.0, workers: int = 16,
+             anneal_iters: int = 300_000, cpsat_time: float = 3.5, workers: int = 16,
              deterministic: bool = True, log=print) -> dict:
     spec = SCENARIOS[scenario]
     n = net.n
@@ -127,7 +127,6 @@ def run_year(net: Network, lists, scenario: str, seed: int = 7, first_state: str
     prev = None
     rotations = []
     submitters = [i for i in range(n) if lists[i]]
-    listed_sets = [set(l) for l in lists]
     clique = list(net.clique)
     t_year = time.perf_counter()
     for r in range(ROTATIONS):

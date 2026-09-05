@@ -27,7 +27,7 @@ def main(argv=None):
     ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "data"))
     ap.add_argument("--scenarios", default=",".join(SCENARIOS))
     ap.add_argument("--anneal-iters", type=int, default=300_000)
-    ap.add_argument("--cpsat-time", type=float, default=4.0, help="CP-SAT budget per rotation (deterministic time, or seconds with --wallclock)")
+    ap.add_argument("--cpsat-time", type=float, default=3.5, help="CP-SAT budget per rotation (deterministic time, or seconds with --wallclock)")
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--wallclock", action="store_true", help="multi-threaded wall-clock CP-SAT (faster, not bit-reproducible)")
     ap.add_argument("--fast", action="store_true", help="tiny budgets for smoke tests")

@@ -1,5 +1,5 @@
 // Entry point: load traces, wire the shared timeline, tabs, keyboard and tooltip.
-import { initAvatars, preloadBitmaps, avatarImg } from './avatars.js';
+import { initAvatars, avatarImg } from './avatars.js';
 import { createTab1 } from './tab1.js';
 import { createTab2 } from './tab2.js';
 import { createTab3 } from './tab3.js';
@@ -37,8 +37,6 @@ function showTooltip(info) {
 async function main() {
   const [traces] = await Promise.all([loadTraces(), initAvatars()]);
   $('loading').hidden = true;
-  const ids = traces.honest.students.map(s => s.id);
-  preloadBitmaps(ids, Math.round(16 * (window.devicePixelRatio || 1)));
 
   const ctx = { traces, showTooltip };
   const tabs = { room: createTab1(ctx), student: createTab2(ctx), game: createTab3(ctx) };
@@ -103,8 +101,8 @@ async function main() {
     if (e.key === 'ArrowRight') { stop(); setRotation(rot + 1); e.preventDefault(); }
     else if (e.key === 'ArrowLeft') { stop(); setRotation(rot - 1); e.preventDefault(); }
     else if (e.key === ' ') { playing ? stop() : play(); e.preventDefault(); }
-    else if (e.key === 'Home') { stop(); setRotation(0); }
-    else if (e.key === 'End') { stop(); setRotation(N_ROT - 1); }
+    else if (e.key === 'Home') { stop(); setRotation(0); e.preventDefault(); }
+    else if (e.key === 'End') { stop(); setRotation(N_ROT - 1); e.preventDefault(); }
     else if (e.key === '1') switchTab('room');
     else if (e.key === '2') switchTab('student');
     else if (e.key === '3') switchTab('game');

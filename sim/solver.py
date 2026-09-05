@@ -391,7 +391,12 @@ def kick_and_repair(st: State, i: int, j: int, rng: random.Random) -> bool:
             st.apply_group_swap(*best)
     if st.cost < snap[3]:
         return True
-    st.assign, st.members, st.tcost, st.cost = snap
+    # restore in place: callers (the annealer) hold aliases to these lists
+    st.assign[:] = snap[0]
+    for t in range(len(st.members)):
+        st.members[t] = snap[1][t]
+    st.tcost[:] = snap[2]
+    st.cost = snap[3]
     return False
 
 

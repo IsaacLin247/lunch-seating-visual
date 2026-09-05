@@ -38,7 +38,7 @@ export function createTab3(ctx) {
   }
 
   function wiring(el, members, lists, opts = {}) {
-    const W = 300, H = 190, cx = opts.cx || 150, cy = 95, R = 62, r = 15;
+    const W = 300, H = 215, cx = opts.cx || 150, cy = 98, R = 62, r = 15;
     const pos = members.map((m, i) => { const a = -Math.PI / 2 + (i / members.length) * Math.PI * 2; return { m, x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R }; });
     const P = new Map(pos.map(p => [p.m, p]));
     let s = '';
@@ -87,12 +87,12 @@ export function createTab3(ctx) {
     let inner;
     if (mode === 'coalition_screened' && trace.listedInitial) {
       const init = new Map(ids.map((id, i) => [id, trace.listedInitial[i]]));
-      inner = `<svg viewBox="0 0 600 190">${defs}` +
+      inner = `<svg viewBox="0 0 600 215">${defs}` +
         wiring(null, members, init, { cx: 150, id: 'a', stamp: 'RETURNED', caption: 'as submitted · flagged' }) +
-        `<text x="300" y="100" text-anchor="middle" font-size="26" fill="#8b847a">→</text>` +
+        `<text x="300" y="104" text-anchor="middle" font-size="26" fill="#8b847a">→</text>` +
         wiring(null, members, lists, { cx: 450, id: 'b', outward: true, color: '#c98b8b', caption: 'resubmitted · + outside names' }) + `</svg>`;
     } else {
-      inner = `<svg viewBox="0 0 300 190">${defs}${wiring(null, members, lists, {})}</svg>`;
+      inner = `<svg viewBox="0 0 300 215">${defs}${wiring(null, members, lists, {})}</svg>`;
     }
     $('wiring').innerHTML = inner;
     $('wiring-note').textContent = MODES[mode].wiringNote;

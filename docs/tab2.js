@@ -84,10 +84,12 @@ export function createTab2(ctx) {
         el.querySelector('.uses').textContent = uses ? `R${uses.join(', R')}` : '';
       });
       $('anchor-count').textContent = `${Y.anchors.size} of ${L.length} delivered so far`;
+      const others = cur.mates.length - cur.friendsHere.length;
+      const freshOthers = cur.fresh.filter(m => !cur.friendsHere.includes(m)).length;
       $('anchor-line').innerHTML = cur.anchor
         ? `Rotation ${rot + 1} (${trace.rotations[rot].state === 'same' ? 'same grade' : 'mixed grades'}): the guarantee seated ${hero} with <b>${cur.anchor}</b>` +
-          (cur.friendsHere.length > 1 ? ` (and ${cur.friendsHere.length - 1} more listed friend${cur.friendsHere.length > 2 ? 's' : ''})` : '') +
-          ` and ${cur.mates.length - cur.friendsHere.length} people they did not list — ${cur.fresh.length} of them new this year.`
+          (cur.friendsHere.length > 1 ? ` (plus ${cur.friendsHere.length - 1} more listed friend${cur.friendsHere.length > 2 ? 's' : ''})` : '') +
+          `. The other ${others} tablemates were not on their list — ${freshOthers} of them ${freshOthers === 1 ? 'is' : 'are'} new faces this year.`
         : `Rotation ${rot + 1}: ${hero} listed no friends, so no guarantee applies.`;
 
       // wall of people met
