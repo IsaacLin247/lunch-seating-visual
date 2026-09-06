@@ -1,21 +1,27 @@
 """Seating solver for one rotation.
 
-Pipeline (mirrors the validated prototype):
-    pod greedy  ->  swap repair  ->  simulated annealing  ->  CP-SAT (hinted)
+Pipeline (Tab 4 of the site states the same equations):
+    Stage 1 pods  ->  Stage 2 swap repair  ->  Stage 3 annealing  ->  Stage 4 CP-SAT (hinted)
 
-Objective per rotation
-  HARD  every submitter sits with >= 1 listed peer (same-grade listed peers
-        only during same-grade rotations)
-  SOFT  minimise  300 * #{students with >= 2 listed peers at their table}
-                + sum over seated pairs of a repeat penalty:
-                    incidental pair  5 * m_ab   (m_ab = times seated together so far)
-                    listed pair      2 * alpha_ab
-        Annealing carries the full-year history; CP-SAT penalises pairs seated
-        together in the *previous* rotation at 100x those weights.
+Hard constraint: every submitter sits with >= 1 listed peer (same-grade listed
+peers only during same-grade rotations).
 
-Lessons baked in: per-student indicator encoding (no pairwise variables for
-the friend counts), hints cover every variable, incidental repeats cost more
-than anchor repeats.
+Stage 3 energy (maximised; s_i = listed peers at i's table, m_ab = co-seatings
+of the pair so far, alpha_ab = those co-seatings where one listed the other):
+
+    E = sum_i ( 1000 * 1[s_i >= 1] - max(0, s_i - 1) )
+        - (1/10) * sum_{(a,b) co-seated} ( 5 m_ab + 2 alpha_ab )
+
+with Metropolis acceptance P(accept dE < 0) = exp(dE / T) and T geometric
+2.5 -> 0.02.  The code minimises C = -E (plus a constant) with every term scaled
+by 10 so bookkeeping stays in integers; the temperature is scaled by the same
+factor, so acceptance probabilities are identical.
+
+Stage 4 objective: minimise 300 * sum y2_i + sum w_ab r_ab over pairs seated
+together in the previous rotation, w_ab = 100 (5 m_ab + 2 alpha_ab).
+
+Encoding lessons kept: per-student indicators (no pairwise friend variables),
+hints cover every variable.
 """
 from __future__ import annotations
 
@@ -25,11 +31,15 @@ import time
 
 from ortools.sat.python import cp_model
 
-W_2PLUS = 300
-W_INCIDENTAL = 5
-W_LISTED = 2
-CPSAT_REPEAT_SCALE = 100
-VIOL = 5000  # annealing penalty per unsatisfied submitter (dominates everything)
+SCALE = 10                      # integer scaling of the Stage 3 energy
+VIOL = 1000 * SCALE             # 1000 per friendless submitter
+W_EXTRA = 1 * SCALE             # 1 per listed peer beyond the first
+W_M = 5                         # (1/10) * 5 m_ab, scaled by 10
+W_ALPHA = 2                     # (1/10) * 2 alpha_ab, scaled by 10
+T0 = 2.5 * SCALE
+T1 = 0.02 * SCALE
+W_2PLUS_CPSAT = 300             # Stage 4: per student with >= 2 listed peers
+CPSAT_REPEAT_SCALE = 100        # Stage 4: w_ab = 100 (5 m_ab + 2 alpha_ab)
 
 
 def table_layout(state: str, n11: int = 132, n12: int = 125):
@@ -84,7 +94,7 @@ class Problem:
             for b in range(a + 1, n):
                 m = ha[b]
                 if m:
-                    w = (W_LISTED if b in la else W_INCIDENTAL) * m
+                    w = W_M * m + (W_ALPHA * m if b in la else 0)
                     Wa[b] = w
                     W[b][a] = w
         self.W = W
@@ -92,8 +102,7 @@ class Problem:
         # penalty lookup by count for each student
         self.pen = []
         for i in range(n):
-            row = [W_2PLUS] * (self.n + 1)
-            row[1] = 0
+            row = [W_EXTRA * max(0, c - 1) for c in range(self.n + 1)]
             row[0] = VIOL if self.submitter[i] else 0
             self.pen.append(row)
         self.allowed = [[t for t in range(self.T) if table_grade[t] is None or table_grade[t] == grade[i]]
@@ -123,14 +132,15 @@ class Problem:
         cnt = self.counts(assign, members)
         viol = sum(1 for i in range(self.n) if self.submitter[i] and cnt[i] == 0)
         two = sum(1 for i in range(self.n) if cnt[i] >= 2)
+        extra = sum(max(0, c - 1) for c in cnt)
         rep = 0
         for ms in members:
             for x in range(len(ms)):
                 Wa = self.W[ms[x]]
                 for y in range(x + 1, len(ms)):
                     rep += Wa[ms[y]]
-        return {"violations": viol, "twoPlus": two, "repeat": rep,
-                "total": VIOL * viol + W_2PLUS * two + rep}
+        return {"violations": viol, "twoPlus": two, "extraPeers": extra, "repeat": rep,
+                "total": VIOL * viol + W_EXTRA * extra + rep}
 
     def check(self, assign):
         members = self.members_of(assign)
@@ -193,7 +203,7 @@ def pod_greedy(p: Problem, rng: random.Random):
                 # extra familiar faces the merge would create (each risks a 2+)
                 extra = sum(1 for x in pod for y in other if (y in p.adj[x] or x in p.adj[y])) - 1
                 hist = sum(p.W[x][y] for x in pod for y in other)
-                key = (W_2PLUS * max(extra, 0) + hist, len(other), rng.random())
+                key = (W_EXTRA * max(extra, 0) + hist, len(other), rng.random())
                 if best is None or key < best[0]:
                     best = (key, q)
             if best is None:
@@ -223,7 +233,7 @@ def pod_greedy(p: Problem, rng: random.Random):
                 for o in members[t]:
                     c += p.W[m][o]
                     if o in p.adj[m] or m in p.adj[o]:
-                        c += W_2PLUS
+                        c += W_EXTRA
             # prefer emptier tables (spread pods), keep exact-fill feasible
             key = (c, -remaining[t], rng.random())
             if best is None or key < best[0]:
@@ -441,8 +451,9 @@ def swap_repair(st: State, rng: random.Random, max_rounds: int = 20):
 
 
 # ----- phase 3: simulated annealing ----------------------------------------------
-def anneal(st: State, rng: random.Random, iters: int = 300_000, t0: float = 150.0, t1: float = 0.5):
-    """Group-swap annealing on the full-history objective.
+def anneal(st: State, rng: random.Random, iters: int = 300_000, t0: float = T0, t1: float = T1):
+    """Stage 3: group-swap Metropolis annealing on the full-history energy
+    (geometric temperature t0 -> t1; defaults are the Tab 4 values scaled by SCALE).
 
     Move mix per iteration:
       * closure group swap (default): Ga = closure(a), Gb = closure(b), padded
@@ -573,7 +584,7 @@ def cpsat_polish(p: Problem, hint_assign, time_limit: float = 5.0, workers: int 
         nL = len(L)
         if nL >= 2:
             z2[i] = model.NewBoolVar(f"z{i}")
-            obj.append(W_2PLUS * z2[i])
+            obj.append(W_2PLUS_CPSAT * z2[i])
         ys = []
         for t in p.allowed[i]:
             S = sum(x[j, t] for j in L if (j, t) in x)
@@ -667,7 +678,7 @@ def solve_rotation(p: Problem, seed: int = 0, anneal_iters: int = 300_000, cpsat
             break
         st = State(p, best_assign)
         swap_repair(st, rng)
-        best_assign, best_cost = anneal(st, rng, iters=max(anneal_iters // 2, 20_000), t0=60.0)
+        best_assign, best_cost = anneal(st, rng, iters=max(anneal_iters // 2, 20_000))
         info["annealRetries"] = attempt + 1
     info["anneal"] = p.cost_breakdown(best_assign)
     t3 = time.perf_counter()

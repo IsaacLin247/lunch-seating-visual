@@ -13,7 +13,7 @@ const MODES = {
   },
   coalition_screened: {
     explainer: 'Lists that only point inward are caught before anyone is seated; once the group adds real outside names, the year plays out like everyone else’s.',
-    wiringNote: 'Flagged wiring (left) was returned. Resubmitted lists (right) name the five friends plus three people outside the group, enough outward names to pass both screens.',
+    wiringNote: 'Flagged wiring (left) was returned: it contains a set that no seating can split. Resubmitted lists (right) name the five friends plus three people outside the group, and pass the coercion test.',
   },
 };
 
@@ -121,11 +121,13 @@ export function createTab3(ctx) {
       const sb = $('screen-banner');
       if (mode === 'coalition_screened') {
         const scr = trace.config.screen;
+        const core = scr.flags.map(f => f.members.join(', ')).join('; ');
+        const six = scr.candidates.find(c => c.members.length === members.length && !c.flagged);
         sb.hidden = false;
         sb.innerHTML = `⚠ Submission screen flagged this group (insular lists), returned for diversification before rotation 1` +
-          `<small>Insularity screen: their six lists close on themselves (closure size ${scr.flags.find(f => f.screen === 'insularity')?.kernel?.length ?? 6}, limit 12). ` +
-          `Boundary screen: heavy pairwise overlap with ≤3 outward names. ${scr.nFlagged} students flagged, ${scr.honestFlagged.length} of them honest. ` +
-          `After resubmission: ${scr.afterResubmission.nFlagged} flagged.</small>`;
+          `<small>Coercion test: the set {${core}} admits no split into two closed parts, so the guarantee would have to seat it as a block. ` +
+          (six ? `Their six-set itself splits (${six.split[0].join(', ')} | ${six.split[1].join(', ')}), which is exactly why the solver can scatter them in mode 2. ` : '') +
+          `${scr.nReturned} students returned (the whole kernel), ${scr.honestFlagged.length} honest students affected. After resubmission: ${scr.afterResubmission.nFlagged} flagged.</small>`;
       } else sb.hidden = true;
       if (mode !== lastMode) drawWiring();
       lastRot = rot; lastMode = mode;

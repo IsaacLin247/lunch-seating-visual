@@ -7,10 +7,10 @@ from datetime import datetime, timezone
 
 import numpy as np
 
-from .generator import Network, generate_network, honest_lists, coalition_lists, student_id, apply_rules
+from .generator import Network, make_cohort, honest_lists, coalition_lists, student_id, apply_rules
 from .screens import run_screens
 from .solver import (Problem, table_layout, solve_rotation, random_assignment,
-                     W_2PLUS, W_INCIDENTAL, W_LISTED, CPSAT_REPEAT_SCALE)
+                     VIOL, W_EXTRA, W_M, W_ALPHA, SCALE, T0, T1, W_2PLUS_CPSAT, CPSAT_REPEAT_SCALE)
 
 ROTATIONS = 16
 STATES = ("mixed", "same")
@@ -19,7 +19,7 @@ SCENARIOS = {
     "honest": {
         "title": "The whole room",
         "short": "Honest lists",
-        "description": "Every student submits their true friends (8 names). Random status quo vs. the proposed system.",
+        "description": "Every student submits their true friends. Random status quo vs. the proposed system.",
         "coalitionMode": None,
         "rules": {"min4": True, "screens": True},
     },
@@ -40,7 +40,7 @@ SCENARIOS = {
     "coalition_screened": {
         "title": "Gaming it: screens on",
         "short": "Screens on",
-        "description": "Min-4 rule plus the pre-solve screens: the group is flagged, returned for diversification, and resubmits honest lists.",
+        "description": "Min-4 rule plus the pre-solve coercion screen: the group's wiring contains a set that cannot be split, so the whole group is returned for diversification and resubmits honest lists.",
         "coalitionMode": "screened",
         "rules": {"min4": True, "screens": True},
     },
@@ -82,7 +82,7 @@ def build_lists(net: Network, scenario: str):
         # honest lists (their true friends, rules applied)
         lists = [list(l) for l in first]
         rng = np.random.default_rng([net.seed, 9])
-        for i in run_screens(first)["flaggedStudents"]:
+        for i in run_screens(first)["returnedStudents"]:
             lists[i] = apply_rules(list(net.friends[i]), i, net, rng)
         rep["afterResubmission"] = _screen_report(lists, net, flagged_expected=False)
     else:
@@ -92,14 +92,23 @@ def build_lists(net: Network, scenario: str):
 
 def _screen_report(lists, net: Network, flagged_expected: bool):
     r = run_screens(lists)
+    ids = student_id
+    flagged = set(r["flaggedStudents"])
+    returned = set(r["returnedStudents"])
     return {
-        "flags": [{**f, "members": [student_id(m) for m in f["members"]],
-                   **({"kernel": [student_id(m) for m in f["kernel"]]} if "kernel" in f else {})}
-                  for f in r["flags"]],
-        "flaggedStudents": [student_id(m) for m in r["flaggedStudents"]],
-        "nFlagged": len(r["flaggedStudents"]),
-        "coalitionFlagged": all(m in r["flaggedStudents"] for m in net.clique) if flagged_expected else None,
-        "honestFlagged": [student_id(m) for m in r["flaggedStudents"] if m not in net.clique],
+        "rule": "coercion",
+        "flags": [{"screen": f["screen"], "members": [ids(m) for m in f["members"]], "size": f["size"],
+                   "sources": f["sources"]} for f in r["flags"]],
+        "candidates": [{"members": [ids(m) for m in c["members"]], "sources": c["sources"], "flagged": c["flagged"],
+                        **({"split": [[ids(m) for m in part] for part in c["split"]]} if "split" in c else {})}
+                       for c in r["candidates"]],
+        "flaggedStudents": [ids(m) for m in sorted(flagged)],
+        "returnedStudents": [ids(m) for m in sorted(returned)],
+        "min4Violations": [ids(m) for m in r["min4Violations"]],
+        "nFlagged": len(flagged),
+        "nReturned": len(returned),
+        "coalitionFlagged": (bool(flagged & set(net.clique)) and set(net.clique) <= returned) if flagged_expected else None,
+        "honestFlagged": [ids(m) for m in sorted(returned) if m not in net.clique],
     }
 
 
@@ -232,11 +241,15 @@ def run_year(net: Network, lists, scenario: str, seed: int = 7, first_state: str
             "rules": spec["rules"],
             "coalitionMode": spec["coalitionMode"],
             "coalition": [ids[i] for i in clique] if spec["coalitionMode"] else [],
-            "weights": {"twoPlus": W_2PLUS, "incidentalRepeat": W_INCIDENTAL, "listedRepeat": W_LISTED,
-                        "cpsatRepeatScale": CPSAT_REPEAT_SCALE},
+            "weights": {"anneal": {"satisfied": VIOL / SCALE, "extraPeer": W_EXTRA / SCALE,
+                                   "repeatM": W_M / SCALE, "repeatAlpha": W_ALPHA / SCALE,
+                                   "T0": T0 / SCALE, "T1": T1 / SCALE},
+                        "cpsat": {"twoPlus": W_2PLUS_CPSAT, "repeatScale": CPSAT_REPEAT_SCALE}},
             "network": {"reciprocity": round(net.reciprocity, 3),
                         "withinGradeFrac": round(_within_grade_frac(net), 3),
-                        "popularitySigma": 0.6, "withinBias": 9.0},
+                        "popularitySigma": 0.6, "withinBias": 9.0,
+                        "mu": net.mu, "omega": net.omega, "nGroups": len(net.groups),
+                        "inGroupFrac": round(net.in_group_fraction(), 3)},
             "solver": {"annealIters": anneal_iters, "cpsatTime": cpsat_time, "workers": workers,
                        "deterministic": deterministic, "pipeline": "pod greedy -> swap repair -> annealing -> CP-SAT (hinted)"},
             "yearSolveSeconds": round(year_time, 1),
@@ -330,15 +343,16 @@ def validate_trace(trace: dict) -> None:
         assert r["stats"]["pctGe1"] == 100.0
 
 
-def make_all(seed: int = 7, scenarios=None, log=print, **solver_kw) -> dict[str, dict]:
-    net = generate_network(seed=seed)
+def make_all(seed: int = 7, scenarios=None, log=print, mu: float = 0.0, omega: float = 0.0,
+             cross_grade_group_frac: float = 0.0, **solver_kw) -> dict[str, dict]:
+    net = make_cohort(seed=seed, mu=mu, omega=omega, cross_grade_group_frac=cross_grade_group_frac)
     out = {}
     for name in scenarios or list(SCENARIOS):
         lists, extra = build_lists(net, name)
         if log:
             log(f"== scenario {name}: {SCENARIOS[name]['title']}")
             if "screen" in extra:
-                log(f"   screens: flagged {extra['screen']['nFlagged']} students; "
+                log(f"   screen: flagged {extra['screen']['nFlagged']} students, returned {extra['screen']['nReturned']}; "
                     f"honest false positives: {len(extra['screen']['honestFlagged'])}")
         trace = run_year(net, lists, name, seed=seed, log=log, **solver_kw)
         if "screen" in extra:

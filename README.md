@@ -35,15 +35,20 @@ solver enforces:
 
 * **Hard:** every submitter sits with ≥1 listed peer (same-grade listed peers only
   in same-grade rotations).
-* **Soft (minimised):** students with ≥2 listed peers at their table (weight 300
-  each — the goal is *one* familiar face and everyone else new), plus
-  history-weighted repeat penalties: incidental repeats cost 5·m, listed-friend
-  repeats 2·α (m, α = how often the pair has already shared a table). Annealing
-  carries the full-year history; CP-SAT penalises previous-rotation pairs at 100×
-  those weights.
-* **Pre-solve screens:** (a) insularity — a student whose list-closure has size
-  2–12 sits in a coercive kernel; (b) boundary — clusters with ≥3 shared names and
-  ≤3 combined outward names. Flagged groups are returned for diversification.
+* **Soft:** the annealing stage maximises
+  E = Σ_i (1000·1[s_i ≥ 1] − max(0, s_i − 1)) − (1/10)·Σ_{co-seated (a,b)} (5·m_ab + 2·α_ab)
+  with Metropolis acceptance and T geometric 2.5 → 0.02 over the full-year
+  history (s_i = listed peers at i's table, m_ab = co-seatings so far, α_ab = those
+  where one listed the other). The CP-SAT stage minimises 300·Σ y²_i + Σ w_ab·r_ab
+  over previous-rotation pairs with w_ab = 100·(5·m_ab + 2·α_ab). Tab 4 states the
+  same equations.
+* **Pre-solve screen (coercion capability, exact):** candidate sets come from two
+  cheap detectors, insular kernels (list-closure size 2–12) and boundary clusters
+  (≥3 shared names, ≤3 combined outward names). A candidate S is flagged exactly
+  when S admits no bipartition into two closed parts of size ≥2 (a part is closed
+  when every member keeps a listed peer inside it), which is decided by exact
+  enumeration over the 2^|S| splits. Flagged sets, together with the kernel that
+  contains them, are returned for diversification.
 
 ### Scenarios / tabs
 
@@ -63,6 +68,18 @@ solver enforces:
 Site-copy rule: no em dashes anywhere under `docs/` (`grep -rn "—" docs/` must
 return nothing); `tests/test_site.py` enforces it along with the Tab 4 word budget
 and the presence of every equation.
+
+### Cohort generator
+
+`make_cohort(seed, mu, omega, group_size_dist=(6, 12), cross_grade_group_frac=0.0)`
+partitions students into latent friend groups (sizes uniform on 6–12, within grade
+unless `cross_grade_group_frac` says otherwise); with probability `omega` a student
+also joins one secondary group; each of the K = 8 true friendships is drawn with
+probability `mu` from the student's group(s) (popularity-weighted) and otherwise
+from the grade-biased background. `mu = 1, omega = 0` gives isolated cliques,
+`mu ≈ 0.6, omega ≈ 0.3` the realistic intertwined regime. The committed traces use
+the default `mu = 0, omega = 0`; pass `--mu/--omega/--cross-grade-groups` to
+`export_traces.py` to change it.
 
 ## Setup
 

@@ -110,13 +110,16 @@ def test_min4_rule_scatters_coalition(traces):
 def test_screens_flag_coalition_not_honest_students(traces):
     t = traces["coalition_screened"]
     scr = t["config"]["screen"]
+    assert scr["rule"] == "coercion"
     assert scr["coalitionFlagged"] is True
     assert scr["honestFlagged"] == []
-    assert set(scr["flaggedStudents"]) == set(t["config"]["coalition"])
-    assert scr["afterResubmission"]["nFlagged"] == 0
+    assert scr["flags"] and all(f["screen"] == "coercion" for f in scr["flags"])
+    assert set(scr["flaggedStudents"]) <= set(t["config"]["coalition"])
+    assert set(scr["returnedStudents"]) == set(t["config"]["coalition"])
+    assert scr["afterResubmission"]["nFlagged"] == 0 and scr["afterResubmission"]["nReturned"] == 0
     assert "listedInitial" in t
     h = traces["honest"]["config"]["screen"]
-    assert h["nFlagged"] == 0
+    assert h["nFlagged"] == 0 and h["nReturned"] == 0
 
 
 def test_index_lists_all_scenarios():

@@ -2,7 +2,6 @@
 import random
 
 from sim.generator import generate_network, honest_lists, coalition_lists
-from sim.screens import run_screens, insularity_screen, boundary_screen
 from sim.solver import Problem, table_layout, pod_greedy, State, swap_repair, anneal, solve_rotation, random_assignment
 
 
@@ -90,21 +89,3 @@ def test_random_assignment_respects_state():
     for t, ms in enumerate(p.members_of(a)):
         assert len(ms) == p.caps[t]
         assert {p.grade[i] for i in ms} == {p.table_grade[t]}
-
-
-def test_screens():
-    net = generate_network(seed=11)
-    base = honest_lists(net)
-    assert run_screens(base)["flaggedStudents"] == []
-    k1 = coalition_lists(net, "k1", base)
-    assert set(net.clique) <= set(run_screens(k1)["flaggedStudents"])
-    m4 = coalition_lists(net, "min4", base)
-    flagged = run_screens(m4)["flaggedStudents"]
-    assert set(net.clique) <= set(flagged) and set(flagged) <= set(net.clique)
-    # a pair listing only each other is a coercive kernel of size 2
-    lists = [[] for _ in range(6)]
-    lists[0], lists[1] = [1], [0]
-    assert insularity_screen(lists)[0]["kernel"] == [0, 1]
-    # boundary: three students sharing 3 names with <=3 outward names
-    lists = [[3, 4, 5, 1], [3, 4, 5, 0], [3, 4, 5, 0], [], [], []]
-    assert boundary_screen(lists)[0]["members"] == [0, 1, 2]

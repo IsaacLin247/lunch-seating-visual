@@ -31,6 +31,9 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--wallclock", action="store_true", help="multi-threaded wall-clock CP-SAT (faster, not bit-reproducible)")
     ap.add_argument("--fast", action="store_true", help="tiny budgets for smoke tests")
+    ap.add_argument("--mu", type=float, default=0.0, help="latent-group friendship fraction (0 = plain grade-biased network)")
+    ap.add_argument("--omega", type=float, default=0.0, help="probability of a secondary (overlapping) group")
+    ap.add_argument("--cross-grade-groups", type=float, default=0.0, help="fraction of latent groups drawing from both grades")
     args = ap.parse_args(argv)
     if args.fast:
         args.anneal_iters = 30_000
@@ -38,7 +41,8 @@ def main(argv=None):
     os.makedirs(args.out, exist_ok=True)
     t0 = time.perf_counter()
     traces = make_all(seed=args.seed, scenarios=args.scenarios.split(","), anneal_iters=args.anneal_iters,
-                      cpsat_time=args.cpsat_time, workers=args.workers, deterministic=not args.wallclock)
+                      cpsat_time=args.cpsat_time, workers=args.workers, deterministic=not args.wallclock,
+                      mu=args.mu, omega=args.omega, cross_grade_group_frac=args.cross_grade_groups)
     index = {"scenarios": [], "seed": args.seed}
     total = 0
     for name, trace in traces.items():
