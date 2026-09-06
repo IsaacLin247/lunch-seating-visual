@@ -81,6 +81,17 @@ from the grade-biased background. `mu = 1, omega = 0` gives isolated cliques,
 the default `mu = 0, omega = 0`; pass `--mu/--omega/--cross-grade-groups` to
 `export_traces.py` to change it.
 
+## Methodology write-up
+
+`paper/methodology.tex` documents the cohort generator, the screens, all four
+solver stages, the baseline, the statistics, validation and results in full.
+`paper/make_tables.py` regenerates `paper/macros.tex` and `paper/tables.tex` from
+`docs/data/*.json`, so every number in the PDF comes from the committed traces:
+
+```bash
+python paper/make_tables.py && (cd paper && latexmk -pdf methodology.tex)
+```
+
 ## Setup
 
 ```bash
