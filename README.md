@@ -83,16 +83,19 @@ the default `mu = 0, omega = 0`; pass `--mu/--omega/--cross-grade-groups` to
 
 ## Methodology write-up
 
-`paper/article.tex` is the journal-style article: the general rotating group
+`article/article.tex` is the journal-style article: the general rotating group
 assignment problem with an anchor guarantee, its NP-completeness, the coercion
 capability analysis (closed bipartitions, the minimum-list theorem, the exact
-screen), the hybrid solver, and the school as a case study. `paper/methodology.tex`
-is the internal technical report describing the implementation stage by stage.
-`paper/make_tables.py` regenerates `paper/macros.tex` and `paper/tables.tex` from
-`docs/data/*.json`, so every number in the PDF comes from the committed traces:
+screen), the hybrid solver, and the school as a case study (`article/refs.bib`
+holds its bibliography). `paper/methodology.tex` is the internal technical report
+describing the implementation stage by stage.
+`paper/make_tables.py` regenerates `macros.tex` and `tables.tex` in both folders
+from `docs/data/*.json`, so every number in either PDF comes from the committed traces:
 
 ```bash
-python paper/make_tables.py && (cd paper && latexmk -pdf article.tex methodology.tex)
+python paper/make_tables.py
+(cd article && latexmk -pdf article.tex)
+(cd paper && latexmk -pdf methodology.tex)
 ```
 
 ## Setup
