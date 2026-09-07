@@ -1,0 +1,282 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+\setlist{nosep,leftmargin=*}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{problem}[theorem]{Problem}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\ind}[1]{\mathbf{1}[#1]}
+\newcommand{\cl}{\operatorname{cl}}
+\lstset{basicstyle=\ttfamily\small,columns=fullflexible,breaklines=true,frame=single,framerule=0.3pt}
+
+\input{macros}
+
+\title{Rotating Group Assignment with a Guaranteed Companion:\\
+Coercion-Resistant Preference Elicitation and a Hybrid\\ Local-Search / Constraint-Programming Solver}
+\author{Isaac Lin\\[2pt] \small [Affiliation and correspondence address to be added]}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Many institutions periodically reassign people to small groups (lunch tables, seminar sections, project teams, conference tables) in order to widen everyone's circle of acquaintances. Purely random reassignment achieves the mixing but places most people among strangers, and the social-psychology literature on secure attachment suggests that a single familiar companion is what makes a new group approachable. We formalise the \emph{rotating group assignment problem with an anchor guarantee}: over a sequence of periods, partition a population into capacity-constrained groups, possibly stratified into blocks in some periods, such that every participant who submitted a list of preferred companions shares a group with at least one of them, while minimising surplus familiarity (a second listed companion in the same group) and repeated co-membership across periods. We show that feasibility alone is NP-complete, and we study strategic misreporting: a colluding set that reports only each other can force the mechanism to seat it as a block. We characterise this \emph{coercion capability} exactly through closed bipartitions of the reported-preference digraph, prove that a minimum-list-length rule makes small colluding sets provably non-coercive, and give an exact polynomial-space screen for the remaining candidates. We then present a four-stage solver (anchored constructive heuristic, repair, closure-move simulated annealing over the full history, and hinted constraint programming) whose local-search moves preserve the anchor guarantee by construction. On a real-scale instance (257 participants, 40 groups of size 6 or 7, 16 periods alternating stratified and unstratified) the guarantee is met for every participant in every period, \HonestExactlyOne\% of participants have exactly one listed companion, and participants meet \HonestMet{} distinct others over the year against \RandomMet{} under random assignment; an adversarial six-person coalition captures a group in \NoneIntact/16 periods without defenses, is split into pairs under the minimum-list rule, and is detected before the first period by the screen with no honest participant affected. Code, traces and an interactive visualisation are released.
+\end{abstract}
+
+\noindent\textbf{Keywords.} group assignment; seating; social mixing; preference elicitation; strategic manipulation; simulated annealing; constraint programming; digraph partitions.
+
+\section{Introduction}
+\label{sec:intro}
+
+Institutions that want their members to know one another often rotate them through small groups: schools reassign cafeteria tables every few weeks, universities shuffle discussion sections, companies rotate project teams, conferences reseat dinner tables between courses. The design intent is \emph{mixing}: over a year each member should share a group with as many different others as possible. The standard instrument is random assignment, which mixes well but has a well-known failure mode. When a member finds no familiar face at the assigned group, the group is avoided, or joined in silence. Attachment theory offers an explanation and a remedy: a \emph{secure base}, a trusted companion who is present, lowers the anxiety of an unfamiliar setting and frees attention for exploration and new contact \citep{bowlby1988}. The remedy is not to seat friends together (which would undo the mixing) but to guarantee \emph{one} familiar companion and fill the rest of the group with new people.
+
+This paper studies the resulting assignment problem in general form. Each participant may confidentially submit a list of preferred companions. In every period the mechanism must partition the population into groups of prescribed sizes so that every participant who submitted a list shares a group with at least one listed companion (the \emph{anchor guarantee}), while keeping the number of listed companions in a group to one where possible and avoiding pairs who have already shared a group earlier in the sequence. Some periods may be \emph{stratified}: groups may not mix blocks (grades, departments, cohorts), which further constrains which listed companions can serve as anchors.
+
+The guarantee is a hard promise, and any mechanism that keeps a hard promise can be gamed by shaping the input. A set of participants who list only each other in a cycle forces the mechanism to seat the whole cycle together in every period, converting a mixing policy into a private table. We analyse this manipulation exactly. The question ``can this set of reported lists force a shared group'' turns out to be a question about \emph{closed bipartitions} of the reported-preference digraph, and it is decidable exactly for the small sets that matter. We show that a simple submission rule (at least $k$ names or none) makes every set of at most $2k$ participants provably non-coercive, and we give a screen that catches the remaining cases before the first assignment is made, returning the set for diversification rather than seating it.
+
+Solving the assignment problem itself is hard: even without objectives and with mutual preferences the feasibility question contains the $P_3$-factor problem. We give a hybrid method whose local-search phase operates on \emph{closed groups} of participants, sets that can be moved between groups without stranding anyone's anchor, and which therefore explores feasible assignments directly, and whose final phase is an exact constraint-programming model seeded with the local-search solution as a complete hint. Everything is deterministic in a seed, which matters when the output is a public promise.
+
+\subsection{Contributions}
+\begin{enumerate}[label=(\roman*)]
+\item A formal model of rotating group assignment with an anchor guarantee, block stratification and a history-weighted novelty objective (Section~\ref{sec:problem}), with an NP-completeness result for feasibility (Theorem~\ref{thm:np}).
+\item A model of strategic misreporting and an exact characterisation of \emph{coercion capability} through closed bipartitions (Section~\ref{sec:coercion}); a proof that a minimum-list rule with threshold $k$ makes any colluding set of size at most $2k$ non-coercive (Theorem~\ref{thm:mink}); and a screening procedure that is exact on bounded candidate sets.
+\item A four-stage solver whose annealing moves are \emph{closure swaps} that preserve the guarantee at the origin group by construction (Proposition~\ref{prop:closure}), a compound kick-and-repair move for chain-like structures, and a hinted CP-SAT polishing stage with an acceptance guard (Section~\ref{sec:method}).
+\item A synthetic population model with stratification, popularity, reciprocity and latent communities, and a fully reproducible case study at the scale of a real secondary-school lunch period, including the manipulation scenarios (Sections~\ref{sec:population}--\ref{sec:case}).
+\end{enumerate}
+
+\section{Related work}
+\label{sec:related}
+
+Seating and table-assignment problems have been studied as optimisation problems in their own right. \citet{lewis2016seating} model wedding and gala seating with likes and dislikes between guests and compare a heuristic with an integer-programming formulation; \citet{ceylan2023seat} give a complexity map of seat arrangement under various preference structures. Our setting differs in three ways: the assignment is repeated over periods with a history-dependent objective, the central constraint is a per-participant guarantee rather than a sum of pairwise utilities, and the participants are strategic. Repeated grouping with a mixing objective is the subject of the social golfer problem, a benchmark for symmetry breaking in constraint programming, where the requirement that no two golfers play together twice is a hard constraint \citep{dotu2005golfers}; here repeats are penalised rather than forbidden, because a year of 16 periods with groups of 6 or 7 in a population of 257 makes some repetition unavoidable. Our local-search stage follows the simulated-annealing tradition \citep{metropolis1953,kirkpatrick1983annealing}, and the exact stage uses the CP-SAT solver of OR-Tools \citep{ortools}.
+
+The hardness of the feasibility question is inherited from graph factor problems \citep{kirkpatrick1983factor,garey1979}. The manipulation analysis connects to the partitioning of digraphs under out-degree constraints: a closed part in our sense is a set inducing a subdigraph of minimum out-degree at least one, so a closed bipartition is a $(1,1)$-splitting in the terminology of \citet{alon2006splitting}, and the complexity of related 2-partition problems is studied by \citet{bangjensen2016partitions1,bangjensen2016partitions2}. Closed sets are also dual to kernels of digraphs \citep{richardson1953}: a kernel is independent and absorbing, whereas a closed set is one every member of which can be absorbed from inside. For undirected graphs, degree-constrained decompositions go back to \citet{stiebitz1996}. We use none of these results directly; the sets we must decide are small enough for exact enumeration, and the contribution is the modelling connection.
+
+\section{The rotating group assignment problem}
+\label{sec:problem}
+
+\subsection{Instances}
+A population $V$ of $N$ participants is partitioned into \emph{blocks} by $g : V \to \mathcal{B}$ (grades, cohorts, departments). There are $R$ periods. Period $r$ specifies a set of groups $\mathcal{T}_r$ with capacities $c^{(r)}_t$, $\sum_t c^{(r)}_t = N$, and is either \emph{unstratified} (any participant may join any group) or \emph{stratified}, in which case each group carries a block label $\beta^{(r)}_t$ and may only hold participants of that block, with $\sum_{t : \beta_t = b} c^{(r)}_t = |g^{-1}(b)|$ for each block $b$. Each participant $i$ submits a list $L_i \subseteq V \setminus \{i\}$, possibly empty; $i$ is a \emph{submitter} if $L_i \neq \emptyset$. The \emph{effective} list in period $r$ is $L^{(r)}_i = L_i$ in an unstratified period and $L^{(r)}_i = \{ j \in L_i : g(j) = g(i)\}$ in a stratified one.
+
+\subsection{Assignments, anchors and history}
+An assignment for period $r$ is a map $\sigma_r : V \to \mathcal{T}_r$ with $|\sigma_r^{-1}(t)| = c^{(r)}_t$ for every $t$ and $g(i) = \beta^{(r)}_{\sigma_r(i)}$ in stratified periods. Write $s^{(r)}_i = |\{ j \in L^{(r)}_i : \sigma_r(j) = \sigma_r(i) \}|$ for the number of effective listed companions in $i$'s group. The \emph{anchor guarantee} is
+\begin{equation}
+s^{(r)}_i \ge 1 \qquad \text{for every submitter } i \text{ and every period } r. \label{eq:anchor}
+\end{equation}
+History accumulates across periods: $m_{ab}$ counts periods before the current one in which $a$ and $b$ shared a group, and $\alpha_{ab}$ counts those among them for \emph{listed pairs}, pairs with $a \in L_b$ or $b \in L_a$ (so $\alpha_{ab} = m_{ab}$ for listed pairs and $0$ otherwise).
+
+\subsection{Objective}
+Among assignments satisfying \eqref{eq:anchor} the mechanism prefers \emph{one} familiar companion and new faces otherwise, and it prefers not to repeat co-memberships. We use the energy
+\begin{equation}
+E(\sigma_r) = \sum_{i} \Big( M\, \ind{s^{(r)}_i \ge 1} - \max(0, s^{(r)}_i - 1) \Big) - \lambda \sum_{\{a,b\} : \sigma_r(a) = \sigma_r(b)} \big( \kappa_m\, m_{ab} + \kappa_\alpha\, \alpha_{ab} \big), \label{eq:energy}
+\end{equation}
+to be maximised, with $M$ large enough to dominate all other terms (so that \eqref{eq:anchor} is enforced whenever it is satisfiable) and $\lambda, \kappa_m, \kappa_\alpha > 0$. The first sum penalises each listed companion beyond the first by one unit; the second charges every co-seated pair in proportion to how often it has already met, with a separate coefficient for listed pairs. In the case study $M = 1000$, $\lambda = 1/10$, $\kappa_m = 5$, $\kappa_\alpha = 2$, the values displayed on the public visualisation of the mechanism. The sequence of assignments is produced greedily period by period; the history terms are what couple the periods.
+
+\begin{problem}[Rotating group assignment with an anchor guarantee]
+Given an instance, produce assignments $\sigma_1, \dots, \sigma_R$ such that each satisfies \eqref{eq:anchor} and maximises \eqref{eq:energy} given the history of the previous periods.
+\end{problem}
+
+\subsection{Complexity}
+\begin{theorem}\label{thm:np}
+Deciding whether an assignment satisfying \eqref{eq:anchor} exists is NP-complete, already for a single unstratified period, mutual lists ($j \in L_i \Leftrightarrow i \in L_j$) and all capacities equal to three.
+\end{theorem}
+\begin{proof}
+Membership in NP is clear. For hardness, let $H$ be an undirected graph on $3q$ vertices and take $V = V(H)$, $L_i = N_H(i)$, and $q$ groups of capacity three. An assignment satisfies \eqref{eq:anchor} exactly when every group $\{u,v,w\}$ induces a subgraph of $H$ with no isolated vertex, that is, a connected subgraph on three vertices, which is a path $P_3$ or a triangle, and every triangle contains a spanning $P_3$. Hence a feasible assignment exists if and only if $H$ has a $P_3$-factor. Deciding whether a graph has a $G$-factor is NP-complete for every connected $G$ with at least three vertices \citep{kirkpatrick1983factor}, in particular for $G = P_3$.
+\end{proof}
+
+Because the hard constraint alone is intractable in the worst case, exact methods are used here only to \emph{polish} a solution found by heuristics that keep \eqref{eq:anchor} satisfied throughout the search.
+
+\section{Strategic misreporting and coercion capability}
+\label{sec:coercion}
+
+\subsection{The manipulation}
+Lists are confidential and self-reported, and the guarantee is a promise: whatever the lists say, every submitter will share a group with someone on their list. A set of participants can therefore shape the outcome by shaping their lists. The sharpest attack is the \emph{chain}: participants $c_0, \dots, c_{k-1}$ each list exactly the next member, $L_{c_j} = \{c_{j+1 \bmod k}\}$. Every member's only admissible anchor is the next member, so any assignment satisfying \eqref{eq:anchor} places the whole cycle in one group in every period, regardless of the objective. The mixing policy has been converted into a reserved table for the cycle, and, if $k$ exceeds the largest capacity, into an infeasible instance.
+
+\subsection{Closed sets and coercive sets}
+Let $D$ be the digraph on $V$ with an arc $i \to j$ whenever $j \in L_i$. For $S \subseteq V$ write $D[S]$ for the induced subdigraph.
+
+\begin{definition}[closed set]\label{def:closed}
+$A \subseteq V$ is \emph{closed} if every member of $A$ has an out-neighbour in $A$, that is, $D[A]$ has minimum out-degree at least one. (A member with an empty list has no out-neighbour anywhere and is never in a closed set; in stratified periods arcs to other blocks are ignored.)
+\end{definition}
+A closed set is exactly a set that can be seated by itself with every member's guarantee met. The question of whether the mechanism is forced to keep a set $S$ together is then whether $S$ can be broken into closed pieces.
+
+\begin{definition}[closed bipartition, coercion capability]\label{def:coercive}
+$S$ \emph{admits a closed bipartition} if $S = A \uplus B$ with $|A|, |B| \ge 2$ and both $A$ and $B$ closed in $D[S]$. A set $S$ that is itself closed and admits no closed bipartition is \emph{coercive}.
+\end{definition}
+If $S$ is closed and coercive, every assignment that satisfies \eqref{eq:anchor} using only anchors inside $S$ seats $S$ as a block; if members of $S$ also list outsiders the block can be broken through those outsiders, which is why the screening procedure below operates on sets with few or no outward names. The size bound in Definition~\ref{def:coercive} excludes trivial parts: a singleton cannot be closed, and a bipartition into a closed part and a single participant would leave that participant without an anchor.
+
+\begin{theorem}[minimum-list rule]\label{thm:mink}
+Let $S$ be closed with $|S| \ge 4$ and suppose every member of $S$ lists at least $k \ge 3$ members of $S$. If $|S| \le 2k$ then $S$ admits a closed bipartition. In particular, under a rule that requires at least $k$ names on every submitted list, no set of at most $2k$ participants whose lists point only inside the set is coercive.
+\end{theorem}
+\begin{proof}
+$D[S]$ has at least $k|S|$ arcs on $\binom{|S|}{2}$ unordered pairs. If $k|S| > \binom{|S|}{2}$, equivalently $|S| - 1 < 2k$, some pair $\{x, y\}$ carries arcs in both directions. Put $A = \{x,y\}$, which is closed, and $B = S \setminus A$. Each $b \in B$ has at least $k$ out-neighbours in $S$, at most two of which lie in $A$, so at least $k - 2 \ge 1$ lie in $B$; hence $B$ is closed, and $|B| = |S| - 2 \ge 2$.
+\end{proof}
+
+With $k = 4$, the value used in the case study, a colluding set of up to eight participants that complies with the rule cannot force a shared group. This is the formal content of the informal claim that ``the guarantee cannot be weaponised into a private table'': the mechanism will still give each colluder one companion from the set, but it is free to distribute the set in pairs or triples, and the novelty objective makes it do so. Larger sets that comply with the rule can be coercive only through reciprocity-free wirings on nine or more participants, which the screen below detects and which exceed every group capacity in any case.
+
+\subsection{Screening procedure}
+\label{sec:screen}
+The screen runs once on the submitted lists, before the first period.
+
+\paragraph{Candidates.} Two detectors propose candidate sets. The \emph{insular detector} computes for every submitter the list-closure $\cl(i)$, the set reachable from $i$ along arcs of $D$ including $i$, and proposes every closure of size between $2$ and $\kappa$ ($\kappa = 12$ here, roughly two groups). The \emph{boundary detector} joins two submitters whose lists share at least three names, takes connected components of size at least two, and proposes every component whose outward names $\bigcup_{c \in C} L_c \setminus C$ number at most three (components larger than $\kappa$ are dropped). Closures are closed by construction; boundary components need not be, but they are nearly so.
+
+\paragraph{Exact test.} For each candidate $S$ the screen decides whether $S$ admits a closed bipartition in $D[S]$ by enumerating the $2^{|S|-1}$ subsets containing a fixed member, checking closedness of both parts on a bitmask, and stopping at the first valid split. With $|S| \le \kappa = 12$ this is at most $2048$ checks per candidate. Candidates of size at most three are flagged automatically since two parts of size at least two cannot exist. Members of a flagged set are \emph{flagged}; the set \emph{returned} to the participants for diversification also includes every member of a candidate set containing a flagged participant, so that the whole group is asked to add outside names rather than only its coercive core. Violations of the minimum-list rule are reported separately.
+
+The test is exact on every candidate by construction. Its blind spot is the candidate generation: a coercive set that is neither a small closure nor a heavily overlapping cluster with few outward names would not be proposed. Such a set would have members listing many outsiders, and members who list outsiders can be anchored to them, so the set would not in fact be forced together; we have not attempted to make this observation into a proof of completeness.
+
+\paragraph{Properties.} The following are verified by unit tests on wirings constructed in closed form: complete digraphs on $4$--$12$ vertices are never flagged (every split is closed); chains are always flagged; \emph{hub} wirings, in which every member lists a common hub and the next member of a chain among the rest, are flagged; \emph{circulant} wirings in which each member lists the next $k \ge 2$ members around a circle are not flagged, because an interleaved split exists; a set of six that lists three internal names each plus one shared outsider is proposed by the boundary detector and passes; and a pair listing only each other is flagged. Honest lists in the synthetic populations of Section~\ref{sec:population} produce no candidates at all in the default regime and, in the fully clustered regime ($\mu = 1$), one candidate per latent group, none of which is flagged.
+
+\section{Solution method}
+\label{sec:method}
+
+Each period is solved by a four-stage pipeline (Algorithm~\ref{alg:pipeline}). Stages 1--3 maintain a complete assignment and work on a cost $C = -E + \text{const}$, using the full history; Stage 4 is an exact model over the previous period's pairs only, and its solution is accepted only if it does not worsen the full-history cost. In the implementation every term of $C$ is scaled by ten to remain integral; the annealing temperature is scaled identically, so acceptance probabilities are unchanged.
+
+\begin{algorithm}[t]
+\caption{One period}\label{alg:pipeline}
+\begin{algorithmic}[1]
+\State $\sigma \gets$ \textsc{AnchoredConstruction} \Comment{Stage 1}
+\State \textsc{Repair}$(\sigma)$ \Comment{Stage 2}
+\State $\sigma \gets$ \textsc{ClosureAnneal}$(\sigma, I)$ \Comment{Stage 3, full history}
+\For{up to 6 attempts while some submitter has $s_i = 0$}
+  \State \textsc{Repair}$(\sigma)$; $\sigma \gets$ \textsc{ClosureAnneal}$(\sigma, I/2)$
+\EndFor
+\State $\sigma' \gets$ \textsc{CPSAT}$(\text{hint} = \sigma)$ \Comment{Stage 4, previous-period pairs}
+\If{$\sigma'$ exists, satisfies \eqref{eq:anchor}, and $C(\sigma') \le C(\sigma)$} $\sigma \gets \sigma'$ \EndIf
+\If{some submitter still has $s_i = 0$} \State $\sigma \gets$ \textsc{CPSAT}$(\text{hint} = \sigma)$ with six times the budget; fail if none \EndIf
+\State \Return $\sigma$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Group costs and moves}
+For a group $t$ with member set $T$ define
+\begin{gather*}
+\mathrm{cost}(T) = \sum_{i \in T} \mathrm{pen}_i(s_i) + \sum_{\{a,b\} \subseteq T} W_{ab}, \qquad W_{ab} = \lambda(\kappa_m m_{ab} + \kappa_\alpha \alpha_{ab}), \\
+\mathrm{pen}_i(s) = \begin{cases} M & s = 0 \text{ and } i \text{ is a submitter} \\ \max(0, s - 1) & \text{otherwise,} \end{cases}
+\end{gather*}
+so that $C(\sigma) = \sum_t \mathrm{cost}(\sigma^{-1}(t))$. Every move exchanges a set $G_a$ in group $t_a$ with an equally sized set $G_b$ in group $t_b$ of the same block class, and its effect on $C$ is computed exactly by re-costing the two groups, each of at most seven members. Group costs are cached.
+
+\subsection{Stage 1: anchored construction}
+Participants are processed in increasing order of effective list size (ties at random), so the participant with the fewest options is seeded first, $i^\ast = \arg\min_{i \in U} |L_i \cap U|$ over the unmatched set $U$. Each $i$ is paired with an unmatched listed companion $j$, preferring one who lists $i$ back, then the smallest $W_{ij}$, then the shortest list; a companion who does not list $i$ back and has strictly fewer options than $i$ is never taken, so a scarce participant's only option is not consumed one-directionally. Unmatched participants become singleton pods.
+
+Pods are then merged until every submitter has a listed companion inside their own pod: needy participants are processed in increasing order of list size and each merges their pod with the pod of one of their listed companions, provided the merged size does not exceed the smallest capacity, choosing the target by the number of extra familiar faces the merge would create, then by accumulated history, then by size. This step assembles one-directional chains into a single pod before any other participant can claim a seat beside a chain member. Pods are placed largest first into the group with enough free seats (and the right block) that minimises accumulated history plus one unit per list relation with the current occupants, ties broken toward emptier groups; a pod that fits nowhere is split into singletons. The result is a complete assignment that fills every group exactly.
+
+\subsection{Stage 2: repair}
+For up to twenty rounds, each submitter with $s_i = 0$, in random order, evaluates the single swap with every non-anchor member of every group holding one of $i$'s listed companions and applies the best if its cost change is below $M/2$, which means $i$ becomes satisfied without leaving anyone else without an anchor. If no single swap achieves this, the compound move \textsc{KickAndRepair}$(i,j)$ is tried for $i$'s companions $j$ in random order: the closure of $i$ (Section~\ref{sec:closure}) is forced into $j$'s group, an equally sized set of $j$'s group-mates outside $j$'s closure is evicted to $i$'s former group (preferring participants with the longest lists, who are easiest to re-seat), every evicted or stranded participant is re-seated by their own best single swap below $M/2$, and the compound is kept only if the total cost decreased and otherwise undone in place.
+
+\subsection{Closures}
+\label{sec:closure}
+Single swaps almost always break the guarantee, because moving a participant away from their only anchor strands both. The annealer therefore moves \emph{closures}. The closure of participant $a$ in group $T$ is the smallest set $G \ni a$, $G \subseteq T$, stable under two rules: (i) any submitter $x \in T \setminus G$ all of whose anchors in $T$ lie in $G$ joins $G$; (ii) any submitter in $G$ without a listed companion inside $G$ pulls in one of their anchors in $T$, chosen at random. Closures larger than the largest capacity are abandoned.
+
+\begin{proposition}\label{prop:closure}
+Let $G$ be the closure of $a$ in group $T$ and suppose $G$ is moved to another group while an equally sized set arrives in $T$. Then no participant of $T \setminus G$ who had an anchor before the move lacks one after it, and every member of $G$ who had a listed companion in $G$ before the move keeps one after it.
+\end{proposition}
+\begin{proof}
+By rule (i), every submitter remaining in $T$ retains at least one anchor in $T \setminus G$; arrivals cannot remove anchors. Members of $G$ travel together, so a companion inside $G$ remains a group-mate.
+\end{proof}
+Consequently a closure swap can only change the guarantee status of movers who had no internal companion even after rule (ii), that is, participants who were already without an anchor, and of participants added by padding. The move set therefore walks the feasible region of \eqref{eq:anchor} rather than bouncing off its boundary.
+
+\subsection{Stage 3: closure-move simulated annealing}
+The annealer runs $I$ iterations ($I = 300\,000$ in the case study) of Metropolis acceptance on $C$, $P(\text{accept } \Delta C > 0) = e^{-\Delta C / T}$, with $T$ geometric from $T_0$ to $T_1$ ($2.5 \to 0.02$ in energy units) and keeps the best assignment visited. Each iteration draws a participant $a$ uniformly and then one of four move types:
+\begin{itemize}
+\item with probability $1/4$ a raw single swap with a uniform $b$ of the same block class;
+\item with probability $1/4$ a \emph{companion-directed} single swap: a listed companion $j$ of $a$ is drawn, $b$ is a uniform group-mate of $j$ other than $j$, so that participants are frequently proposed beside a friend;
+\item otherwise a closure swap $\cl(a) \leftrightarrow \cl(b)$ with $b$ uniform, the smaller closure padded with up to eight random extra group-mates until sizes agree (the move is skipped if they still differ);
+\item while the current cost still contains a violation, every eighth iteration is a \emph{targeted} move instead: $a$ is a uniform stranded submitter, $j$ one of their companions, $b$ a group-mate of $j$, and the move is a closure swap or a single swap with equal probability; every sixty-fourth such iteration runs \textsc{KickAndRepair}$(a, j)$ instead.
+\end{itemize}
+A closure swap re-costs two groups of at most seven participants, so an iteration takes about $15\,\mu$s in Python and the stage about four seconds. In the case study Stages 1--2 already reach a feasible assignment in every period, so the retry loop of Algorithm~\ref{alg:pipeline} never executes.
+
+\subsection{Stage 4: exact polishing}
+The annealed assignment is passed as a complete hint to CP-SAT \citep{ortools}. With $x_{i,t}$ the assignment indicators over the groups allowed for $i$ and $\ell_i = |L^{(r)}_i|$,
+\begin{gather*}
+\textstyle\sum_t x_{i,t} = 1 \ \ \forall i, \qquad \sum_i x_{i,t} = c_t \ \ \forall t, \\
+y_{i,t} \le x_{i,t}, \qquad y_{i,t} \le \textstyle\sum_{j \in L^{(r)}_i} x_{j,t}, \qquad \sum_t y_{i,t} \ge 1 \quad \text{for every submitter } i, \\
+\textstyle\sum_{j \in L^{(r)}_i} x_{j,t} \le 1 + (\ell_i - 1)\, z_i + \ell_i (1 - x_{i,t}) \quad \forall t, \ \text{whenever } \ell_i \ge 2,
+\end{gather*}
+so that $z_i = 1$ whenever $i$ sits with two or more listed companions; this is a per-participant indicator encoding with no pairwise companion variables. For each pair $(a,b)$ that shared a group in the \emph{previous} period with $W_{ab} > 0$, a repeat indicator obeys $r_{ab} \lor \lnot x_{a,t} \lor \lnot x_{b,t}$ for every $t$. The objective is
+\[
+\min\ \ \omega_2 \sum_i z_i + \sum_{(a,b)} \omega_r\, W_{ab}\, r_{ab},
+\]
+with $\omega_2 = 300$ and $\omega_r W_{ab} = 100(\kappa_m m_{ab} + \kappa_\alpha \alpha_{ab})$ in the case study. Hints cover every variable. The solver runs in deterministic interleaved mode with a deterministic-time budget, which makes the outcome a function of model and hint only. Because the model ignores older history, its optimum can be worse on the full-year cost; the pipeline therefore accepts the CP-SAT assignment only if it satisfies \eqref{eq:anchor} and $C(\sigma') \le C(\sigma)$. Empirically CP-SAT wins early in a year, when there is little history and its optimum has no participant with two listed companions, and the annealer wins later.
+
+\subsection{Baseline and determinism}
+The comparison baseline is uniformly random assignment respecting the period's stratification, seeded independently. All randomness (population, per-period local search, baseline, CP-SAT) is seeded, and re-running the pipeline reproduces the committed output byte for byte apart from timestamps and timings. Determinism was verified on two scenarios of the case study.
+
+\section{Synthetic population model}
+\label{sec:population}
+
+Real preference lists are confidential, so the evaluation uses synthetic populations that reproduce the structural features that matter for the mechanism: blocks, unequal popularity, partial reciprocity, and community structure. Each participant receives a popularity weight $\pi_i \sim \mathrm{LogNormal}(0, \sigma^2)$ and $K$ true friendships, sampled in random order over participants: when $i$ is processed, its open slots are filled with distinct $j \ne i$ drawn without replacement with probability proportional to $\pi_j \cdot (\rho$ if $g(j) = g(i)$, else $1)$, the within-block bias; each new arc $i \to j$ is reciprocated with probability $p$ if $j$ has an open slot. Since reciprocated arcs fill slots that would otherwise be sampled, every participant ends with exactly $K$ friends. The value of $p$ is calibrated deterministically to hit a target reciprocity.
+
+Community structure is added by \emph{latent groups}: participants of each block are cut into groups of sizes uniform on an interval (6--12 here), with an optional fraction of groups drawn from two blocks; with probability $\omega$ a participant joins one secondary group. Each friendship draw is assigned to the participant's group pool with probability $\mu$ (popularity-weighted within the pool) and to the background otherwise, the background excluding the own group so that the in-group share of friendships is $\mu$ in expectation. At $\mu = 1$ groups are fully isolated and small groups yield fewer than $K$ friends; for $\mu < 1$ an exhausted pool falls back to the background. Unit tests confirm that the measured in-group share is within $\pm 0.05$ of $\mu$, that the secondary-group frequency is within $\pm 0.05$ of $\omega$, and that $\mu = 0$ reproduces the plain block-biased network exactly.
+
+Honest participants submit their true friends in preference order, filtered by the submission rules (at least $k$ names or none; at least two same-block names, padded from same-block acquaintances if necessary). A designated set of $k_c$ participants (six here), planted as mutual friends, plays the colluding group in the manipulation scenarios and submits the wirings of Section~\ref{sec:case}.
+
+\section{Case study: a secondary-school lunch period}
+\label{sec:case}
+
+\subsection{Instance}
+The instance mirrors a real school's lunch period: $N = 257$ students in two blocks (grade 11: 132, grade 12: 125), 40 groups of which 17 seat 7 and 23 seat 6, $R = 16$ periods (a two-week rotation over a school year) alternating unstratified (``mixed'') and stratified (``same-grade'') periods, with the stratified partition 12 seven-seat and 8 six-seat groups for juniors and 5 and 15 for seniors. Population parameters: $K = 8$, $\sigma = 0.6$, $\rho = 9$, target reciprocity $0.5$ (measured \Reciprocity), measured within-block share \WithinGrade, $\mu = \omega = 0$. Submission rule $k = 4$ with at least two same-block names. Energy parameters as in Section~\ref{sec:problem}; annealing $I = \AnnealIters$ iterations, CP-SAT deterministic-time budget \CpsatTime{} with \Workers{} interleaved workers; seed \Seed. Table~\ref{tab:params} collects every parameter.
+
+Four scenarios share the population and differ only in the six colluders' lists: \emph{honest} (all lists honest); \emph{no defenses} (colluders submit a chain of one name each, no rule, no screen); \emph{minimum-list rule} (colluders submit four of the five others each, wired so that the omitted names form two directed 3-cycles, the wiring that leaves the most penalty-free triples); and \emph{screens on} (the previous wiring is screened, the returned students resubmit honest lists, and the year is played with those).
+
+\subsection{Results}
+Table~\ref{tab:summary} summarises the four scenarios; Table~\ref{tab:honest} follows the honest scenario period by period; Table~\ref{tab:coalition} follows the colluding group under each defense level; Table~\ref{tab:screen} lists the screen's verdicts.
+\input{tables}
+
+\paragraph{Guarantee and novelty.} The anchor guarantee holds for every submitter in every period of every scenario, as asserted before export and re-checked by the test suite. In the honest scenario \HonestExactlyOne\% of submitters have exactly one listed companion on average; the fraction dips late in the year, when repeat avoidance leaves less room. Students share a group with \HonestMet{} distinct others by the end of the year against \RandomMet{} under random assignment; the history penalties make the mechanism at least as effective at spreading students as randomness (it produces fewer repeat pairs than the random baseline in every period but the last), while the baseline seats only \RandomGeOne\% of submitters with any listed companion in a typical period.
+
+\paragraph{Manipulation.} With no defenses the chain is seated together in \NoneIntact/16 periods, as Section~\ref{sec:coercion} predicts: the constraint leaves no alternative. Under the minimum-list rule the adversarially wired lists are split into three pairs in every period (mean cluster \MinFourAvgCluster, largest cluster 2, \MinFourIntact/16 intact), each colluder still receiving exactly one companion from the set; this is Theorem~\ref{thm:mink} at work, and Table~\ref{tab:screen} shows the six-set's closed bipartition \ScreenSplit. With the screen on, the boundary detector proposes the two omission triples as separate clusters (their pairwise overlaps are three names and their outward names are exactly the other triple); a triple cannot be bipartitioned into parts of size two, so the triple \ScreenFlaggedSet{} is flagged, the kernel containing it returns all \ScreenReturned{} colluders, no honest student is affected, and the resubmission passes. The colluders' year then looks like everyone else's.
+
+\paragraph{Sensitivity and cost.} A reduced-budget run of the honest scenario in the clustered regime $\mu = 0.6$, $\omega = 0.3$ gave 98.3\% exactly-one and 73.5 distinct companions against 72.3, so community structure in this range does not change the picture. The full export of four scenarios took \ExportSeconds{} s on an eight-core desktop, \MeanSolve{} s per period on average and \MaxSolve{} s at most.
+
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{One companion, not a table of friends.} The energy \eqref{eq:energy} charges every listed companion beyond the first. This is a design choice with a social rationale: a single secure base is what lowers the barrier to new contact, while a table of friends recreates the closed group the rotation is meant to open. It also has a mechanism-design consequence: it is exactly what makes the minimum-list rule effective, since the mechanism has both the freedom (Theorem~\ref{thm:mink}) and the incentive to split a compliant colluding set.
+
+\paragraph{Guarantees versus objectives.} The anchor guarantee is hard because a soft version would be violated for precisely the participants for whom it matters most, those with few options. The price of a hard guarantee is manipulability, which we address by shaping the input space (the minimum-list rule) and by an exact pre-check on the small structures that can still be coercive. The two are complementary: the rule removes coercion for sets up to $2k$, the screen catches what the rule cannot, and the two detectors keep the screen's cost trivial.
+
+\paragraph{Limitations.} The evaluation uses synthetic populations and one committed seed, so the numbers are point estimates for that population rather than averages over many; the pipeline is deterministic and the code is released so that multi-seed studies are straightforward. The exact stage sees only the previous period's pairs; a model carrying the full history would need per-participant repeat variables and was not attempted within the time budget. The screen's completeness rests on the candidate detectors. The energy charges listed-pair repeats at $\kappa_m + \kappa_\alpha$ per prior meeting, more than incidental repeats; whether anchors should rotate faster than incidental acquaintances is a policy question rather than an algorithmic one, and the coefficients are exposed as parameters. Finally, participants who submit no list receive no guarantee; in the case study every student submits, and the effect of a large non-submitting minority on the others' novelty is left for future work.
+
+\paragraph{Privacy.} Lists are confidential and never displayed; the public visualisation shows anonymous identifiers on synthetic data. In deployment the only information that leaves the mechanism is the assignment itself, from which a participant can infer at most that one of their group-mates is on their list, which they know already.
+
+\section{Conclusion}
+We have formalised rotating group assignment with an anchor guarantee, shown that feasibility is NP-complete, characterised exactly when self-reported preferences can coerce the mechanism into seating a set as a block, proved that a minimum-list rule removes coercion for sets of up to twice the threshold, and given a screen that is exact on bounded candidates. A hybrid solver whose local-search moves respect the guarantee by construction, followed by hinted constraint programming, meets the guarantee for every participant in every period of a real-scale instance while matching random assignment's mixing, and the manipulation scenarios behave as the theory predicts. The approach applies wherever an institution rotates people through small groups and wants each of them to arrive knowing one person.
+
+\paragraph{Data and code availability.} The implementation (generator, screens, solver, export), the committed traces, the tests and the interactive visualisation are available at \url{https://github.com/IsaacLin247/lunch-seating-visual}; the visualisation is served at \url{https://isaaclin247.github.io/lunch-seating-visual/}. Every number in this article is generated from the committed traces by a script in the repository.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\appendix
+\section{Reproduction}
+\begin{lstlisting}
+python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+python sim/export_traces.py            # four scenarios, deterministic, ~10 min
+pytest                                 # 93 tests
+python paper/make_tables.py && cd paper && latexmk -pdf article.tex
+\end{lstlisting}
+
+\end{document}

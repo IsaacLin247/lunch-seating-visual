@@ -83,13 +83,16 @@ the default `mu = 0, omega = 0`; pass `--mu/--omega/--cross-grade-groups` to
 
 ## Methodology write-up
 
-`paper/methodology.tex` documents the cohort generator, the screens, all four
-solver stages, the baseline, the statistics, validation and results in full.
+`paper/article.tex` is the journal-style article: the general rotating group
+assignment problem with an anchor guarantee, its NP-completeness, the coercion
+capability analysis (closed bipartitions, the minimum-list theorem, the exact
+screen), the hybrid solver, and the school as a case study. `paper/methodology.tex`
+is the internal technical report describing the implementation stage by stage.
 `paper/make_tables.py` regenerates `paper/macros.tex` and `paper/tables.tex` from
 `docs/data/*.json`, so every number in the PDF comes from the committed traces:
 
 ```bash
-python paper/make_tables.py && (cd paper && latexmk -pdf methodology.tex)
+python paper/make_tables.py && (cd paper && latexmk -pdf article.tex methodology.tex)
 ```
 
 ## Setup
