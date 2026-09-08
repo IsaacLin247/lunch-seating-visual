@@ -131,7 +131,7 @@ export class RoomView {
 
   /** Animate students flying to their seats in rotation idx. */
   goTo(idx, animate = true) {
-    if (!animate || idx === this.rot && !this.anim) { if (idx !== this.rot) this.snapTo(idx); else this.requestDraw(); return; }
+    if (!animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches || idx === this.rot && !this.anim) { if (idx !== this.rot) this.snapTo(idx); else this.requestDraw(); return; }
     const fromInfo = this.rotInfo(this.rot);
     const toInfo = this.rotInfo(idx);
     const from = new Map(), to = new Map(), delay = new Map();

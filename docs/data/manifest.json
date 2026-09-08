@@ -1,0 +1,26 @@
+{
+ "scenarios": [
+  "honest",
+  "coalition_none",
+  "coalition_min4",
+  "coalition_stratified",
+  "coalition_shared_anchor",
+  "coalition_screened"
+ ],
+ "seed": 7,
+ "rotations": 16,
+ "playback": "precomputed validated solver traces",
+ "effectiveSourceHashes": [
+  "4282fb6588006917a0fdd94339113c4799d1f26cd5bb37f0e67a3282bc764ed8"
+ ],
+ "evidenceStatus": "verified_attempt_ledger",
+ "evidenceManifestSha256": "18fa11f92db61a4396d3a6b60f3bc6384e175b60cee7fad38500ff60cc3f489b",
+ "attemptIds": {
+  "honest": "fdc2d6783e824da6ba4dba8b711d0536",
+  "coalition_none": "60123fff4ea544158061bf5234dadb2d",
+  "coalition_min4": "c4e49cf0a29b4774877449917c8826ca",
+  "coalition_stratified": "69a83babd7574bd5adfa69fff8de57ad",
+  "coalition_shared_anchor": "6b3f72b796b3427bbd9e9b457ea36893",
+  "coalition_screened": "34f97559eb0b4321bdf67bdd6e355075"
+ }
+}

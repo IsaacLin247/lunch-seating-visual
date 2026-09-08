@@ -1,0 +1,162 @@
+{
+  "manifestSha256": "18fa11f92db61a4396d3a6b60f3bc6384e175b60cee7fad38500ff60cc3f489b",
+  "tracesChecked": 32,
+  "rotationsChecked": 517,
+  "invalidAnnealingEndpoints": [
+    {
+      "attemptId": "6b3f72b796b3427bbd9e9b457ea36893",
+      "scenario": "coalition_shared_anchor",
+      "populationSeed": 7,
+      "rotation": 4,
+      "initialCpsatStatus": "UNKNOWN",
+      "acceptedPhase": "cpsat-fallback",
+      "annealCost": {
+        "violations": 1,
+        "twoPlus": 2,
+        "extraPeers": 2,
+        "repeat": 154,
+        "total": 10174
+      },
+      "finalCost": {
+        "violations": 0,
+        "twoPlus": 0,
+        "extraPeers": 0,
+        "repeat": 421,
+        "total": 421
+      }
+    },
+    {
+      "attemptId": "6b3f72b796b3427bbd9e9b457ea36893",
+      "scenario": "coalition_shared_anchor",
+      "populationSeed": 7,
+      "rotation": 6,
+      "initialCpsatStatus": "FEASIBLE",
+      "acceptedPhase": "cpsat",
+      "annealCost": {
+        "violations": 1,
+        "twoPlus": 4,
+        "extraPeers": 4,
+        "repeat": 269,
+        "total": 10309
+      },
+      "finalCost": {
+        "violations": 0,
+        "twoPlus": 7,
+        "extraPeers": 8,
+        "repeat": 457,
+        "total": 537
+      }
+    },
+    {
+      "attemptId": "6b3f72b796b3427bbd9e9b457ea36893",
+      "scenario": "coalition_shared_anchor",
+      "populationSeed": 7,
+      "rotation": 8,
+      "initialCpsatStatus": "UNKNOWN",
+      "acceptedPhase": "cpsat-fallback",
+      "annealCost": {
+        "violations": 1,
+        "twoPlus": 2,
+        "extraPeers": 2,
+        "repeat": 447,
+        "total": 10467
+      },
+      "finalCost": {
+        "violations": 0,
+        "twoPlus": 0,
+        "extraPeers": 0,
+        "repeat": 1129,
+        "total": 1129
+      }
+    },
+    {
+      "attemptId": "6b3f72b796b3427bbd9e9b457ea36893",
+      "scenario": "coalition_shared_anchor",
+      "populationSeed": 7,
+      "rotation": 10,
+      "initialCpsatStatus": "UNKNOWN",
+      "acceptedPhase": "cpsat-fallback",
+      "annealCost": {
+        "violations": 1,
+        "twoPlus": 2,
+        "extraPeers": 2,
+        "repeat": 655,
+        "total": 10675
+      },
+      "finalCost": {
+        "violations": 0,
+        "twoPlus": 0,
+        "extraPeers": 0,
+        "repeat": 1404,
+        "total": 1404
+      }
+    },
+    {
+      "attemptId": "6b3f72b796b3427bbd9e9b457ea36893",
+      "scenario": "coalition_shared_anchor",
+      "populationSeed": 7,
+      "rotation": 12,
+      "initialCpsatStatus": "UNKNOWN",
+      "acceptedPhase": "cpsat-fallback",
+      "annealCost": {
+        "violations": 1,
+        "twoPlus": 2,
+        "extraPeers": 2,
+        "repeat": 783,
+        "total": 10803
+      },
+      "finalCost": {
+        "violations": 0,
+        "twoPlus": 0,
+        "extraPeers": 0,
+        "repeat": 1820,
+        "total": 1820
+      }
+    },
+    {
+      "attemptId": "6b3f72b796b3427bbd9e9b457ea36893",
+      "scenario": "coalition_shared_anchor",
+      "populationSeed": 7,
+      "rotation": 14,
+      "initialCpsatStatus": "UNKNOWN",
+      "acceptedPhase": "cpsat-fallback",
+      "annealCost": {
+        "violations": 1,
+        "twoPlus": 5,
+        "extraPeers": 5,
+        "repeat": 988,
+        "total": 11038
+      },
+      "finalCost": {
+        "violations": 0,
+        "twoPlus": 0,
+        "extraPeers": 0,
+        "repeat": 2029,
+        "total": 2029
+      }
+    },
+    {
+      "attemptId": "6b3f72b796b3427bbd9e9b457ea36893",
+      "scenario": "coalition_shared_anchor",
+      "populationSeed": 7,
+      "rotation": 16,
+      "initialCpsatStatus": "FEASIBLE",
+      "acceptedPhase": "cpsat",
+      "annealCost": {
+        "violations": 1,
+        "twoPlus": 2,
+        "extraPeers": 2,
+        "repeat": 1210,
+        "total": 11230
+      },
+      "finalCost": {
+        "violations": 0,
+        "twoPlus": 1,
+        "extraPeers": 1,
+        "repeat": 1719,
+        "total": 1729
+      }
+    }
+  ],
+  "initialFeasibleCandidatesAllAcceptedAtNoGreaterCost": true
+}

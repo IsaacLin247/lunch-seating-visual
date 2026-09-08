@@ -1,293 +1,189 @@
 #!/usr/bin/env python
-"""Generate macros.tex (headline numbers) and tables.tex (tables) in both
-paper/ and article/ from docs/data/*.json and results/experiments.json, so
-neither write-up can drift from the committed data.
-Run: python paper/make_tables.py"""
-from __future__ import annotations
+"""Build all manuscript numbers from the finalized, verified experiment ledger.
 
+There is deliberately no fallback to historical summary-only results or old
+website traces. Run assemble_evidence.py first after all attempts terminate.
+"""
+from __future__ import annotations
 import json
-import os
+from collections import Counter
+from pathlib import Path
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, ROOT)
-DATA = os.path.join(ROOT, "docs", "data")
-EXPERIMENTS = os.path.join(ROOT, "results", "experiments.json")
-OUT_DIRS = [os.path.join(ROOT, "paper"), os.path.join(ROOT, "article")]
-SCEN = ["honest", "coalition_none", "coalition_min4", "coalition_stratified", "coalition_screened"]
-LABEL = {"honest": "Honest", "coalition_none": "Coalition, no defenses", "coalition_min4": "Coalition, min-4 rule (star)",
-         "coalition_stratified": "Coalition, same-grade attack", "coalition_screened": "Coalition, screens on"}
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from paper.assemble_evidence import REFERENCES, verify_attempt
+from sim.attacks import best_four_of_five_wiring
+
+LABEL = dict(zip(REFERENCES, ('Honest', 'One-name cycle', 'Omission star',
+    'Stratified attack', 'Shared-anchor attack', 'Screened resubmission')))
+OUTS = (ROOT / 'article', ROOT / 'paper')
 
 
-def esc(s):
-    return str(s).replace("_", r"\_").replace("%", r"\%")
+def esc(value):
+    return str(value).replace('&', r'\&').replace('%', r'\%').replace('_', r'\_').replace('#', r'\#')
 
 
-def fmt_list(xs):
-    return ", ".join(str(x) for x in xs) if xs else "none"
+def table(name, caption, header, rows, spec):
+    return '\n'.join((r'\begin{table}[tb]\centering\small',
+        r'\caption{' + caption + r'}\label{tab:' + name + '}',
+        r'\begin{tabular}{@{}' + spec + r'@{}}\toprule',
+        ' & '.join(header) + r' \\ \midrule',
+        *(' & '.join(map(str, row)) + r' \\' for row in rows),
+        r'\bottomrule\end{tabular}\end{table}', ''))
 
 
 def main():
-    T = {n: json.load(open(os.path.join(DATA, f"{n}.json"))) for n in SCEN}
-    exp = json.load(open(EXPERIMENTS)) if os.path.exists(EXPERIMENTS) else None
-    from sim.attacks import analyse_wiring, best_four_of_five_wiring
-    out = []
-    w = out.append
-    h = T["honest"]
-    cfg = h["config"]
-    net = cfg["network"]
+    path = ROOT / 'results/verified_experiments.json'
+    data = json.loads(path.read_text())
+    if data['assembly']['partial'] or any(a['status'] == 'running' for a in data['attempts']):
+        raise SystemExit('Finalize evidence assembly before generating publication tables.')
+    attempts = {a['id']: a for a in data['attempts']}
+    for a in attempts.values():
+        verify_attempt(a, path, retained_source=True)
+    refs = {}
+    for name in REFERENCES:
+        matches = [r for r in data['seeds'] if r['scenario'] == name and r['populationSeed'] == 7
+                   and r['rotations'] == 16 and r['annealIters'] == 300000 and r['cpsatTime'] == 3.5]
+        if len(matches) != 1:
+            raise ValueError(f'Need exactly one verified seed7 reference for {name}, got {len(matches)}')
+        refs[name] = json.loads((path.parent / matches[0]['traceEvidence']['path']).read_text())
+    honest = sorted((r for r in data['seeds'] if r['scenario'] == 'honest'), key=lambda r: r['populationSeed'])
+    stars = {r['populationSeed']: r for r in data['seeds'] if r['scenario'] == 'coalition_min4'}
+    if [r['populationSeed'] for r in honest] != list(range(1, 11)) or set(stars) != set(range(1, 11)):
+        raise ValueError('Primary comparison requires the planned ten complete honest/star population pairs.')
+    h = refs['honest']; cfg = h['config']; hs = h['summary']; lk = h['leakage']; fair = h['fairness']; baseline = cfg['baseline']
+    macros = {}
+    def m(name, value): macros[name] = str(value)
+    def f(name, value, digits=2): m(name, f'{value:.{digits}f}')
+    for key, field in [('HonestExactlyOne','pctExactly1Mean'),('HonestExactlyOneMin','pctExactly1Min'),
+                       ('HonestMet','meanDistinctMetFinal'),('RandomMet','meanDistinctMetFinalRandom')]: f(key, hs[field])
+    for key, field in [('RandomMetExpected','expectedDistinctRandom'),('RandomMetExpectedAllMixed','expectedDistinctRandomAllMixed'),
+        ('RandomGeOneExpected','expectedFriendCoverageSchedule'),('RandomGeOneExpectedMixed','expectedFriendCoverageMixed'),
+        ('RandomGeOneExpectedSame','expectedFriendCoverageSame')]: f(key, baseline[field])
+    # Resample populations, not students or rotations; use unrounded chart counts.
+    import numpy as np
+    paired_raw=[]
+    for row in honest:
+        trace=json.loads((path.parent / row['traceEvidence']['path']).read_text())
+        means=[]
+        for key in ('tables','tablesRandom'):
+            contacts={student['id']:set() for student in trace['students']}
+            for rotation in trace['rotations']:
+                for group in rotation[key]:
+                    for i in group: contacts[i].update(set(group)-{i})
+            means.append(sum(map(len,contacts.values()))/len(contacts))
+        paired_raw.append(means[0]-means[1])
+    paired_raw=np.asarray(paired_raw)
+    rng=np.random.default_rng(20260908)
+    samples=paired_raw[rng.integers(0,len(paired_raw),size=(20000,len(paired_raw)))].mean(axis=1)
+    ci=np.quantile(samples,[.025,.975],method='linear')
+    f('SeedDiffCILow',ci[0]); f('SeedDiffCIHigh',ci[1])
+    ex = [r['pctExactly1Mean'] for r in honest]
+    diff = paired_raw.tolist()
+    m('NSeeds', len(honest)); m('Seed', 7)
+    for name, vals in [('SeedExactlyOne',ex),('SeedDiff',diff)]:
+        for suffix, value in [('Mean',sum(vals)/len(vals)),('Min',min(vals)),('Max',max(vals))]:
+            m(name + suffix, f'{value:+.2f}' if name == 'SeedDiff' else f'{value:.2f}')
+    for key, field in [('LeakForced','forcedEdges'),('LeakEdges','submittedEdges'),('LeakCorrect','forcedEdgesCorrect'),('LeakStudents','studentsWithForcedEdge')]: m(key, lk[field])
+    f('LeakFraction', 100*lk['fractionOfEdgesForced'], 1); m('LeakFull', len(lk['fullyDeterminedStudents']))
+    m('FairMin',fair['distinctMet']['min']); m('FairMax',fair['distinctMet']['max'])
+    f('FairLowIn',fair['lowestInDegreeQuartile']['meanDistinctMet']); f('FairHighIn',fair['highestInDegreeQuartile']['meanDistinctMet'])
+    for prefix, name in [('None','coalition_none'),('Star','coalition_min4'),('Strat','coalition_stratified'),('Screened','coalition_screened')]:
+        s=refs[name]['summary']; m(prefix+'Intact',s['coalitionIntactRotations']); f(prefix+'AvgCluster',s['coalitionAvgCluster'])
+    m('StarPatterns', ', '.join(f'{esc(k)} in {v} rotation' + ('s' if v != 1 else '') for k,v in sorted(refs['coalition_min4']['summary']['coalitionPatterns'].items())))
+    for state in ('Same','Mixed'): m('StratIntact'+state, refs['coalition_stratified']['summary']['coalitionIntactByState'][state.lower()])
+    shared=refs['coalition_shared_anchor']; m('SharedIntactSame', shared['summary']['coalitionIntactByState']['same'])
+    m('SharedReturned',shared['config']['diagnosticScreen']['nReturned'])
+    best, wirings=best_four_of_five_wiring(); f('StarBound', best, 0); m('StarBoundWirings',len(wirings))
+    worse=hs['repeatsWorseThanRandomRotations']; m('RepeatsWorseCount',len(worse)); m('RepeatsWorseRotations',', '.join(map(str,worse)) or 'none')
+    isolated=[r for r in data['communities'] if r['mu']==1 and r['omega']==0]
+    if len(isolated)!=1: raise ValueError('Missing isolated-community sensitivity result')
+    f('IsolatedExactlyOne', isolated[0]['pctExactly1Mean'])
+    iso_trace=json.loads((path.parent / isolated[0]['traceEvidence']['path']).read_text())
+    f('IsolatedMeanList',sum(map(len,iso_trace['listed']))/len(iso_trace['listed']))
+    long=[r for r in data['horizons'] if r['rotations']==32]
+    if len(long)!=1: raise ValueError('Missing 32-rotation sensitivity result')
+    long_trace=json.loads((path.parent / long[0]['traceEvidence']['path']).read_text())
+    m('LongLeakForced',long_trace['leakage']['forcedEdges'])
+    f('LongLeakFraction',100*long_trace['leakage']['fractionOfEdgesForced'],1)
+    m('LongLeakFull',len(long_trace['leakage']['fullyDeterminedStudents']))
+    m('NonSubmitters',cfg['submission']['nNonSubmitters']); m('RejectedByRules',len(cfg['submission']['rejectedByRules']))
+    f('MaxSolve', max(r['summary']['maxSolveSeconds'] for r in refs.values()),1)
+    m('Workers',cfg['solver']['workers']); m('CpsatTime',cfg['solver']['cpsatTime'])
+    m('AnnealIters', f"{cfg['solver']['annealIters']:,}".replace(',', r'\,'))
+    m('Versions', f"Python {cfg['versions']['python']}, NumPy {cfg['versions']['numpy']}, OR-Tools {cfg['versions']['ortools']}")
 
-    # ---- macros ------------------------------------------------------------------------
-    w("% auto-generated by paper/make_tables.py; do not edit by hand")
-    M = lambda name, val: w(f"\\newcommand{{\\{name}}}{{{val}}}")  # noqa: E731
-    M("Seed", cfg["seed"])
-    M("Reciprocity", f"{net['reciprocity']:.3f}")
-    M("WithinGrade", f"{net['withinGradeFrac']:.3f}")
-    M("Hero", h["hero"])
-    M("Coalition", ", ".join(T["coalition_none"]["config"]["coalition"]))
-    M("ExportSeconds", f"{sum(t['config']['yearSolveSeconds'] for t in T.values()):.0f}")
-    allst = [r["stats"]["solveTime"] for t in T.values() for r in t["rotations"]]
-    M("MaxSolve", f"{max(allst):.1f}")
-    M("MeanSolve", f"{sum(allst)/len(allst):.1f}")
-    M("CpsatTime", cfg["solver"]["cpsatTime"])
-    M("Workers", cfg["solver"]["workers"])
-    M("AnnealIters", f"{cfg['solver']['annealIters']:,}".replace(",", r"\,"))
-    M("Versions", f"Python {cfg['versions']['python']}, NumPy {cfg['versions']['numpy']}, OR-Tools {cfg['versions']['ortools']}")
-    M("HonestExactlyOne", f"{h['summary']['pctExactly1Mean']:.2f}")
-    M("HonestExactlyOneMin", f"{h['summary']['pctExactly1Min']:.1f}")
-    M("HonestMet", f"{h['summary']['meanDistinctMetFinal']:.2f}")
-    M("RandomMet", f"{h['summary']['meanDistinctMetFinalRandom']:.2f}")
-    M("RandomMetExpected", f"{cfg['baseline']['expectedDistinctRandom']:.2f}")
-    M("RandomMetExpectedAllMixed", f"{cfg['baseline']['expectedDistinctRandomAllMixed']:.2f}")
-    M("RandomGeOne", f"{h['summary']['pctGe1RandomMean']:.1f}")
-    M("RandomGeOneExpected", f"{cfg['baseline']['expectedFriendCoverageSchedule']:.1f}")
-    M("RandomGeOneExpectedMixed", f"{cfg['baseline']['expectedFriendCoverageMixed']:.1f}")
-    M("RandomGeOneExpectedSame", f"{cfg['baseline']['expectedFriendCoverageSame']:.1f}")
-    M("RepeatsWorseRotations", fmt_list(h["summary"]["repeatsWorseThanRandomRotations"]))
-    M("RepeatsWorseCount", len(h["summary"]["repeatsWorseThanRandomRotations"]))
-    M("HonestPhasesCpsat", h["summary"]["phases"].get("cpsat", 0))
-    m4 = T["coalition_min4"]["summary"]
-    M("StarAvgCluster", f"{m4['coalitionAvgCluster']:.2f}")
-    M("StarIntact", m4["coalitionIntactRotations"])
-    M("StarPatterns", ", ".join(f"{k} in {v} rotations" for k, v in sorted(m4["coalitionPatterns"].items(), key=lambda kv: -kv[1])))
-    st = T["coalition_stratified"]["summary"]
-    M("StratIntact", st["coalitionIntactRotations"])
-    M("StratIntactSame", st["coalitionIntactByState"]["same"])
-    M("StratIntactMixed", st["coalitionIntactByState"]["mixed"])
-    M("StratAvgCluster", f"{st['coalitionAvgCluster']:.2f}")
-    M("NoneIntact", T["coalition_none"]["summary"]["coalitionIntactRotations"])
-    scr = T["coalition_screened"]["config"]["screen"]
-    M("ScreenFlagged", scr["nFlagged"])
-    M("ScreenReturned", scr["nReturned"])
-    same_flags = scr["perState"]["same"]["flags"]
-    M("ScreenFlaggedSets", "; ".join("\\{" + ", ".join(f["members"]) + "\\}" for f in same_flags) if same_flags else "--")
-    M("ScreenedAvgCluster", f"{T['coalition_screened']['summary']['coalitionAvgCluster']:.2f}")
-    M("ScreenedIntact", T["coalition_screened"]["summary"]["coalitionIntactRotations"])
-    lk = h["leakage"]
-    M("LeakForced", lk["forcedEdges"])
-    M("LeakCorrect", lk["forcedEdgesCorrect"])
-    M("LeakStudents", lk["studentsWithForcedEdge"])
-    M("LeakFraction", f"{100*lk['fractionOfEdgesForced']:.1f}")
-    M("LeakFull", len(lk["fullyDeterminedStudents"]))
-    M("LeakEdges", lk["submittedEdges"])
-    fz = h["fairness"]
-    M("FairMin", fz["distinctMet"]["min"])
-    M("FairMax", fz["distinctMet"]["max"])
-    M("FairQOne", fz["distinctMet"]["q1"])
-    M("FairQThree", fz["distinctMet"]["q3"])
-    M("FairLowIn", f"{fz['lowestInDegreeQuartile']['meanDistinctMet']:.2f}")
-    M("FairHighIn", f"{fz['highestInDegreeQuartile']['meanDistinctMet']:.2f}")
-    M("FairLowInDeg", f"{fz['lowestInDegreeQuartile']['meanInDegree']:.1f}")
-    M("FairHighInDeg", f"{fz['highestInDegreeQuartile']['meanInDegree']:.1f}")
-    sub = cfg["submission"]
-    M("NonSubmitters", sub["nNonSubmitters"])
-    M("RejectedByRules", len(sub["rejectedByRules"]))
-    best, wirings = best_four_of_five_wiring()
-    M("StarBound", f"{best:.0f}")
-    M("StarBoundWirings", len(wirings))
-    feas = cfg["feasibility"]
-    M("FeasMixed", feas["mixed"]["status"])
-    M("FeasSame", feas["same"]["status"])
-    M("FeasSeconds", f"{feas['mixed']['seconds'] + feas['same']['seconds']:.1f}")
-
-    # experiments macros
-    if exp and exp["seeds"]:
-        hon = [r for r in exp["seeds"] if r["scenario"] == "honest"]
-        star = [r for r in exp["seeds"] if r["scenario"] == "coalition_min4"]
-        ex1 = [r["pctExactly1Mean"] for r in hon]
-        met = [r["meanDistinctMetFinal"] for r in hon]
-        rmet = [r["meanDistinctMetFinalRandom"] for r in hon]
-        diff = [a - b for a, b in zip(met, rmet)]
-        M("NSeeds", len(hon))
-        M("SeedExactlyOneMean", f"{sum(ex1)/len(ex1):.2f}")
-        M("SeedExactlyOneMin", f"{min(ex1):.2f}")
-        M("SeedExactlyOneMax", f"{max(ex1):.2f}")
-        M("SeedMetMean", f"{sum(met)/len(met):.2f}")
-        M("SeedMetMin", f"{min(met):.2f}")
-        M("SeedMetMax", f"{max(met):.2f}")
-        M("SeedRandomMetMean", f"{sum(rmet)/len(rmet):.2f}")
-        M("SeedDiffMin", f"{min(diff):+.2f}")
-        M("SeedDiffMax", f"{max(diff):+.2f}")
-        M("SeedDiffMean", f"{sum(diff)/len(diff):+.2f}")
-        M("SeedGuaranteeAll", "yes" if all(r["pctGe1Min"] == 100.0 for r in hon + star) else "no")
-        M("SeedMaxSolve", f"{max(r['maxSolveSeconds'] for r in hon + star):.1f}")
-        M("SeedLeakMin", min(r["leakageForcedEdges"] for r in hon))
-        M("SeedLeakMax", max(r["leakageForcedEdges"] for r in hon))
-        if star:
-            M("SeedStarIntact", sum(r["coalitionIntactRotations"] for r in star))
-            M("SeedStarClusterMin", f"{min(r['coalitionAvgCluster'] for r in star):.2f}")
-            M("SeedStarClusterMax", f"{max(r['coalitionAvgCluster'] for r in star):.2f}")
-    else:
-        for name in ("NSeeds", "SeedExactlyOneMean", "SeedExactlyOneMin", "SeedExactlyOneMax", "SeedMetMean", "SeedMetMin",
-                     "SeedMetMax", "SeedRandomMetMean", "SeedDiffMin", "SeedDiffMax", "SeedDiffMean", "SeedGuaranteeAll",
-                     "SeedMaxSolve", "SeedLeakMin", "SeedLeakMax", "SeedStarIntact", "SeedStarClusterMin", "SeedStarClusterMax"):
-            M(name, "--")
-    for d in OUT_DIRS:
-        with open(os.path.join(d, "macros.tex"), "w") as f:
-            f.write("\n".join(out) + "\n")
-    out.clear()
-    w("% auto-generated by paper/make_tables.py; do not edit by hand")
-
-    # ---- summary table -------------------------------------------------------------------
-    w(r"\begin{table}[t]\centering\small")
-    w(r"\caption{Headline statistics per scenario (seed \Seed, 16 rotations). ``$\ge 1$'' and ``exactly one'' are percentages of submitters; ``met'' is the mean number of distinct schoolmates a student has shared a table with by rotation 16; cluster statistics describe the six coalition members (mean = $\sum_c |c|^2/6$).}")
-    w(r"\label{tab:summary}")
-    w(r"\begin{tabular}{@{}lrrrrrrr@{}}\toprule")
-    w(r"Scenario & $\ge 1$ (min) & \multicolumn{2}{c}{exactly one} & met & met, & intact & mean \\")
-    w(r" & & mean & min & & random & & cluster \\ \midrule")
-    for n in SCEN:
-        t = T[n]; S = t["summary"]
-        coal = t["config"]["coalitionMode"]
-        w(f"{LABEL[n]} & {S['pctGe1Min']:.1f} & {S['pctExactly1Mean']:.2f} & {S['pctExactly1Min']:.1f} & {S['meanDistinctMetFinal']:.2f} & {S['meanDistinctMetFinalRandom']:.2f} & "
-          + (f"{S['coalitionIntactRotations']}/16 & {S['coalitionAvgCluster']:.2f}" if coal else "-- & --") + r" \\")
-    w(r"\bottomrule\end{tabular}\end{table}")
-    w("")
-
-    # ---- honest per-rotation table -------------------------------------------------------
-    w(r"\begin{table}[t]\centering\small")
-    w(r"\caption{Honest scenario, rotation by rotation. ``2+'' counts submitters with two or more listed peers at their table; repeat pairs are pairs seated together who had already shared a table this year (proposed / random); ``phase'' is the pipeline stage whose seating was kept; time is the wall-clock solve time of the rotation including any fallback solve.}")
-    w(r"\label{tab:honest}")
-    w(r"\begin{tabular}{@{}rlrrrrrrlr@{}}\toprule")
-    w(r"rot. & state & $\ge 1$ & exactly one & 2+ & met & met, rnd & repeats (prop./rnd) & phase & time (s) \\ \midrule")
-    n_sub = sum(1 for l in h["listed"] if l)
-    for r in h["rotations"]:
-        s = r["stats"]
-        two = round(s["pctGe2"] * n_sub / 100)
-        w(f"{r['idx']} & {r['state']} & {s['pctGe1']:.0f} & {s['pctExactly1']:.1f} & {two} & {s['meanDistinctMet']:.1f} & {s['meanDistinctMetRandom']:.1f} & {s['repeatPairs']} / {s['repeatPairsRandom']} & {esc(s['acceptedPhase'])} & {s['solveTime']:.1f} \\\\")
-    w(r"\bottomrule\end{tabular}\end{table}")
-    w("")
-
-    # ---- coalition per-rotation table --------------------------------------------------------
-    w(r"\begin{table}[t]\centering\small")
-    w(r"\caption{Coalition outcome per rotation under each defense level: partition pattern of the six members across tables (``6'' = all at one table) and the member-weighted mean cluster size.}")
-    w(r"\label{tab:coalition}")
-    w(r"\begin{tabular}{@{}rl lr lr lr lr@{}}\toprule")
-    w(r" & & \multicolumn{2}{c}{no defenses} & \multicolumn{2}{c}{min-4 (star)} & \multicolumn{2}{c}{same-grade attack} & \multicolumn{2}{c}{screens on} \\")
-    w(r"rot. & state & pattern & mean & pattern & mean & pattern & mean & pattern & mean \\ \midrule")
-    for i in range(16):
-        row = [str(i + 1), T["coalition_none"]["rotations"][i]["state"]]
-        for n in ("coalition_none", "coalition_min4", "coalition_stratified", "coalition_screened"):
-            c = T[n]["rotations"][i]["coalition"]
-            row += [c["pattern"], f"{c['avgCluster']:.2f}"]
-        w(" & ".join(row) + r" \\")
-    w(r"\bottomrule\end{tabular}\end{table}")
-    w("")
-
-    # ---- screen verdicts --------------------------------------------------------------------
-    w(r"\begin{table}[t]\centering\small")
-    w(r"\caption{Screen on the coalition's initial submission (same-grade attack): candidate closed sets on each rotation state's effective lists and the verdict.}")
-    w(r"\label{tab:screen}")
-    w(r"\begin{tabular}{@{}lp{5.6cm}ll@{}}\toprule")
-    w(r"state & candidate closed set $S$ & verdict & closed split found \\ \midrule")
-    for state in ("mixed", "same"):
-        cands = scr["perState"][state]["candidates"]
-        if not cands:
-            w(f"{state} & (no closed set of at most 64 students) & -- & -- \\\\")
-        for c in cands:
-            split = " $\\mid$ ".join(", ".join(p) for p in c["split"]) if "split" in c else "none"
-            w(f"{state} & {', '.join(c['members'])} & {'flagged' if c['flagged'] else 'passes'} & {split} \\\\")
-    w(r"\bottomrule\end{tabular}\end{table}")
-    w("")
-
-    # ---- structural attack bounds --------------------------------------------------------
-    w(r"\begin{table}[t]\centering\small")
-    w(r"\caption{Structural cohesion bounds for six-member wirings: the minimum, over all partitions of the six into closed parts, of the member-weighted mean cluster size and of the largest cluster. These bounds hold for every feasible seating regardless of solver, seed or history.}")
-    w(r"\label{tab:bounds}")
-    w(r"\begin{tabular}{@{}lrrl@{}}\toprule")
-    w(r"wiring & min mean cluster & min largest cluster & passes screen \\ \midrule")
-    chain = {"minMeanCluster": 6.0, "minLargestCluster": 6}
-    w(f"one name each, cycle (k=1) & {chain['minMeanCluster']:.1f} & {chain['minLargestCluster']} & no (coercive) \\\\")
-    for name, om in (("4-of-5, omitted names form two 3-cycles", [1, 2, 0, 4, 5, 3]), ("4-of-5, omission star (nobody lists member 1)", [1, 0, 0, 0, 0, 0])):
-        a = analyse_wiring(om)
-        w(f"{name} & {a['minMeanCluster']:.1f} & {a['minLargestCluster']} & {'yes' if not a['screenFlags'] else 'no'} \\\\")
-    w(f"best of all $5^5$ 4-of-5 wirings (exhaustive) & {best:.1f} & 3 & yes \\\\")
-    w(r"\bottomrule\end{tabular}\end{table}")
-    w("")
-
-    # ---- experiments --------------------------------------------------------------------------
-    if exp and exp["seeds"]:
-        hon = sorted([r for r in exp["seeds"] if r["scenario"] == "honest"], key=lambda r: r["seed"])
-        star = {r["seed"]: r for r in exp["seeds"] if r["scenario"] == "coalition_min4"}
-        w(r"\begin{table}[t]\centering\small")
-        w(r"\caption{Independent population seeds at the default budget. Honest scenario: guarantee, exactly-one mean, distinct schoolmates met (proposed / simulated random / closed-form expectation), forced list entries recoverable from the charts. Star coalition: intact rotations and mean cluster.}")
-        w(r"\label{tab:seeds}")
-        w(r"\resizebox{\textwidth}{!}{\begin{tabular}{@{}rrrrrrrrr@{}}\toprule")
-        w(r"seed & $\ge 1$ (min) & exactly one & met & met, rnd & expected & leaked & star intact & star cluster \\ \midrule")
-        for r in hon:
-            s = star.get(r["seed"])
-            w(f"{r['seed']} & {r['pctGe1Min']:.0f} & {r['pctExactly1Mean']:.2f} & {r['meanDistinctMetFinal']:.2f} & {r['meanDistinctMetFinalRandom']:.2f} & {r['expectedDistinctRandom']:.2f} & {r['leakageForcedEdges']} & "
-              + (f"{s['coalitionIntactRotations']}/16 & {s['coalitionAvgCluster']:.2f}" if s else "-- & --") + r" \\")
-        w(r"\bottomrule\end{tabular}}\end{table}")
-        w("")
-    if exp and (exp["budgets"] or exp["communities"]):
-        w(r"\begin{table}[t]\centering\small")
-        w(r"\caption{Sensitivity on seed 7 (honest scenario): annealing budget and latent-group regime.}")
-        w(r"\label{tab:sensitivity}")
-        w(r"\resizebox{\textwidth}{!}{\begin{tabular}{@{}lrrrrr@{}}\toprule")
-        w(r"setting & exactly one & exactly one (min) & met & met, rnd & max solve (s) \\ \midrule")
-        for r in sorted(exp["budgets"], key=lambda r: r["annealIters"]):
-            w(f"anneal {r['annealIters']:,} iterations & {r['pctExactly1Mean']:.2f} & {r['pctExactly1Min']:.1f} & {r['meanDistinctMetFinal']:.2f} & {r['meanDistinctMetFinalRandom']:.2f} & {r['maxSolveSeconds']:.1f} \\\\".replace(",", r"\,"))
-        for r in exp["communities"]:
-            w(f"latent groups $\\mu={r['mu']}$, $\\omega={r['omega']}$ (in-group {r['inGroupFrac']:.2f}) & {r['pctExactly1Mean']:.2f} & {r['pctExactly1Min']:.1f} & {r['meanDistinctMetFinal']:.2f} & {r['meanDistinctMetFinalRandom']:.2f} & {r['maxSolveSeconds']:.1f} \\\\")
-        w(r"\bottomrule\end{tabular}}\end{table}")
-        w("")
-
-    # ---- parameters ------------------------------------------------------------------------
-    wts = cfg["weights"]
-    w(r"\begin{table}[t]\centering\small")
-    w(r"\caption{Parameters used for the committed traces.}\label{tab:params}")
-    w(r"\begin{tabular}{@{}llr@{}}\toprule")
-    w(r"group & parameter & value \\ \midrule")
-    rows = [
-        ("cohort", "students (grade 11 / 12)", f"{cfg['n']} ({cfg['n11']} / {cfg['n12']})"),
-        ("cohort", "true friends per student $K$", cfg["K"]),
-        ("cohort", "popularity $\\sigma$ (lognormal)", net["popularitySigma"]),
-        ("cohort", "within-grade weight", net["withinBias"]),
-        ("cohort", "reciprocity target / measured / $p$", f"{net['targetReciprocity']} / {net['reciprocity']:.3f} / {net['pRecip']:.2f}"),
-        ("cohort", "measured within-grade fraction", f"{net['withinGradeFrac']:.3f}"),
-        ("cohort", "latent groups $\\mu$, $\\omega$", f"{net['mu']}, {net['omega']}"),
-        ("rules", "minimum list / same-grade names / short lists", "4 / 2 / no submission"),
-        ("tables", "capacities", "17 $\\times$ 7, 23 $\\times$ 6"),
-        ("rotations", "count / first state", f"{cfg['rotations']} / {cfg['firstState']}"),
-        ("stage 3", "satisfied submitter", wts["anneal"]["satisfied"]),
-        ("stage 3", "extra listed peer", wts["anneal"]["extraPeer"]),
-        ("stage 3", "repeat per prior meeting: incidental / listed", f"{wts['anneal']['repeatIncidentalPerMeeting']} / {wts['anneal']['repeatListedPerMeeting']}"),
-        ("stage 3", "temperature $T_0 \\to T_1$", f"{wts['anneal']['T0']} $\\to$ {wts['anneal']['T1']}"),
-        ("stage 3", "iterations", f"{cfg['solver']['annealIters']:,}"),
-        ("stage 4", "weight per student with $\\ge 2$ peers", wts["cpsat"]["twoPlus"]),
-        ("stage 4", "repeat scale", wts["cpsat"]["repeatScale"]),
-        ("stage 4", "deterministic time budget / workers", f"{cfg['solver']['cpsatTime']} / {cfg['solver']['workers']}"),
-        ("certificate", "feasibility budget (deterministic time)", cfg["solver"]["feasibilityTime"]),
-        ("run", "seed / versions", f"{cfg['seed']} / {esc(cfg['versions']['python'])}, {cfg['versions']['numpy']}, {cfg['versions']['ortools']}"),
-    ]
-    for g, p, v in rows:
-        w(f"{g} & {p} & {v} \\\\")
-    w(r"\bottomrule\end{tabular}\end{table}")
-    for d in OUT_DIRS:
-        with open(os.path.join(d, "tables.tex"), "w") as f:
-            f.write("\n".join(out) + "\n")
-    print("wrote macros.tex and tables.tex in " + ", ".join(OUT_DIRS))
+    tables={}
+    rows=[]
+    for name,t in refs.items():
+        s=t['summary']; q=len(t['config']['coalition']) if t['config']['coalitionMode'] else None
+        rows.append([LABEL[name],q or '--',f"{s['pctGe1Min']:.0f}",f"{s['pctExactly1Mean']:.2f}",f"{s['meanDistinctMetFinal']:.2f}",
+            f"{s['coalitionIntactRotations']}/16" if q else '--',f"{s['coalitionAvgCluster']:.2f}" if q else '--'])
+    tables['summary']=table('summary','Six verified seed-seven reference scenarios. Minimum guarantee and mean exactly-one rates are percentages of submitters; distinct contacts average over all participants. Intact and cluster values use the actual coalition size $q$.',
+        ['Scenario','$q$','$\\ge1$','Exactly 1','Contacts','Intact','$H$'], rows,'lrrrrrr')
+    rows=[]
+    for r in honest:
+        s=stars[r['populationSeed']]
+        rows.append([r['populationSeed'],f"{r['pctExactly1Mean']:.2f}",f"{r['meanDistinctMetFinal']:.2f}",f"{r['meanDistinctMetFinalRandom']:.2f}",
+                     f"{r['meanDistinctMetFinal']-r['meanDistinctMetFinalRandom']:+.2f}",r['leakageForcedEdges'],f"{s['coalitionAvgCluster']:.2f}"])
+    tables['seeds']=table('seeds','Primary population comparisons at the default budget. Exactly-one percentages, distinct contacts (proposed and random), their paired difference, forced directed list entries, and the omission-star mean cluster size are computed from full traces.',
+        ['Seed','Exactly 1','Contacts','Random','$\\Delta$','Forced','Star $H$'],rows,'rrrrrrr')
+    def group(a):
+        if a['category']=='seeds': return 'Primary population pairs' if a['configuration']['scenario'] in ('honest','coalition_min4') else 'Additional reference attacks'
+        if a['category']=='budgets': return 'Annealing sensitivity' if a['configuration']['run']['anneal_iters']!=300000 else 'CP sensitivity'
+        return {'horizons':'Horizon sensitivity','communities':'Community sensitivity'}[a['category']]
+    groups=['Primary population pairs','Additional reference attacks','Annealing sensitivity','CP sensitivity','Horizon sensitivity','Community sensitivity']
+    rows=[]
+    for g in groups:
+        aa=[a for a in attempts.values() if group(a)==g]; counts=Counter(a['status'] for a in aa)
+        interrupted=sum(v for k,v in counts.items() if k.startswith('interrupted'))
+        rows.append([g,len(aa),counts['success'],interrupted,len(aa)-counts['success']-interrupted])
+    counts=Counter(a['status'] for a in attempts.values())
+    tables['ledger']=table('ledger','Attempt-level evidence inventory. Interrupted processes remain in the denominator after resumption; they do not establish either model infeasibility or solver failure. Other terminal outcomes, if any, are detailed in the machine-readable ledger.',
+        ['Experiment family','Attempts','Success','Interrupted','Other'],rows,'lrrrr')
+    m('VerifiedAttempts',len(attempts));m('VerifiedRuns',counts['success']);m('VerifiedRotations',sum(r['rotations'] for k in ('seeds','budgets','horizons','communities') for r in data[k]))
+    screen_rows=[]
+    for name in ('honest','coalition_stratified','coalition_shared_anchor','coalition_screened'):
+        t=refs[name]; sc=t['config'].get('diagnosticScreen') or t['config'].get('screen')
+        if not sc: continue
+        for state in ('mixed','same'):
+            ss=sc['perState'][state]; cert=[c for c in ss['candidates'] if c['verdict']=='proved-coercive']
+            cov=ss['coverage']
+            screen_rows.append(['Initial screened attack' if name=='coalition_screened' else LABEL[name], state, len(cert),len(ss.get('unresolvedCandidates',[])),
+                f"{cov['targetCandidatesExamined']}/{cov['targetCandidatesDiscovered']}"])
+    tables['screen']=table('screen','Reference diagnostic screening by eligibility state, before any modeled resubmission. Certificates may overlap; they are not counts of distinct students. Target coverage is examined/discovered bounded cores, not recall against all possible attacks. All screens also record closure and capacity checks.',
+        ['Submission','State','Certificates','Unresolved','Target cores'],screen_rows,'llrrr')
+    rows=[]
+    settings=[('Reference (16 rotations)',next(r for r in honest if r['populationSeed']==7))]
+    for r in data['budgets']:
+        setting=f"Anneal {r['annealIters']:,}" if r['annealIters']!=300000 else f"CP budget {r['cpsatTime']:g}"
+        settings.append((setting,r))
+    settings += [(f"Horizon {r['rotations']}",r) for r in data['horizons']]
+    settings += [(f"Groups $\\mu={r['mu']:g},\\omega={r['omega']:g}$",r) for r in data['communities']]
+    for setting,r in settings:
+        rows.append([setting,r['rotations'],f"{r['pctExactly1Mean']:.2f}",f"{r['meanDistinctMetFinal']:.2f}",f"{r['meanDistinctMetFinalRandom']:.2f}",r['leakageForcedEdges'],r['config']['submission']['nNonSubmitters']])
+    tables['sensitivity']=table('sensitivity','Seed-seven honest sensitivity, with one setting changed at a time. Contact counts and forced entries depend on horizon and should be compared at equal horizons. Nonsubmission includes generated lists rejected by the admission rule; it is distinct from an unmet seating guarantee.',
+        ['Setting','$R$','Exactly 1','Contacts','Random','Forced','No list'],rows,'lrrrrrr')
+    net=cfg['network']; run=cfg['solver']
+    rows=[['Population',f"{cfg['n']} ({cfg['n11']} grade 11; {cfg['n12']} grade 12)"],
+        ['Tables',r'17 $\times$ 7 and 23 $\times$ 6'],['Rotations','16, alternating mixed and same grade'],
+        ['Defended study lists','None or 4--8 names; at least 2 same grade'],['Reference nonsubmitters',cfg['submission']['nNonSubmitters']],
+        ['Popularity / within-grade weight',f"$\\sigma={net['popularitySigma']}$ / {net['withinBias']:g}"],
+        ['Reciprocity target / realized',f"{net['targetReciprocity']} / {net['reciprocity']:.3f}"],
+        ['Realized within-grade fraction',f"{net['withinGradeFrac']:.3f}"],['Reference communities',r'$\mu=0,\ \omega=0$'],
+        ['Annealing budget / temperature',r'300,000 iterations / $25\to0.2$ (integer energy)'],
+        ['CP budget / workers',f"{run['cpsatTime']} deterministic-time units / {run['workers']}"],
+        ['Pre-feasibility budget',f"{run['feasibilityTime']} deterministic-time units per state"],
+        ['Runtime versions',r'\Versions']]
+    tables['parameters']=table('params','Reference configuration. Complete generator, submission, and solver configurations are retained in every trace.', ['Parameter','Value'],rows,'lp{9.2cm}')
+    for out in OUTS:
+        (out/'generated').mkdir(parents=True,exist_ok=True)
+        (out/'macros.tex').write_text('% Generated exclusively from verified full traces.\n'+'\n'.join(f'\\newcommand{{\\{k}}}{{{v}}}' for k,v in macros.items())+'\n')
+        for name,content in tables.items(): (out/'generated'/f'{name}.tex').write_text(content)
+        (out/'tables.tex').write_text('\n'.join(tables.values()))
+    (ROOT/'paper/numerical_claims.json').write_text(json.dumps({'manifest':'results/verified_experiments.json','macros':macros,'sourceHashes':sorted({a['source']['effectiveSourceHash'] for a in attempts.values()})},indent=2)+'\n')
+    print(f'Generated {len(macros)} numerical macros and {len(tables)} tables from {counts["success"]} verified runs.')
 
 
-if __name__ == "__main__":
-    main()
+if __name__=='__main__': main()

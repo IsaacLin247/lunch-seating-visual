@@ -128,7 +128,7 @@ def test_demand_screen_passes_ordinary_cores():
 
 
 # --------------------------------------------------------- large candidates ----
-def test_large_candidates_use_thomassen_or_heuristic():
+def test_large_candidates_use_thomassen_or_exact_cpsat_decisions():
     n = 30
     lists = wiring(n, lambda i: [(i + d) % n for d in range(1, 4)])      # min out-degree 3
     r = coercion_screen(lists)

@@ -20,6 +20,8 @@ export function createTab1(ctx) {
     $('s-prop-ge1').textContent = pct(s.pctGe1);
     $('s-prop-ex1').textContent = pct(s.pctExactly1);
     $('s-prop-met').textContent = num(s.meanDistinctMet);
+    const r = trace.rotations[rot];
+    $('solver-status').textContent = `Saved rotation ${r.idx}: ${s.cost?.violations ?? 0} guarantee violations · accepted stage: ${s.acceptedPhase} · CP-SAT status: ${s.cpsatStatus} · ${s.solveTime}s solving time. Random baseline follows the same grade schedule.`;
     renderSparkline($('spark-met'), [
       { name: 'Proposed', values: met, color: COLORS.two },
       { name: 'Random', values: metR, color: '#9a948a' },
@@ -38,5 +40,5 @@ export function createTab1(ctx) {
   };
 }
 
-const pct = v => `${Math.round(v)}%`;
-const num = v => `${Math.round(v)}`;
+const pct = v => `${v.toFixed(1)}%`;
+const num = v => `${v.toFixed(1)}`;

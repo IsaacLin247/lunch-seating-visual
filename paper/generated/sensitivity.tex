@@ -1,0 +1,14 @@
+\begin{table}[tb]\centering\small
+\caption{Seed-seven honest sensitivity, with one setting changed at a time. Contact counts and forced entries depend on horizon and should be compared at equal horizons. Nonsubmission includes generated lists rejected by the admission rule; it is distinct from an unmet seating guarantee.}\label{tab:sensitivity}
+\begin{tabular}{@{}lrrrrrr@{}}\toprule
+Setting & $R$ & Exactly 1 & Contacts & Random & Forced & No list \\ \midrule
+Reference (16 rotations) & 16 & 99.68 & 74.44 & 72.31 & 613 & 0 \\
+Anneal 100,000 & 16 & 99.15 & 73.82 & 72.31 & 554 & 0 \\
+Anneal 900,000 & 16 & 99.90 & 75.13 & 72.31 & 688 & 0 \\
+CP budget 0.1 & 16 & 99.68 & 74.54 & 72.31 & 602 & 0 \\
+CP budget 1 & 16 & 99.66 & 74.54 & 72.31 & 620 & 0 \\
+Horizon 5 & 5 & 100.00 & 26.18 & 26.15 & 0 & 0 \\
+Horizon 32 & 32 & 99.45 & 128.26 & 120.44 & 1691 & 0 \\
+Groups $\mu=0.6,\omega=0.3$ & 16 & 99.76 & 75.03 & 72.31 & 544 & 0 \\
+Groups $\mu=1,\omega=0$ & 16 & 89.88 & 75.62 & 72.31 & 491 & 0 \\
+\bottomrule\end{tabular}\end{table}

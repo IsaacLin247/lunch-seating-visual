@@ -4,3 +4,14 @@ __pycache__/
 .pytest_cache/
 node_modules/
 .DS_Store
+
+# Local build state and advisory locks (the PDFs and evidence remain tracked).
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+results/*.json.lock

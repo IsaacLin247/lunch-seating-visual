@@ -1,0 +1,275 @@
+{
+  "manifest": "results/verified_core_b.json",
+  "manifestSha256": "379eeff1c754d7dc43925eaebd57efc09fefcb474b984ebfe5b00a93a5687e7f",
+  "attemptDenominator": 10,
+  "attemptStatuses": {
+    "success": 10
+  },
+  "tracesChecked": 10,
+  "totalDiscrepancies": 0,
+  "reports": [
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.59,
+        "pctExactly1Min": 97.67,
+        "pctGe1RandomMean": 21.16,
+        "meanDistinctMetFinal": 74.7,
+        "meanDistinctMetFinalRandom": 72.25,
+        "repeatsWorseThanRandomRotations": [
+          5,
+          7
+        ]
+      },
+      "attemptId": "0d96fcc0ece541079e94b31c57f840f3",
+      "tracePath": "results/verified_core_b_traces/0d96fcc0ece541079e94b31c57f840f3.json",
+      "status": "success",
+      "populationSeed": 2,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.22,
+        "pctExactly1Min": 96.5,
+        "pctGe1RandomMean": 20.99,
+        "meanDistinctMetFinal": 73.99,
+        "meanDistinctMetFinalRandom": 72.25,
+        "repeatsWorseThanRandomRotations": [
+          5,
+          6,
+          7
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.02,
+        "coalitionPatterns": {
+          "3+3": 15,
+          "4+2": 1
+        }
+      },
+      "attemptId": "e61b8ec992dd413f8b29f87366cc8e39",
+      "tracePath": "results/verified_core_b_traces/e61b8ec992dd413f8b29f87366cc8e39.json",
+      "status": "success",
+      "populationSeed": 2,
+      "scenario": "coalition_min4"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.44,
+        "pctExactly1Min": 97.28,
+        "pctGe1RandomMean": 20.26,
+        "meanDistinctMetFinal": 74.7,
+        "meanDistinctMetFinalRandom": 72.33,
+        "repeatsWorseThanRandomRotations": [
+          5,
+          15
+        ]
+      },
+      "attemptId": "a6792439c97b429392f2eafcbe5cd67f",
+      "tracePath": "results/verified_core_b_traces/a6792439c97b429392f2eafcbe5cd67f.json",
+      "status": "success",
+      "populationSeed": 4,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.34,
+        "pctExactly1Min": 97.67,
+        "pctGe1RandomMean": 20.06,
+        "meanDistinctMetFinal": 73.69,
+        "meanDistinctMetFinalRandom": 72.33,
+        "repeatsWorseThanRandomRotations": [
+          5,
+          11,
+          15
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.02,
+        "coalitionPatterns": {
+          "3+3": 15,
+          "4+2": 1
+        }
+      },
+      "attemptId": "d7aad037714e4ace9c2a4268ca998d7e",
+      "tracePath": "results/verified_core_b_traces/d7aad037714e4ace9c2a4268ca998d7e.json",
+      "status": "success",
+      "populationSeed": 4,
+      "scenario": "coalition_min4"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.73,
+        "pctExactly1Min": 98.83,
+        "pctGe1RandomMean": 23.64,
+        "meanDistinctMetFinal": 74.63,
+        "meanDistinctMetFinalRandom": 72.39,
+        "repeatsWorseThanRandomRotations": [
+          7,
+          9
+        ]
+      },
+      "attemptId": "cd943653f466454ab7f38ef42e08709a",
+      "tracePath": "results/verified_core_b_traces/cd943653f466454ab7f38ef42e08709a.json",
+      "status": "success",
+      "populationSeed": 6,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.32,
+        "pctExactly1Min": 97.67,
+        "pctGe1RandomMean": 23.3,
+        "meanDistinctMetFinal": 74.35,
+        "meanDistinctMetFinalRandom": 72.39,
+        "repeatsWorseThanRandomRotations": [
+          5,
+          7,
+          9
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.0,
+        "coalitionPatterns": {
+          "3+3": 16
+        }
+      },
+      "attemptId": "6b13db363eba43ddbaa2fa8d52f53b93",
+      "tracePath": "results/verified_core_b_traces/6b13db363eba43ddbaa2fa8d52f53b93.json",
+      "status": "success",
+      "populationSeed": 6,
+      "scenario": "coalition_min4"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.71,
+        "pctExactly1Min": 98.83,
+        "pctGe1RandomMean": 22.93,
+        "meanDistinctMetFinal": 74.23,
+        "meanDistinctMetFinalRandom": 72.04,
+        "repeatsWorseThanRandomRotations": [
+          3,
+          7,
+          9
+        ]
+      },
+      "attemptId": "080bccb6c4ad424491282ea1f2825211",
+      "tracePath": "results/verified_core_b_traces/080bccb6c4ad424491282ea1f2825211.json",
+      "status": "success",
+      "populationSeed": 8,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.05,
+        "pctExactly1Min": 96.89,
+        "pctGe1RandomMean": 22.71,
+        "meanDistinctMetFinal": 74.14,
+        "meanDistinctMetFinalRandom": 72.04,
+        "repeatsWorseThanRandomRotations": [
+          3,
+          7,
+          9
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.04,
+        "coalitionPatterns": {
+          "3+3": 14,
+          "4+2": 2
+        }
+      },
+      "attemptId": "7305edadcfdd4d538c01c3df9ececcdd",
+      "tracePath": "results/verified_core_b_traces/7305edadcfdd4d538c01c3df9ececcdd.json",
+      "status": "success",
+      "populationSeed": 8,
+      "scenario": "coalition_min4"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.68,
+        "pctExactly1Min": 98.44,
+        "pctGe1RandomMean": 21.6,
+        "meanDistinctMetFinal": 74.58,
+        "meanDistinctMetFinalRandom": 72.09,
+        "repeatsWorseThanRandomRotations": [
+          5,
+          13
+        ]
+      },
+      "attemptId": "491bd8a17f6b41f7b9c5ae9247c489cb",
+      "tracePath": "results/verified_core_b_traces/491bd8a17f6b41f7b9c5ae9247c489cb.json",
+      "status": "success",
+      "populationSeed": 10,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.08,
+        "pctExactly1Min": 96.5,
+        "pctGe1RandomMean": 21.47,
+        "meanDistinctMetFinal": 74.28,
+        "meanDistinctMetFinalRandom": 72.09,
+        "repeatsWorseThanRandomRotations": [
+          4,
+          5
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.0,
+        "coalitionPatterns": {
+          "3+3": 16
+        }
+      },
+      "attemptId": "ab9672fcb3a4467d8f16bcdd92952233",
+      "tracePath": "results/verified_core_b_traces/ab9672fcb3a4467d8f16bcdd92952233.json",
+      "status": "success",
+      "populationSeed": 10,
+      "scenario": "coalition_min4"
+    }
+  ]
+}

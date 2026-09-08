@@ -802,15 +802,17 @@ def solve_rotation(p: Problem, seed: int = 0, anneal_iters: int = 300_000, cpsat
             f"{len(p.ineligible)} submitter(s) have no eligible listed peer in this rotation: {p.ineligible[:10]}")
     rng = random.Random(seed)
     t_start = time.perf_counter()
-    info = {}
+    info = {"snapshots": {}}
 
     assign = pod_greedy(p, rng)
     st = State(p, assign)
     info["greedy"] = p.cost_breakdown(assign)
+    info["snapshots"]["greedy"] = list(assign)
     t1 = time.perf_counter()
 
     swap_repair(st, rng)
     info["repair"] = p.cost_breakdown(st.assign)
+    info["snapshots"]["repair"] = list(st.assign)
     t2 = time.perf_counter()
 
     best_assign, best_cost, best_viol = anneal(st, rng, iters=anneal_iters)
@@ -822,6 +824,7 @@ def solve_rotation(p: Problem, seed: int = 0, anneal_iters: int = 300_000, cpsat
         best_assign, best_cost, best_viol = anneal(st, rng, iters=max(anneal_iters // 2, 20_000))
         info["annealRetries"] = attempt + 1
     info["anneal"] = p.cost_breakdown(best_assign)
+    info["snapshots"]["anneal"] = list(best_assign)
     t3 = time.perf_counter()
 
     final = best_assign
@@ -833,10 +836,10 @@ def solve_rotation(p: Problem, seed: int = 0, anneal_iters: int = 300_000, cpsat
         if cp_assign is not None:
             cb = p.cost_breakdown(cp_assign)
             info["cpsatFull"] = cb
-            # keep the CP-SAT seating only if it satisfies everyone and is not
-            # worse on the full-history objective (CP-SAT sees only the
-            # previous rotation's pairs)
-            if cb["violations"] == 0 and cb["total"] <= info["anneal"]["total"]:
+            # Feasibility takes priority over the finite violation penalty.
+            # Once the incumbent is feasible, retain the full-history guard
+            # (CP-SAT sees only the previous rotation's pairs).
+            if cb["violations"] == 0 and (info["anneal"]["violations"] > 0 or cb["total"] <= info["anneal"]["total"]):
                 final = cp_assign
                 info["accepted"] = "cpsat"
     t4 = time.perf_counter()
@@ -855,6 +858,7 @@ def solve_rotation(p: Problem, seed: int = 0, anneal_iters: int = 300_000, cpsat
                     "cpsat": t4 - t3, "fallback": t5 - t4, "total": t5 - t_start}
     if info["final"]["violations"]:
         raise RuntimeError(f"pipeline left {info['final']['violations']} submitters without a listed peer")
+    info["snapshots"]["final"] = list(final)
     if log:
         log(info)
     return final, info

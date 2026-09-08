@@ -1,0 +1,861 @@
+{
+  "figure": "leakage_fairness.pdf",
+  "pdfSha256": "de2a990e741cb6b4e36719b2fdb6120c5d31448b352ba4dcb30d1ebf48a3536c",
+  "generatorSha256": "8d6a58ed879a7df455483aef3bede8cdd8e06d7f348e635b4d8405549f6c6fb2",
+  "type": "empirical",
+  "inputs": {
+    "docs/data/honest.json": "be2cf9912bceb5bb5c107faf38f455cdc2d93d84214d0921c01c2eda61e3a3ca",
+    "docs/data/coalition_none.json": "9c4c559991c8085bc79e8040e611ba56150b9aa9cc5fd803028c30af004c98af",
+    "docs/data/coalition_min4.json": "76ab9a35f3345756da26a7a1d10a44dbfa31fc265aaba1eb17fb32eea0616239",
+    "docs/data/coalition_stratified.json": "c5c153fcdbaddfdc3ceed7f34be8819fafbdda26e768e9bc2cf0d8afba2b7991",
+    "docs/data/coalition_shared_anchor.json": "5b613158bf9fee629282817d6b07b59413cf0dfce2d1c68d50d732dc6b426fdd",
+    "docs/data/coalition_screened.json": "ea7eb5dc12cf74744f2f8f8743e237ed2011bf15575188e6c9d30fa4b02b7024"
+  },
+  "effectiveSourceHash": "4282fb6588006917a0fdd94339113c4799d1f26cd5bb37f0e67a3282bc764ed8",
+  "sourceVerification": "retained_snapshot",
+  "plottedValues": {
+    "publicCap": 8,
+    "prefixRotations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "forcedEntries": {
+      "honest": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        10,
+        42,
+        96,
+        152,
+        240,
+        351,
+        500,
+        613
+      ],
+      "coalition_none": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        8,
+        28,
+        88,
+        157,
+        255,
+        327,
+        453,
+        552
+      ],
+      "coalition_min4": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        10,
+        37,
+        104,
+        174,
+        250,
+        342,
+        484,
+        583
+      ],
+      "coalition_stratified": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        12,
+        38,
+        80,
+        140,
+        227,
+        324,
+        471,
+        557
+      ],
+      "coalition_shared_anchor": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        6,
+        38,
+        56,
+        129,
+        184,
+        300,
+        416
+      ],
+      "coalition_screened": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        10,
+        37,
+        104,
+        174,
+        250,
+        342,
+        484,
+        583
+      ]
+    },
+    "fairnessPoints": [
+      {
+        "inDegree": 0,
+        "distinctMet": 79,
+        "n": 1
+      },
+      {
+        "inDegree": 1,
+        "distinctMet": 73,
+        "n": 1
+      },
+      {
+        "inDegree": 1,
+        "distinctMet": 75,
+        "n": 1
+      },
+      {
+        "inDegree": 1,
+        "distinctMet": 77,
+        "n": 2
+      },
+      {
+        "inDegree": 1,
+        "distinctMet": 80,
+        "n": 1
+      },
+      {
+        "inDegree": 2,
+        "distinctMet": 72,
+        "n": 1
+      },
+      {
+        "inDegree": 2,
+        "distinctMet": 74,
+        "n": 1
+      },
+      {
+        "inDegree": 2,
+        "distinctMet": 75,
+        "n": 2
+      },
+      {
+        "inDegree": 2,
+        "distinctMet": 76,
+        "n": 1
+      },
+      {
+        "inDegree": 2,
+        "distinctMet": 77,
+        "n": 2
+      },
+      {
+        "inDegree": 2,
+        "distinctMet": 78,
+        "n": 1
+      },
+      {
+        "inDegree": 2,
+        "distinctMet": 79,
+        "n": 1
+      },
+      {
+        "inDegree": 2,
+        "distinctMet": 82,
+        "n": 1
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 69,
+        "n": 1
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 70,
+        "n": 1
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 72,
+        "n": 1
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 73,
+        "n": 3
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 74,
+        "n": 3
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 75,
+        "n": 5
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 76,
+        "n": 3
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 77,
+        "n": 4
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 78,
+        "n": 1
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 79,
+        "n": 2
+      },
+      {
+        "inDegree": 3,
+        "distinctMet": 80,
+        "n": 1
+      },
+      {
+        "inDegree": 4,
+        "distinctMet": 73,
+        "n": 3
+      },
+      {
+        "inDegree": 4,
+        "distinctMet": 74,
+        "n": 2
+      },
+      {
+        "inDegree": 4,
+        "distinctMet": 75,
+        "n": 3
+      },
+      {
+        "inDegree": 4,
+        "distinctMet": 76,
+        "n": 3
+      },
+      {
+        "inDegree": 4,
+        "distinctMet": 77,
+        "n": 1
+      },
+      {
+        "inDegree": 4,
+        "distinctMet": 78,
+        "n": 1
+      },
+      {
+        "inDegree": 4,
+        "distinctMet": 79,
+        "n": 4
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 71,
+        "n": 1
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 72,
+        "n": 3
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 73,
+        "n": 1
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 74,
+        "n": 4
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 75,
+        "n": 3
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 76,
+        "n": 7
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 77,
+        "n": 4
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 78,
+        "n": 3
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 79,
+        "n": 1
+      },
+      {
+        "inDegree": 5,
+        "distinctMet": 80,
+        "n": 1
+      },
+      {
+        "inDegree": 6,
+        "distinctMet": 70,
+        "n": 1
+      },
+      {
+        "inDegree": 6,
+        "distinctMet": 72,
+        "n": 2
+      },
+      {
+        "inDegree": 6,
+        "distinctMet": 73,
+        "n": 4
+      },
+      {
+        "inDegree": 6,
+        "distinctMet": 74,
+        "n": 1
+      },
+      {
+        "inDegree": 6,
+        "distinctMet": 75,
+        "n": 1
+      },
+      {
+        "inDegree": 6,
+        "distinctMet": 76,
+        "n": 3
+      },
+      {
+        "inDegree": 6,
+        "distinctMet": 77,
+        "n": 5
+      },
+      {
+        "inDegree": 6,
+        "distinctMet": 78,
+        "n": 1
+      },
+      {
+        "inDegree": 6,
+        "distinctMet": 80,
+        "n": 1
+      },
+      {
+        "inDegree": 7,
+        "distinctMet": 66,
+        "n": 1
+      },
+      {
+        "inDegree": 7,
+        "distinctMet": 71,
+        "n": 3
+      },
+      {
+        "inDegree": 7,
+        "distinctMet": 72,
+        "n": 4
+      },
+      {
+        "inDegree": 7,
+        "distinctMet": 74,
+        "n": 5
+      },
+      {
+        "inDegree": 7,
+        "distinctMet": 75,
+        "n": 3
+      },
+      {
+        "inDegree": 7,
+        "distinctMet": 76,
+        "n": 4
+      },
+      {
+        "inDegree": 7,
+        "distinctMet": 77,
+        "n": 5
+      },
+      {
+        "inDegree": 7,
+        "distinctMet": 78,
+        "n": 2
+      },
+      {
+        "inDegree": 7,
+        "distinctMet": 81,
+        "n": 1
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 69,
+        "n": 1
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 70,
+        "n": 1
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 71,
+        "n": 2
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 73,
+        "n": 2
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 74,
+        "n": 1
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 75,
+        "n": 5
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 76,
+        "n": 2
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 77,
+        "n": 2
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 78,
+        "n": 1
+      },
+      {
+        "inDegree": 8,
+        "distinctMet": 79,
+        "n": 1
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 68,
+        "n": 1
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 71,
+        "n": 1
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 72,
+        "n": 2
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 73,
+        "n": 4
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 74,
+        "n": 1
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 75,
+        "n": 3
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 76,
+        "n": 2
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 77,
+        "n": 2
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 78,
+        "n": 2
+      },
+      {
+        "inDegree": 9,
+        "distinctMet": 79,
+        "n": 1
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 65,
+        "n": 1
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 67,
+        "n": 2
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 69,
+        "n": 1
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 71,
+        "n": 1
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 72,
+        "n": 2
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 73,
+        "n": 3
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 74,
+        "n": 3
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 75,
+        "n": 3
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 76,
+        "n": 4
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 77,
+        "n": 1
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 78,
+        "n": 5
+      },
+      {
+        "inDegree": 10,
+        "distinctMet": 79,
+        "n": 1
+      },
+      {
+        "inDegree": 11,
+        "distinctMet": 71,
+        "n": 1
+      },
+      {
+        "inDegree": 11,
+        "distinctMet": 73,
+        "n": 4
+      },
+      {
+        "inDegree": 11,
+        "distinctMet": 74,
+        "n": 1
+      },
+      {
+        "inDegree": 11,
+        "distinctMet": 75,
+        "n": 1
+      },
+      {
+        "inDegree": 11,
+        "distinctMet": 76,
+        "n": 1
+      },
+      {
+        "inDegree": 11,
+        "distinctMet": 77,
+        "n": 1
+      },
+      {
+        "inDegree": 11,
+        "distinctMet": 78,
+        "n": 1
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 64,
+        "n": 1
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 67,
+        "n": 2
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 69,
+        "n": 1
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 70,
+        "n": 1
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 71,
+        "n": 1
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 72,
+        "n": 2
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 73,
+        "n": 1
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 74,
+        "n": 2
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 75,
+        "n": 3
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 76,
+        "n": 1
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 77,
+        "n": 1
+      },
+      {
+        "inDegree": 12,
+        "distinctMet": 79,
+        "n": 2
+      },
+      {
+        "inDegree": 13,
+        "distinctMet": 72,
+        "n": 1
+      },
+      {
+        "inDegree": 13,
+        "distinctMet": 74,
+        "n": 1
+      },
+      {
+        "inDegree": 13,
+        "distinctMet": 76,
+        "n": 1
+      },
+      {
+        "inDegree": 13,
+        "distinctMet": 77,
+        "n": 1
+      },
+      {
+        "inDegree": 14,
+        "distinctMet": 67,
+        "n": 1
+      },
+      {
+        "inDegree": 14,
+        "distinctMet": 69,
+        "n": 2
+      },
+      {
+        "inDegree": 14,
+        "distinctMet": 70,
+        "n": 1
+      },
+      {
+        "inDegree": 14,
+        "distinctMet": 74,
+        "n": 1
+      },
+      {
+        "inDegree": 14,
+        "distinctMet": 76,
+        "n": 1
+      },
+      {
+        "inDegree": 14,
+        "distinctMet": 77,
+        "n": 1
+      },
+      {
+        "inDegree": 15,
+        "distinctMet": 67,
+        "n": 1
+      },
+      {
+        "inDegree": 15,
+        "distinctMet": 71,
+        "n": 1
+      },
+      {
+        "inDegree": 15,
+        "distinctMet": 73,
+        "n": 1
+      },
+      {
+        "inDegree": 15,
+        "distinctMet": 74,
+        "n": 1
+      },
+      {
+        "inDegree": 15,
+        "distinctMet": 75,
+        "n": 1
+      },
+      {
+        "inDegree": 15,
+        "distinctMet": 79,
+        "n": 1
+      },
+      {
+        "inDegree": 16,
+        "distinctMet": 67,
+        "n": 1
+      },
+      {
+        "inDegree": 16,
+        "distinctMet": 71,
+        "n": 1
+      },
+      {
+        "inDegree": 16,
+        "distinctMet": 72,
+        "n": 2
+      },
+      {
+        "inDegree": 16,
+        "distinctMet": 75,
+        "n": 1
+      },
+      {
+        "inDegree": 17,
+        "distinctMet": 69,
+        "n": 1
+      },
+      {
+        "inDegree": 18,
+        "distinctMet": 72,
+        "n": 1
+      },
+      {
+        "inDegree": 18,
+        "distinctMet": 74,
+        "n": 1
+      },
+      {
+        "inDegree": 19,
+        "distinctMet": 73,
+        "n": 1
+      },
+      {
+        "inDegree": 20,
+        "distinctMet": 72,
+        "n": 1
+      },
+      {
+        "inDegree": 21,
+        "distinctMet": 67,
+        "n": 1
+      },
+      {
+        "inDegree": 21,
+        "distinctMet": 69,
+        "n": 1
+      },
+      {
+        "inDegree": 21,
+        "distinctMet": 73,
+        "n": 1
+      },
+      {
+        "inDegree": 24,
+        "distinctMet": 67,
+        "n": 1
+      },
+      {
+        "inDegree": 28,
+        "distinctMet": 70,
+        "n": 1
+      }
+    ],
+    "quartiles": {
+      "Lowest quartile": {
+        "n": 64,
+        "meanInDegree": 3.09375,
+        "meanDistinctMet": 75.78125
+      },
+      "Highest quartile": {
+        "n": 64,
+        "meanInDegree": 13.953125,
+        "meanDistinctMet": 72.484375
+      }
+    }
+  }
+}

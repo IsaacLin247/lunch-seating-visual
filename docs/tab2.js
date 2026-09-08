@@ -81,15 +81,18 @@ export function createTab2(ctx) {
         const uses = Y.anchors.get(f);
         el.classList.toggle('used', !!uses);
         el.classList.toggle('active', f === cur.anchor);
-        el.querySelector('.uses').textContent = uses ? `R${uses.join(', R')}` : '';
+        const eligible = trace.rotations[rot].state !== 'same' || grade.get(f) === grade.get(hero);
+        el.classList.toggle('ineligible', !eligible);
+        el.title = `${f}, grade ${grade.get(f)}: ${eligible ? 'eligible this rotation' : 'ineligible in this same-grade rotation'}`;
+        el.querySelector('.uses').textContent = [!eligible ? 'ineligible this round' : '', uses ? `anchor: R${uses.join(', R')}` : ''].filter(Boolean).join(' · ');
       });
-      $('anchor-count').textContent = `${Y.anchors.size} of ${L.length} delivered so far`;
+      $('anchor-count').textContent = `${Y.anchors.size} of ${L.length} selected as anchors`;
       const others = cur.mates.length - cur.friendsHere.length;
       const freshOthers = cur.fresh.filter(m => !cur.friendsHere.includes(m)).length;
       $('anchor-line').innerHTML = cur.anchor
         ? `Rotation ${rot + 1} (${trace.rotations[rot].state === 'same' ? 'same grade' : 'mixed grades'}): the guarantee seated ${hero} with <b>${cur.anchor}</b>` +
           (cur.friendsHere.length > 1 ? ` (plus ${cur.friendsHere.length - 1} more listed friend${cur.friendsHere.length > 2 ? 's' : ''})` : '') +
-          `. The other ${others} tablemates were not on their list; ${freshOthers} of them ${freshOthers === 1 ? 'is' : 'are'} new faces this year.`
+          `. The other ${others} tablemates were not on their list; ${freshOthers} of them ${freshOthers === 1 ? 'is' : 'are'} first-time tablemates in these saved charts.`
         : `Rotation ${rot + 1}: ${hero} listed no friends, so no guarantee applies.`;
 
       // wall of people met
@@ -125,7 +128,7 @@ export function createTab2(ctx) {
       $('y-anchors').textContent = `${Y.anchors.size} of ${L.length}`;
       $('y-met').textContent = `${Y.met.size}`;
       $('y-met-rand').textContent = `${Y.metR.size}`;
-      $('year-card').querySelector('h3').textContent = rot === 15 ? 'End-of-year summary' : 'This year so far';
+      $('year-card').querySelector('h3').textContent = rot === trace.rotations.length - 1 ? 'End-of-year summary' : 'This year so far';
       lastRot = rot; lastHero = hero;
     },
     resize() { room.resize(); },

@@ -4,20 +4,22 @@ import { createTab1 } from './tab1.js';
 import { createTab2 } from './tab2.js';
 import { createTab3 } from './tab3.js';
 import { createTab4 } from './tab4.js';
+import { SCENARIO_NAMES } from './scenarios.js';
 
 const $ = id => document.getElementById(id);
-const SCENARIOS = ['honest', 'coalition_none', 'coalition_min4', 'coalition_stratified', 'coalition_screened'];
-const N_ROT = 16;
+
 const PLAY_MS = 2400;
 
 async function loadTraces() {
   const out = {};
-  await Promise.all(SCENARIOS.map(async name => {
+  const manifestResponse = await fetch('data/manifest.json', { cache: 'no-cache' });
+  const names = manifestResponse.ok ? (await manifestResponse.json()).scenarios : SCENARIO_NAMES;
+  await Promise.all(names.map(async name => {
     const res = await fetch(`data/${name}.json`, { cache: 'no-cache' });
     if (!res.ok) throw new Error(`missing data/${name}.json (${res.status})`);
     out[name] = await res.json();
   }));
-  return out;
+  return Object.fromEntries(names.map(name => [name, out[name]]));
 }
 
 const tooltip = $('tooltip');
@@ -39,6 +41,16 @@ async function main() {
   const [traces] = await Promise.all([loadTraces(), initAvatars()]);
   $('loading').hidden = true;
 
+  const nRot = traces.honest.rotations.length;
+  for (const trace of Object.values(traces)) {
+    if (trace.rotations.length !== nRot || trace.rotations.some((r, i) => r.state !== traces.honest.rotations[i].state)) {
+      throw new Error('Loaded traces must share a rotation count and grade schedule');
+    }
+  }
+  $('scrub').max = nRot;
+  $('rot-total').textContent = nRot;
+  $('ticks').style.gridTemplateColumns = `repeat(${nRot}, 1fr)`;
+  $('trace-scale').textContent = `${traces.honest.students.length} synthetic students · ${traces.honest.config.tableCapacities.length} tables · ${nRot} rotations`;
   const ctx = { traces, showTooltip };
   const tabs = { room: createTab1(ctx), student: createTab2(ctx), game: createTab3(ctx), math: createTab4(ctx) };
   let active = 'room';
@@ -46,7 +58,6 @@ async function main() {
   let playing = false, timer = null;
 
   // ticks under the scrubber
-  const first = traces.honest.config.firstState;
   $('ticks').innerHTML = traces.honest.rotations.map(r => `<span class="${r.state}">${r.idx}</span>`).join('');
 
   function badge() {
@@ -57,22 +68,23 @@ async function main() {
     pill.classList.toggle('same', r.state === 'same');
     $('rot-weeks').textContent = `weeks ${rot * 2 + 1}–${rot * 2 + 2}`;
     $('scrub').value = rot + 1;
+    $('scrub').setAttribute('aria-valuetext', `Rotation ${r.idx}, ${r.state === 'same' ? 'same grade' : 'mixed grades'}`);
   }
 
   function setRotation(i, animate = true) {
-    i = Math.max(0, Math.min(N_ROT - 1, i));
+    i = Math.max(0, Math.min(nRot - 1, i));
     rot = i;
     badge();
-    tabs[active].render(rot, animate);
+    tabs[active].render(rot, animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }
 
   function stop() { playing = false; $('btn-play').textContent = '▶'; $('btn-play').setAttribute('aria-label', 'Play'); if (timer) clearTimeout(timer); timer = null; }
   function play() {
-    if (rot >= N_ROT - 1) setRotation(0, false);
+    if (rot >= nRot - 1) setRotation(0, false);
     playing = true; $('btn-play').textContent = '❚❚'; $('btn-play').setAttribute('aria-label', 'Pause');
     const step = () => {
       if (!playing) return;
-      if (rot >= N_ROT - 1) { stop(); return; }
+      if (rot >= nRot - 1) { stop(); return; }
       setRotation(rot + 1, true);
       timer = setTimeout(step, PLAY_MS);
     };
@@ -83,28 +95,39 @@ async function main() {
   $('btn-prev').addEventListener('click', () => { stop(); setRotation(rot - 1); });
   $('btn-next').addEventListener('click', () => { stop(); setRotation(rot + 1); });
   $('btn-first').addEventListener('click', () => { stop(); setRotation(0); });
-  $('btn-last').addEventListener('click', () => { stop(); setRotation(N_ROT - 1); });
+  $('btn-last').addEventListener('click', () => { stop(); setRotation(nRot - 1); });
   $('scrub').addEventListener('input', e => { stop(); setRotation(+e.target.value - 1, true); });
 
   document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
   function switchTab(name) {
     if (name === active) return;
-    document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.tab === name; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on); });
+    stop();
+    document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.tab === name; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
     document.querySelectorAll('.panel').forEach(p => { const on = p.id === `tab-${name}`; p.classList.toggle('is-active', on); p.hidden = !on; });
     active = name;
     showTooltip(null);
-    document.querySelector('.timeline').classList.toggle('is-hidden', name === 'math');
+    Object.values(tabs).forEach(tab => tab.pause?.());
     tabs[active].resize();
     tabs[active].render(rot, false);
   }
 
+  document.querySelector('.tabs').addEventListener('keydown', e => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const buttons = [...document.querySelectorAll('.tab')];
+    const current = buttons.indexOf(document.activeElement);
+    if (current < 0) return;
+    const idx = e.key === 'Home' ? 0 : e.key === 'End' ? buttons.length - 1 : (current + (e.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+    switchTab(buttons[idx].dataset.tab); buttons[idx].focus();
+    e.preventDefault(); e.stopPropagation();
+  });
+
   window.addEventListener('keydown', e => {
-    if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+    if (['SELECT', 'INPUT', 'BUTTON', 'A', 'SUMMARY', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable) return;
     if (e.key === 'ArrowRight') { stop(); setRotation(rot + 1); e.preventDefault(); }
     else if (e.key === 'ArrowLeft') { stop(); setRotation(rot - 1); e.preventDefault(); }
     else if (e.key === ' ') { playing ? stop() : play(); e.preventDefault(); }
     else if (e.key === 'Home') { stop(); setRotation(0); e.preventDefault(); }
-    else if (e.key === 'End') { stop(); setRotation(N_ROT - 1); e.preventDefault(); }
+    else if (e.key === 'End') { stop(); setRotation(nRot - 1); e.preventDefault(); }
     else if (e.key === '1') switchTab('room');
     else if (e.key === '2') switchTab('student');
     else if (e.key === '3') switchTab('game');
@@ -116,5 +139,6 @@ async function main() {
 
 main().catch(err => {
   console.error(err);
+  $('loading').hidden = false;
   $('loading').textContent = `Could not load the simulation data: ${err.message}. Run "python sim/export_traces.py" and serve the docs/ folder.`;
 });

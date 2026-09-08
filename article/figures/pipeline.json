@@ -1,0 +1,94 @@
+{
+  "figure": "pipeline.pdf",
+  "pdfSha256": "e23a6cf264abffa6e4571d1c1bc9ba4f3bdd5738a8e321a035851bf5e0e1ef42",
+  "generatorSha256": "8d6a58ed879a7df455483aef3bede8cdd8e06d7f348e635b4d8405549f6c6fb2",
+  "type": "empirical",
+  "inputs": {
+    "results/verified_experiments.json": "18fa11f92db61a4396d3a6b60f3bc6384e175b60cee7fad38500ff60cc3f489b",
+    "results/verified_core_a_traces/66b9c848b198401784c19e46dab98ff3.json": "288fccfef55138f620bfde945d53a06e053c9fdc6b53b3bde972d34c3f1936d2",
+    "results/verified_core_a_traces/3457751ff0ad46d2980e0c58feb67ecf.json": "c983e86088d3c142da81964173e3fbe70756234dfb57040e6c51dbd4d4e8a5a1",
+    "results/verified_core_a_traces/4b76c58a3d23465081ee802e587f0df3.json": "9993046a0b492ed609dd7052da82d6ebb90dd85901ca5a899330d43b28225586",
+    "results/verified_core_a_traces/cfaf9add637c4d59a9be80a477c009f6.json": "808c5b6965213928153f06370f834592cfbab902ef9690a0087d7f3ebc6b72a7",
+    "results/verified_core_a_traces/6034c4f1deb4427b8b265183eefa62e3.json": "52586348cc37eb20dd5016092ad9b18e82b161d56856a32d91e8664465914015",
+    "results/verified_core_a_traces/6b90a31fd6b64f4cab93b50d47fa533e.json": "def92d73980d667e886082622646688d9627b7f80fdca9eddb2e8e948e38a4ee",
+    "results/verified_core_a_traces/fdc2d6783e824da6ba4dba8b711d0536.json": "be2cf9912bceb5bb5c107faf38f455cdc2d93d84214d0921c01c2eda61e3a3ca",
+    "results/verified_core_a_traces/c4e49cf0a29b4774877449917c8826ca.json": "76ab9a35f3345756da26a7a1d10a44dbfa31fc265aaba1eb17fb32eea0616239",
+    "results/verified_core_a_traces/4a0b9a83b53b4bcba7c3a000ef8638c4.json": "0df5ae19484c65afce62d3c15b107c76ee84429c0c5a7e07d8d9956747601c36",
+    "results/verified_core_a_traces/e7cf9eff0a28474d8b404c3cb9a2afa5.json": "92ed4845db2294b9709ad1ec3b5dcaf10f34d050b0b5e9ec858955f5af058e07",
+    "results/verified_core_b_traces/0d96fcc0ece541079e94b31c57f840f3.json": "02994f88d09877448421d6df9694fb396b92fd674809c6e1bb00bec25a436095",
+    "results/verified_core_b_traces/e61b8ec992dd413f8b29f87366cc8e39.json": "fec4879866c0c4465d7253e4c376610d169250a2ba9ed9b1674ea1c02e27bb75",
+    "results/verified_core_b_traces/a6792439c97b429392f2eafcbe5cd67f.json": "f428890d5a9ad763944fda79692b66fc2645ac516dbb96c5acbdd0cc4d259b62",
+    "results/verified_core_b_traces/d7aad037714e4ace9c2a4268ca998d7e.json": "98a2344bfcaa8a2b1379eb29b4b85b1278ceb0f289b06f95a72d897fc7a229f6",
+    "results/verified_core_b_traces/cd943653f466454ab7f38ef42e08709a.json": "bac1745c37d1dcfc399ca5397b024c38a2b62fe720ae374f791043af1951911a",
+    "results/verified_core_b_traces/6b13db363eba43ddbaa2fa8d52f53b93.json": "f7c30c9177f4379a5e9a76541c46ca5841639816d3c52c1eab8cb6ee009857c5",
+    "results/verified_core_b_traces/080bccb6c4ad424491282ea1f2825211.json": "9cd039ec7fb8318b46aeb2eb5091ef8e391e2119ad5638e91d3a872b827d3866",
+    "results/verified_core_b_traces/7305edadcfdd4d538c01c3df9ececcdd.json": "43983cd657652a22bd00893a5a7999136b05fc4e27cf3c784476595e5b70f3ee",
+    "results/verified_core_b_traces/491bd8a17f6b41f7b9c5ae9247c489cb.json": "21e676c620ec8b31b246204dc04ddb55076a6ef6158dfc2240feef2c69e70321",
+    "results/verified_core_b_traces/ab9672fcb3a4467d8f16bcdd92952233.json": "62c7a3ba5d71082eb7d8758afdc2ee4c77bfc1851765969106030e43799731c6",
+    "results/verified_sensitivity_traces/60123fff4ea544158061bf5234dadb2d.json": "9c4c559991c8085bc79e8040e611ba56150b9aa9cc5fd803028c30af004c98af",
+    "results/verified_sensitivity_traces/69a83babd7574bd5adfa69fff8de57ad.json": "c5c153fcdbaddfdc3ceed7f34be8819fafbdda26e768e9bc2cf0d8afba2b7991",
+    "results/verified_sensitivity_traces/6b3f72b796b3427bbd9e9b457ea36893.json": "5b613158bf9fee629282817d6b07b59413cf0dfce2d1c68d50d732dc6b426fdd",
+    "results/verified_sensitivity_traces/34f97559eb0b4321bdf67bdd6e355075.json": "ea7eb5dc12cf74744f2f8f8743e237ed2011bf15575188e6c9d30fa4b02b7024",
+    "results/verified_sensitivity_traces/93defb35ea624cfbacfdb1ef10e9b88f.json": "b413992b93e8c37c536da47f00c11e3b863cec5bb26389f41edc480d79d04281",
+    "results/verified_sensitivity_traces/65f01ec790d14b028ca308fbb38976eb.json": "62dd3406c27395ef83f34ae8afc898f96f587dd44b8b8eaa1f4d3547a0b2d8a9",
+    "results/verified_sensitivity_traces/0070d4edc9b143f192f2e10626a62ad9.json": "69d8de735a8f4090c09d27b4e7f2bcac9733bad425553d62430cce0d5e31e305",
+    "results/verified_sensitivity_traces/27061e18c7a943eeaea70b71f24877f3.json": "e66dba83be52c77789ba31f1e45863a675d16e5e0e1a15d3ecb854d677f72dae",
+    "results/verified_sensitivity_traces/4e94c5239566484fbc9fea15f8b46b9a.json": "04cb2de912943b47d03e7480e039185378b7902f0c54a0afe9af69222010fbcf",
+    "results/verified_sensitivity_traces/60d8af6edbec44a08069bf7c64d7fff8.json": "edd5c652c5c2553ffe0b1392eef3b989415fa48066704e532dc668a128df3786",
+    "results/verified_sensitivity_traces/07313b2c77da426cb8bc1cd282402176.json": "093b2d1df6c9b042d283e7cc0f61d0bd037433556c919a03f168b7dc1eb094d7",
+    "results/verified_sensitivity_traces/b104fac4b51b4effa0dc4bd406252961.json": "767bc89cf3706fc3258f33cd0e9e15cc035301ee08926536b01900303cb44b96"
+  },
+  "effectiveSourceHash": "4282fb6588006917a0fdd94339113c4799d1f26cd5bb37f0e67a3282bc764ed8",
+  "sourceVerification": "retained_snapshot",
+  "plottedValues": {
+    "populationSeed": 2,
+    "rotation": 1,
+    "acceptedPhase": "cpsat",
+    "stages": [
+      {
+        "stage": "construction",
+        "cost": {
+          "violations": 20,
+          "twoPlus": 19,
+          "extraPeers": 19,
+          "repeat": 0,
+          "total": 200190
+        },
+        "seconds": 0.0024
+      },
+      {
+        "stage": "repair",
+        "cost": {
+          "violations": 1,
+          "twoPlus": 16,
+          "extraPeers": 16,
+          "repeat": 0,
+          "total": 10160
+        },
+        "seconds": 0.013
+      },
+      {
+        "stage": "annealing",
+        "cost": {
+          "violations": 0,
+          "twoPlus": 0,
+          "extraPeers": 0,
+          "repeat": 0,
+          "total": 0
+        },
+        "seconds": 5.3022
+      },
+      {
+        "stage": "final",
+        "cost": {
+          "violations": 0,
+          "twoPlus": 0,
+          "extraPeers": 0,
+          "repeat": 0,
+          "total": 0
+        },
+        "seconds": 2.3499
+      }
+    ]
+  }
+}

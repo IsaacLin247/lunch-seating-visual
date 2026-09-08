@@ -1,38 +1,23 @@
-\begin{thebibliography}{15}
+\begin{thebibliography}{11}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
 
-\bibitem[Alon(2006)]{alon2006splitting}
-Noga Alon.
-\newblock Splitting digraphs.
-\newblock \emph{Combinatorics, Probability and Computing}, 15\penalty0
-  (6):\penalty0 933--937, 2006.
-
-\bibitem[Bang-Jensen and Havet(2016)]{bangjensen2016partitions1}
-J{\o}rgen Bang-Jensen and Fr{\'e}d{\'e}ric Havet.
-\newblock Finding good 2-partitions of digraphs {I}. {H}ereditary properties.
-\newblock \emph{Theoretical Computer Science}, 636:\penalty0 85--94, 2016.
-
-\bibitem[Bang-Jensen et~al.(2016)Bang-Jensen, Cohen, and
-  Havet]{bangjensen2016partitions2}
-J{\o}rgen Bang-Jensen, Nathann Cohen, and Fr{\'e}d{\'e}ric Havet.
-\newblock Finding good 2-partitions of digraphs {II}. {E}numerable properties.
-\newblock \emph{Theoretical Computer Science}, 640:\penalty0 1--19, 2016.
-
-\bibitem[Bowlby(1988)]{bowlby1988}
-John Bowlby.
-\newblock \emph{A Secure Base: Parent-Child Attachment and Healthy Human
-  Development}.
-\newblock Basic Books, 1988.
+\bibitem[Lewis and Carroll(2016)]{lewis2016seating}
+Rhyd Lewis and Fiona Carroll.
+\newblock Creating seating plans: a practical application.
+\newblock \emph{Journal of the Operational Research Society}, 67\penalty0
+  (11):\penalty0 1353--1362, 2016.
+\newblock \url{https://doi.org/10.1057/jors.2016.34}.
 
 \bibitem[Ceylan et~al.(2023)Ceylan, Chen, and Roy]{ceylan2023seat}
 Esra Ceylan, Jiehua Chen, and Sanjukta Roy.
 \newblock Optimal seat arrangement: what are the hard and easy cases?
 \newblock In \emph{Proceedings of the Thirty-Second International Joint
-  Conference on Artificial Intelligence (IJCAI)}, 2023.
+  Conference on Artificial Intelligence (IJCAI)}, pages 2563--2571, 2023.
+\newblock \url{https://doi.org/10.24963/ijcai.2023/285}.
 
 \bibitem[Dot{\'u} and Van~Hentenryck(2005)]{dotu2005golfers}
 Iv{\'a}n Dot{\'u} and Pascal Van~Hentenryck.
@@ -41,30 +26,34 @@ Iv{\'a}n Dot{\'u} and Pascal Van~Hentenryck.
   Programming for Combinatorial Optimization Problems (CPAIOR 2005)}, volume
   3524 of \emph{Lecture Notes in Computer Science}, pages 155--167. Springer,
   2005.
-
-\bibitem[Garey and Johnson(1979)]{garey1979}
-Michael~R. Garey and David~S. Johnson.
-\newblock \emph{Computers and Intractability: A Guide to the Theory of
-  NP-Completeness}.
-\newblock W. H. Freeman, 1979.
+\newblock \url{https://doi.org/10.1007/11493853_13}.
 
 \bibitem[Kirkpatrick and Hell(1983)]{kirkpatrick1983factor}
 David~G. Kirkpatrick and Pavol Hell.
 \newblock On the complexity of general graph factor problems.
 \newblock \emph{SIAM Journal on Computing}, 12\penalty0 (3):\penalty0 601--609,
   1983.
+\newblock \url{https://doi.org/10.1137/0212040}.
 
-\bibitem[Kirkpatrick et~al.(1983)Kirkpatrick, Gelatt, and
-  Vecchi]{kirkpatrick1983annealing}
-S.~Kirkpatrick, C.~D. Gelatt, and M.~P. Vecchi.
-\newblock Optimization by simulated annealing.
-\newblock \emph{Science}, 220\penalty0 (4598):\penalty0 671--680, 1983.
+\bibitem[Thomassen(1983)]{thomassen1983}
+Carsten Thomassen.
+\newblock Disjoint cycles in digraphs.
+\newblock \emph{Combinatorica}, 3\penalty0 (3--4):\penalty0 393--396, 1983.
+\newblock \url{https://doi.org/10.1007/BF02579195}.
 
-\bibitem[Lewis and Carroll(2016)]{lewis2016seating}
-Rhyd Lewis and Fiona Carroll.
-\newblock Creating seating plans: a practical application.
-\newblock \emph{Journal of the Operational Research Society}, 67\penalty0
-  (11):\penalty0 1353--1362, 2016.
+\bibitem[Alon(2006)]{alon2006splitting}
+Noga Alon.
+\newblock Splitting digraphs.
+\newblock \emph{Combinatorics, Probability and Computing}, 15\penalty0
+  (6):\penalty0 933--937, 2006.
+\newblock \url{https://doi.org/10.1017/S0963548306008042}.
+
+\bibitem[Alon()]{aloncoalitions}
+Noga Alon.
+\newblock High school coalitions.
+\newblock Author-hosted research note,
+  \url{https://www.tau.ac.il/~nogaa/PDFS/coalition.pdf}.
+\newblock Undated; accessed 8 September 2026.
 
 \bibitem[Metropolis et~al.(1953)Metropolis, Rosenbluth, Rosenbluth, Teller, and
   Teller]{metropolis1953}
@@ -73,27 +62,22 @@ N.~Metropolis, A.~W. Rosenbluth, M.~N. Rosenbluth, A.~H. Teller, and E.~Teller.
 \newblock \emph{The Journal of Chemical Physics}, 21\penalty0 (6):\penalty0
   1087--1092, 1953.
 
+\bibitem[Kirkpatrick et~al.(1983)Kirkpatrick, Gelatt, and
+  Vecchi]{kirkpatrick1983annealing}
+S.~Kirkpatrick, C.~D. Gelatt, and M.~P. Vecchi.
+\newblock Optimization by simulated annealing.
+\newblock \emph{Science}, 220\penalty0 (4598):\penalty0 671--680, 1983.
+
 \bibitem[Perron and Furnon(2026)]{ortools}
 Laurent Perron and Vincent Furnon.
 \newblock {OR-Tools}.
 \newblock Google, \url{https://developers.google.com/optimization/}, 2026.
 \newblock Version 9.15, CP-SAT solver.
 
-\bibitem[Richardson(1953)]{richardson1953}
-Moses Richardson.
-\newblock Solutions of irreflexive relations.
-\newblock \emph{Annals of Mathematics}, 58\penalty0 (3):\penalty0 573--590,
-  1953.
-
-\bibitem[Stiebitz(1996)]{stiebitz1996}
-Michael Stiebitz.
-\newblock Decomposing graphs under degree constraints.
-\newblock \emph{Journal of Graph Theory}, 23\penalty0 (3):\penalty0 321--324,
-  1996.
-
-\bibitem[Thomassen(1983)]{thomassen1983}
-Carsten Thomassen.
-\newblock Disjoint cycles in digraphs.
-\newblock \emph{Combinatorica}, 3\penalty0 (3--4):\penalty0 393--396, 1983.
+\bibitem[{Google}()]{cpsatstatus}
+{Google}.
+\newblock {CP-SAT} solver: Statuses and feasibility.
+\newblock \url{https://developers.google.com/optimization/cp/cp_solver}.
+\newblock Accessed 8 September 2026.
 
 \end{thebibliography}

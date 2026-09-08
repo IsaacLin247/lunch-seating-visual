@@ -1,0 +1,271 @@
+{
+  "manifest": "results/verified_core_a.json",
+  "manifestSha256": "849a756d43582ec4ef12a441c1a2ba71f05cea5099fa5560d462440deef7799e",
+  "attemptDenominator": 11,
+  "attemptStatuses": {
+    "interrupted_unfinished": 1,
+    "success": 10
+  },
+  "tracesChecked": 10,
+  "totalDiscrepancies": 0,
+  "reports": [
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.61,
+        "pctExactly1Min": 98.44,
+        "pctGe1RandomMean": 21.4,
+        "meanDistinctMetFinal": 74.74,
+        "meanDistinctMetFinalRandom": 71.55,
+        "repeatsWorseThanRandomRotations": [
+          5
+        ]
+      },
+      "attemptId": "66b9c848b198401784c19e46dab98ff3",
+      "tracePath": "results/verified_core_a_traces/66b9c848b198401784c19e46dab98ff3.json",
+      "status": "success",
+      "populationSeed": 1,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.2,
+        "pctExactly1Min": 97.28,
+        "pctGe1RandomMean": 21.18,
+        "meanDistinctMetFinal": 74.53,
+        "meanDistinctMetFinalRandom": 71.55,
+        "repeatsWorseThanRandomRotations": [
+          5
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.0,
+        "coalitionPatterns": {
+          "3+3": 16
+        }
+      },
+      "attemptId": "3457751ff0ad46d2980e0c58feb67ecf",
+      "tracePath": "results/verified_core_a_traces/3457751ff0ad46d2980e0c58feb67ecf.json",
+      "status": "success",
+      "populationSeed": 1,
+      "scenario": "coalition_min4"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.61,
+        "pctExactly1Min": 98.44,
+        "pctGe1RandomMean": 21.35,
+        "meanDistinctMetFinal": 75.04,
+        "meanDistinctMetFinalRandom": 71.95,
+        "repeatsWorseThanRandomRotations": [
+          3,
+          7
+        ]
+      },
+      "attemptId": "4b76c58a3d23465081ee802e587f0df3",
+      "tracePath": "results/verified_core_a_traces/4b76c58a3d23465081ee802e587f0df3.json",
+      "status": "success",
+      "populationSeed": 3,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.25,
+        "pctExactly1Min": 96.89,
+        "pctGe1RandomMean": 21.04,
+        "meanDistinctMetFinal": 74.45,
+        "meanDistinctMetFinalRandom": 71.95,
+        "repeatsWorseThanRandomRotations": [
+          3,
+          7
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.0,
+        "coalitionPatterns": {
+          "3+3": 16
+        }
+      },
+      "attemptId": "cfaf9add637c4d59a9be80a477c009f6",
+      "tracePath": "results/verified_core_a_traces/cfaf9add637c4d59a9be80a477c009f6.json",
+      "status": "success",
+      "populationSeed": 3,
+      "scenario": "coalition_min4"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.68,
+        "pctExactly1Min": 98.83,
+        "pctGe1RandomMean": 21.45,
+        "meanDistinctMetFinal": 74.75,
+        "meanDistinctMetFinalRandom": 72.58,
+        "repeatsWorseThanRandomRotations": [
+          5
+        ]
+      },
+      "attemptId": "6034c4f1deb4427b8b265183eefa62e3",
+      "tracePath": "results/verified_core_a_traces/6034c4f1deb4427b8b265183eefa62e3.json",
+      "status": "success",
+      "populationSeed": 5,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.3,
+        "pctExactly1Min": 96.89,
+        "pctGe1RandomMean": 21.21,
+        "meanDistinctMetFinal": 74.16,
+        "meanDistinctMetFinalRandom": 72.58,
+        "repeatsWorseThanRandomRotations": [
+          5,
+          7,
+          9,
+          11
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.0,
+        "coalitionPatterns": {
+          "3+3": 16
+        }
+      },
+      "attemptId": "6b90a31fd6b64f4cab93b50d47fa533e",
+      "tracePath": "results/verified_core_a_traces/6b90a31fd6b64f4cab93b50d47fa533e.json",
+      "status": "success",
+      "populationSeed": 5,
+      "scenario": "coalition_min4"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.68,
+        "pctExactly1Min": 98.44,
+        "pctGe1RandomMean": 21.23,
+        "meanDistinctMetFinal": 74.44,
+        "meanDistinctMetFinalRandom": 72.31,
+        "repeatsWorseThanRandomRotations": [
+          3,
+          5,
+          7
+        ]
+      },
+      "attemptId": "fdc2d6783e824da6ba4dba8b711d0536",
+      "tracePath": "results/verified_core_a_traces/fdc2d6783e824da6ba4dba8b711d0536.json",
+      "status": "success",
+      "populationSeed": 7,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.3,
+        "pctExactly1Min": 97.28,
+        "pctGe1RandomMean": 20.91,
+        "meanDistinctMetFinal": 74.0,
+        "meanDistinctMetFinalRandom": 72.31,
+        "repeatsWorseThanRandomRotations": [
+          3,
+          5,
+          7
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.02,
+        "coalitionPatterns": {
+          "3+3": 15,
+          "4+2": 1
+        }
+      },
+      "attemptId": "c4e49cf0a29b4774877449917c8826ca",
+      "tracePath": "results/verified_core_a_traces/c4e49cf0a29b4774877449917c8826ca.json",
+      "status": "success",
+      "populationSeed": 7,
+      "scenario": "coalition_min4"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 99.68,
+        "pctExactly1Min": 98.44,
+        "pctGe1RandomMean": 21.69,
+        "meanDistinctMetFinal": 74.39,
+        "meanDistinctMetFinalRandom": 72.08,
+        "repeatsWorseThanRandomRotations": [
+          4,
+          5,
+          9
+        ]
+      },
+      "attemptId": "4a0b9a83b53b4bcba7c3a000ef8638c4",
+      "tracePath": "results/verified_core_a_traces/4a0b9a83b53b4bcba7c3a000ef8638c4.json",
+      "status": "success",
+      "populationSeed": 9,
+      "scenario": "honest"
+    },
+    {
+      "errors": [],
+      "rotationsChecked": 16,
+      "proposedAndRandomChartsChecked": 32,
+      "pipelineChartsChecked": 64,
+      "independentSummary": {
+        "pctGe1Min": 100.0,
+        "pctExactly1Mean": 98.12,
+        "pctExactly1Min": 96.5,
+        "pctGe1RandomMean": 21.43,
+        "meanDistinctMetFinal": 73.67,
+        "meanDistinctMetFinalRandom": 72.08,
+        "repeatsWorseThanRandomRotations": [
+          5,
+          9
+        ],
+        "coalitionIntactRotations": 0,
+        "coalitionAvgCluster": 3.0,
+        "coalitionPatterns": {
+          "3+3": 16
+        }
+      },
+      "attemptId": "e7cf9eff0a28474d8b404c3cb9a2afa5",
+      "tracePath": "results/verified_core_a_traces/e7cf9eff0a28474d8b404c3cb9a2afa5.json",
+      "status": "success",
+      "populationSeed": 9,
+      "scenario": "coalition_min4"
+    }
+  ]
+}

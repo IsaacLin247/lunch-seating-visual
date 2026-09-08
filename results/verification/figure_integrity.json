@@ -1,0 +1,62 @@
+{
+  "manifest": "results/verified_experiments.json",
+  "manifestSha256": "18fa11f92db61a4396d3a6b60f3bc6384e175b60cee7fad38500ff60cc3f489b",
+  "figuresChecked": 6,
+  "allPassed": true,
+  "reports": [
+    {
+      "figure": "structural_examples",
+      "pdfSha256": "56d41436ceb44e5b497bb379f590466690a95720d878c808c14f368e0bc912f9",
+      "bytes": 37189,
+      "allInputHashesMatch": true,
+      "rasterImages": 0,
+      "allFontsEmbedded": true,
+      "inputFilesChecked": 0
+    },
+    {
+      "figure": "pipeline",
+      "pdfSha256": "e23a6cf264abffa6e4571d1c1bc9ba4f3bdd5738a8e321a035851bf5e0e1ef42",
+      "bytes": 177173,
+      "allInputHashesMatch": true,
+      "rasterImages": 0,
+      "allFontsEmbedded": true,
+      "inputFilesChecked": 33
+    },
+    {
+      "figure": "reference_year",
+      "pdfSha256": "3757c679845ab8000b4969b0f0912e1a69a1f45b032de456badb45c39baee31f",
+      "bytes": 22516,
+      "allInputHashesMatch": true,
+      "rasterImages": 0,
+      "allFontsEmbedded": true,
+      "inputFilesChecked": 1
+    },
+    {
+      "figure": "population_results",
+      "pdfSha256": "15f62b19fd6ed0a69d8885dff5998bf2470823dcbfd7552df994404160ea8c3a",
+      "bytes": 25815,
+      "allInputHashesMatch": true,
+      "rasterImages": 0,
+      "allFontsEmbedded": true,
+      "inputFilesChecked": 33
+    },
+    {
+      "figure": "sensitivity",
+      "pdfSha256": "0334a2293c375bf0b80aa0212aac7a367845a7130cbeed62765158c5fd7846fb",
+      "bytes": 28410,
+      "allInputHashesMatch": true,
+      "rasterImages": 0,
+      "allFontsEmbedded": true,
+      "inputFilesChecked": 33
+    },
+    {
+      "figure": "leakage_fairness",
+      "pdfSha256": "de2a990e741cb6b4e36719b2fdb6120c5d31448b352ba4dcb30d1ebf48a3536c",
+      "bytes": 44191,
+      "allInputHashesMatch": true,
+      "rasterImages": 0,
+      "allFontsEmbedded": true,
+      "inputFilesChecked": 6
+    }
+  ]
+}

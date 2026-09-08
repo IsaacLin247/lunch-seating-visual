@@ -1,1 +1,249 @@
-{"scenarios":[{"name":"honest","file":"honest.json","title":"The whole room","short":"Honest lists","summary":{"pctGe1Min":100.0,"pctExactly1Mean":99.68,"pctExactly1Min":98.44,"pctGe1RandomMean":21.23,"meanDistinctMetFinal":74.44,"meanDistinctMetFinalRandom":72.31,"repeatsWorseThanRandomRotations":[3,5,7],"totalSolveSeconds":133.2,"maxSolveSeconds":9.05,"phases":{"anneal":13,"cpsat":3}},"bytes":161879},{"name":"coalition_none","file":"coalition_none.json","title":"Gaming it: no defenses","short":"No defenses","summary":{"pctGe1Min":100.0,"pctExactly1Mean":99.59,"pctExactly1Min":98.44,"pctGe1RandomMean":20.62,"meanDistinctMetFinal":72.78,"meanDistinctMetFinalRandom":72.31,"repeatsWorseThanRandomRotations":[2,3,5,6,7,9,11],"totalSolveSeconds":140.7,"maxSolveSeconds":9.54,"phases":{"anneal":14,"cpsat":2},"coalitionIntactRotations":16,"coalitionIntactByState":{"mixed":8,"same":8},"coalitionAvgCluster":6.0,"coalitionMaxClusterMean":6.0,"coalitionPatterns":{"6":16}},"bytes":165720},{"name":"coalition_min4","file":"coalition_min4.json","title":"Gaming it: min-4 rule","short":"Min-4 rule","summary":{"pctGe1Min":100.0,"pctExactly1Mean":98.3,"pctExactly1Min":97.28,"pctGe1RandomMean":20.91,"meanDistinctMetFinal":74.0,"meanDistinctMetFinalRandom":72.31,"repeatsWorseThanRandomRotations":[3,5,7],"totalSolveSeconds":139.8,"maxSolveSeconds":9.31,"phases":{"anneal":13,"cpsat":3},"coalitionIntactRotations":0,"coalitionIntactByState":{"mixed":0,"same":0},"coalitionAvgCluster":3.02,"coalitionMaxClusterMean":3.06,"coalitionPatterns":{"3+3":15,"4+2":1}},"bytes":166149},{"name":"coalition_stratified","file":"coalition_stratified.json","title":"Gaming it: hiding behind the other grade","short":"Same-grade attack","summary":{"pctGe1Min":100.0,"pctExactly1Mean":98.69,"pctExactly1Min":96.89,"pctGe1RandomMean":20.79,"meanDistinctMetFinal":73.33,"meanDistinctMetFinalRandom":72.31,"repeatsWorseThanRandomRotations":[3,5,7,9,14],"totalSolveSeconds":143.6,"maxSolveSeconds":9.69,"phases":{"anneal":14,"cpsat":2},"coalitionIntactRotations":8,"coalitionIntactByState":{"mixed":0,"same":8},"coalitionAvgCluster":3.79,"coalitionMaxClusterMean":4.06,"coalitionPatterns":{"2+1+1+1+1":4,"6":8,"2+2+1+1":3,"3+2+1":1}},"bytes":166255},{"name":"coalition_screened","file":"coalition_screened.json","title":"Gaming it: screens on","short":"Screens on","summary":{"pctGe1Min":100.0,"pctExactly1Mean":98.3,"pctExactly1Min":97.28,"pctGe1RandomMean":20.91,"meanDistinctMetFinal":74.0,"meanDistinctMetFinalRandom":72.31,"repeatsWorseThanRandomRotations":[3,5,7],"totalSolveSeconds":143.1,"maxSolveSeconds":9.97,"phases":{"anneal":13,"cpsat":3},"coalitionIntactRotations":0,"coalitionIntactByState":{"mixed":0,"same":0},"coalitionAvgCluster":3.02,"coalitionMaxClusterMean":3.06,"coalitionPatterns":{"3+3":15,"4+2":1}},"bytes":182757}],"seed":7}
+{
+ "scenarios": [
+  {
+   "name": "honest",
+   "file": "honest.json",
+   "title": "The whole room",
+   "short": "Honest lists",
+   "summary": {
+    "pctGe1Min": 100.0,
+    "pctExactly1Mean": 99.68,
+    "pctExactly1Min": 98.44,
+    "pctGe1RandomMean": 21.23,
+    "meanDistinctMetFinal": 74.44,
+    "meanDistinctMetFinalRandom": 72.31,
+    "repeatsWorseThanRandomRotations": [
+     3,
+     5,
+     7
+    ],
+    "totalSolveSeconds": 171.4,
+    "maxSolveSeconds": 12.04,
+    "phases": {
+     "anneal": 13,
+     "cpsat": 3
+    }
+   },
+   "bytes": 646268,
+   "sha256": "be2cf9912bceb5bb5c107faf38f455cdc2d93d84214d0921c01c2eda61e3a3ca",
+   "attemptId": "fdc2d6783e824da6ba4dba8b711d0536",
+   "fingerprint": "3a7f83e1b8c713eec814b6b33f978370d180f58447e5b6b1f0d7313200970677"
+  },
+  {
+   "name": "coalition_none",
+   "file": "coalition_none.json",
+   "title": "Gaming it: no defenses",
+   "short": "No defenses",
+   "summary": {
+    "pctGe1Min": 100.0,
+    "pctExactly1Mean": 99.59,
+    "pctExactly1Min": 98.44,
+    "pctGe1RandomMean": 20.62,
+    "meanDistinctMetFinal": 72.78,
+    "meanDistinctMetFinalRandom": 72.31,
+    "repeatsWorseThanRandomRotations": [
+     2,
+     3,
+     5,
+     6,
+     7,
+     9,
+     11
+    ],
+    "totalSolveSeconds": 200.1,
+    "maxSolveSeconds": 14.02,
+    "phases": {
+     "anneal": 14,
+     "cpsat": 2
+    },
+    "coalitionIntactRotations": 16,
+    "coalitionIntactByState": {
+     "mixed": 8,
+     "same": 8
+    },
+    "coalitionAvgCluster": 6.0,
+    "coalitionMaxClusterMean": 6.0,
+    "coalitionPatterns": {
+     "6": 16
+    }
+   },
+   "bytes": 648754,
+   "sha256": "9c4c559991c8085bc79e8040e611ba56150b9aa9cc5fd803028c30af004c98af",
+   "attemptId": "60123fff4ea544158061bf5234dadb2d",
+   "fingerprint": "1086649ae920217300d012d6edf76f29034ea973e6d9711496700a6ea4f1b123"
+  },
+  {
+   "name": "coalition_min4",
+   "file": "coalition_min4.json",
+   "title": "Gaming it: min-4 rule",
+   "short": "Min-4 rule",
+   "summary": {
+    "pctGe1Min": 100.0,
+    "pctExactly1Mean": 98.3,
+    "pctExactly1Min": 97.28,
+    "pctGe1RandomMean": 20.91,
+    "meanDistinctMetFinal": 74.0,
+    "meanDistinctMetFinalRandom": 72.31,
+    "repeatsWorseThanRandomRotations": [
+     3,
+     5,
+     7
+    ],
+    "totalSolveSeconds": 160.8,
+    "maxSolveSeconds": 11.98,
+    "phases": {
+     "anneal": 13,
+     "cpsat": 3
+    },
+    "coalitionIntactRotations": 0,
+    "coalitionIntactByState": {
+     "mixed": 0,
+     "same": 0
+    },
+    "coalitionAvgCluster": 3.02,
+    "coalitionMaxClusterMean": 3.06,
+    "coalitionPatterns": {
+     "3+3": 15,
+     "4+2": 1
+    }
+   },
+   "bytes": 653513,
+   "sha256": "76ab9a35f3345756da26a7a1d10a44dbfa31fc265aaba1eb17fb32eea0616239",
+   "attemptId": "c4e49cf0a29b4774877449917c8826ca",
+   "fingerprint": "b7b7829d58d19f49c020846b95f165a5676c5b7b67c82145a5410304086b0976"
+  },
+  {
+   "name": "coalition_stratified",
+   "file": "coalition_stratified.json",
+   "title": "Gaming it: hiding behind the other grade",
+   "short": "Same-grade attack",
+   "summary": {
+    "pctGe1Min": 100.0,
+    "pctExactly1Mean": 98.69,
+    "pctExactly1Min": 96.89,
+    "pctGe1RandomMean": 20.79,
+    "meanDistinctMetFinal": 73.33,
+    "meanDistinctMetFinalRandom": 72.31,
+    "repeatsWorseThanRandomRotations": [
+     3,
+     5,
+     7,
+     9,
+     14
+    ],
+    "totalSolveSeconds": 201.8,
+    "maxSolveSeconds": 14.26,
+    "phases": {
+     "anneal": 14,
+     "cpsat": 2
+    },
+    "coalitionIntactRotations": 8,
+    "coalitionIntactByState": {
+     "mixed": 0,
+     "same": 8
+    },
+    "coalitionAvgCluster": 3.79,
+    "coalitionMaxClusterMean": 4.06,
+    "coalitionPatterns": {
+     "2+1+1+1+1": 4,
+     "6": 8,
+     "2+2+1+1": 3,
+     "3+2+1": 1
+    }
+   },
+   "bytes": 650220,
+   "sha256": "c5c153fcdbaddfdc3ceed7f34be8819fafbdda26e768e9bc2cf0d8afba2b7991",
+   "attemptId": "69a83babd7574bd5adfa69fff8de57ad",
+   "fingerprint": "290038baa07cb9d02c464b3bf15e6a7c6d02831addba3dfe368de1c29dd65324"
+  },
+  {
+   "name": "coalition_shared_anchor",
+   "file": "coalition_shared_anchor.json",
+   "title": "Gaming it: one shared outside anchor",
+   "short": "Shared-anchor attack",
+   "summary": {
+    "pctGe1Min": 100.0,
+    "pctExactly1Mean": 99.25,
+    "pctExactly1Min": 97.28,
+    "pctGe1RandomMean": 20.57,
+    "meanDistinctMetFinal": 69.54,
+    "meanDistinctMetFinalRandom": 72.31,
+    "repeatsWorseThanRandomRotations": [
+     3,
+     4,
+     5,
+     7,
+     8,
+     10,
+     11,
+     12,
+     14
+    ],
+    "totalSolveSeconds": 377.2,
+    "maxSolveSeconds": 45.99,
+    "phases": {
+     "anneal": 6,
+     "cpsat": 5,
+     "cpsat-fallback": 5
+    },
+    "coalitionIntactRotations": 8,
+    "coalitionIntactByState": {
+     "mixed": 0,
+     "same": 8
+    },
+    "coalitionAvgCluster": 4.71,
+    "coalitionMaxClusterMean": 5.0,
+    "coalitionPatterns": {
+     "3+2+2": 8,
+     "7": 8
+    }
+   },
+   "bytes": 654360,
+   "sha256": "5b613158bf9fee629282817d6b07b59413cf0dfce2d1c68d50d732dc6b426fdd",
+   "attemptId": "6b3f72b796b3427bbd9e9b457ea36893",
+   "fingerprint": "c2f8d72a1755d2eb916bf7f8c257ae91884dbc8527b9df0bb60ba0de1619b7a3"
+  },
+  {
+   "name": "coalition_screened",
+   "file": "coalition_screened.json",
+   "title": "Gaming it: screens on",
+   "short": "Screens on",
+   "summary": {
+    "pctGe1Min": 100.0,
+    "pctExactly1Mean": 98.3,
+    "pctExactly1Min": 97.28,
+    "pctGe1RandomMean": 20.91,
+    "meanDistinctMetFinal": 74.0,
+    "meanDistinctMetFinalRandom": 72.31,
+    "repeatsWorseThanRandomRotations": [
+     3,
+     5,
+     7
+    ],
+    "totalSolveSeconds": 182.1,
+    "maxSolveSeconds": 12.91,
+    "phases": {
+     "anneal": 13,
+     "cpsat": 3
+    },
+    "coalitionIntactRotations": 0,
+    "coalitionIntactByState": {
+     "mixed": 0,
+     "same": 0
+    },
+    "coalitionAvgCluster": 3.02,
+    "coalitionMaxClusterMean": 3.06,
+    "coalitionPatterns": {
+     "3+3": 15,
+     "4+2": 1
+    }
+   },
+   "bytes": 696624,
+   "sha256": "ea7eb5dc12cf74744f2f8f8743e237ed2011bf15575188e6c9d30fa4b02b7024",
+   "attemptId": "34f97559eb0b4321bdf67bdd6e355075",
+   "fingerprint": "f077009be1633725322903178150e4170f28af2a94b8c67d577426eab7d83c80"
+  }
+ ],
+ "seed": 7,
+ "evidenceStatus": "verified_attempt_ledger"
+}

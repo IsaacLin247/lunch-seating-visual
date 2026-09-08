@@ -71,29 +71,62 @@ def infer_forced_names(peers_by_rotation, k_max):
     return sorted(forced), initial
 
 
-def leakage_report(trace, k_max=None, key="tables"):
-    """Run the inference on a trace's charts and score it against the lists."""
+def leakage_report(trace, k_max=None, key="tables", public_list_lengths=None):
+    """Infer from charts and public constraints, then separately score truth.
+
+    Submitter identities, the static-list rule and ``k_max`` are assumed public.
+    By default the declared cap is config.rules.maxList, config.K, or the model's
+    documented cap of eight; the private maximum observed list length is never
+    used. Optional exact lengths must be public metadata supplied by the caller.
+
+    Under an upper-cap-only model, a forced set identifies the complete list
+    only if it fills the public cap (or the entire possible peer universe).
+    Recovering every actual positive entry in a shorter private list is a
+    separate ground-truth score, not proof that no additional names are possible.
+    """
     ids = [s["id"] for s in trace["students"]]
     truth = dict(zip(ids, (set(l) for l in trace["listed"])))
+    cfg = trace.get("config", {})
     if k_max is None:
-        k_max = max((len(l) for l in trace["listed"]), default=0)
+        k_max = cfg.get("rules", {}).get("maxList", cfg.get("K", 8))
+    if not isinstance(k_max, int) or k_max < 0:
+        raise ValueError("the public list cap must be a nonnegative integer")
+    public_list_lengths = public_list_lengths or {}
+    for i, length in public_list_lengths.items():
+        if i not in truth or not isinstance(length, int) or not 0 <= length <= min(k_max, len(ids) - 1):
+            raise ValueError("public exact lengths must name existing students and obey the public cap")
     peers = tablemate_sets(trace["rotations"], ids, key)
-    forced_edges, students_hit, correct, fully = 0, 0, 0, []
+    forced_edges, students_hit, correct, fully, recovered, inconsistent = 0, 0, 0, [], [], []
     per_student = {}
     for i in ids:
         if not truth[i]:
             continue
-        forced, _ = infer_forced_names(peers[i], k_max)
+        cap = public_list_lengths.get(i, k_max)
+        forced, minimum = infer_forced_names(peers[i], cap)
+        if minimum is None or len(minimum) > cap or cap == 0:
+            inconsistent.append(i)
+            continue
+        if public_list_lengths.get(i) == len(ids) - 1:
+            # An exact length equal to the entire allowed peer universe forces
+            # even names never needed to hit the observed tablemate sets.
+            forced = sorted(j for j in ids if j != i)
         if forced:
             students_hit += 1
             forced_edges += len(forced)
             correct += sum(1 for j in forced if j in truth[i])
-            if len(forced) >= len(truth[i]):
+            if len(forced) == min(cap, len(ids) - 1):
                 fully.append(i)
+            if truth[i] <= set(forced):
+                recovered.append(i)
             per_student[i] = forced
     n_edges = sum(len(l) for l in trace["listed"])
     return {"kMax": k_max, "rotationsObserved": len(trace["rotations"]), "forcedEdges": forced_edges,
             "forcedEdgesCorrect": correct, "studentsWithForcedEdge": students_hit,
-            "fullyDeterminedStudents": fully, "submittedEdges": n_edges,
+            "fullyDeterminedStudents": fully, "completeTruePositiveRecoveryStudents": recovered,
+            "inconsistentObservationStudents": inconsistent,
+            "publicExactLengths": dict(public_list_lengths),
+            "inferenceAssumptions": {"knownSubmitterIdentities": True, "staticLists": True,
+                                     "knownUpperCap": True, "usesPrivateLengthsForInference": False},
+            "submittedEdges": n_edges,
             "fractionOfEdgesForced": round(forced_edges / n_edges, 4) if n_edges else 0.0,
             "perStudent": per_student}

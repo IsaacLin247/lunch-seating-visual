@@ -1,31 +1,111 @@
 #!/usr/bin/env python
-"""Robustness experiments: independent population seeds, solver budgets and
-community regimes.  Writes results/experiments.json incrementally.
+"""Run reproducible experiments with a pre-solve attempt ledger and full traces.
 
-    python sim/experiments.py --seeds 10            # ~80 min on 8 cores
+Example bounded study (explicitly select sensitivity options to avoid a large
+implicit batch)::
 
-Each run is a full 16-rotation year at the export defaults unless stated; only
-summaries are stored (the full traces are ~160 KB each).
+    python sim/experiments.py --seed-values 1,2 --scenarios honest,coalition_min4 \\
+        --skip-budgets --skip-communities
+
+The default output is results/verified_experiments.json. Historical schema-1
+summaries are retained as explicitly unverified legacy evidence if loaded; they
+never satisfy a resume key for a new run. A terminal success means the full
+chart passed validation, including when a preliminary CP check was UNKNOWN.
 """
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+from datetime import datetime, timezone
+import fcntl
+import inspect
 import json
 import os
+from pathlib import Path
 import sys
+import tempfile
 import time
+import traceback
+import uuid
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sim.scenarios import make_all  # noqa: E402
+from sim.generator import make_cohort  # noqa: E402
+from sim.provenance import file_sha256, fingerprint, resume_fingerprint, source_provenance  # noqa: E402
+from sim.scenarios import SCENARIOS, SubmissionReviewRequired, make_all, validate_trace  # noqa: E402
+from sim.solver import InfeasibleInputError  # noqa: E402
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = Path(__file__).resolve().parents[1]
+CATEGORIES = ("seeds", "budgets", "communities", "horizons")
+# Imported modules stay in memory even when another process edits their files.
+# A long-running batch must never label old loaded code with a new on-disk hash.
+IMPORTED_SOURCE = source_provenance()
+
+
+def utc_now():
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def atomic_json(path, value):
+    """Replace one artifact only after its complete JSON has reached disk."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix=path.name + ".", suffix=".tmp", delete=False) as f:
+            tmp_path = Path(f.name)
+            json.dump(value, f, indent=1, allow_nan=False)
+            f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, path)
+    finally:
+        if tmp_path is not None and tmp_path.exists():
+            tmp_path.unlink()
+
+
+@contextmanager
+def manifest_lock(path):
+    """Refuse concurrent writers rather than losing another process's attempts."""
+    lock = Path(str(path) + ".lock")
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    with lock.open("a+") as stream:
+        try:
+            fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError(f"another experiment process is writing {path}") from exc
+        try:
+            yield
+        finally:
+            fcntl.flock(stream, fcntl.LOCK_UN)
+
+
+def load_manifest(path):
+    path = Path(path)
+    if not path.exists():
+        return {"schemaVersion": 2, **{k: [] for k in CATEGORIES}, "attempts": [], "batches": [],
+                "meta": {"createdAt": utc_now()}}
+    with path.open() as f:
+        old = json.load(f)
+    if old.get("schemaVersion") == 2:
+        return old
+    if old.get("schemaVersion") not in (None, 1):
+        raise ValueError("unsupported experiment manifest schema")
+    return {"schemaVersion": 2, **{k: [] for k in CATEGORIES}, "attempts": [], "batches": [],
+            "meta": {"createdAt": utc_now()},
+            "legacy": {"status": "unverified_summary_only", "originalFileSha256": file_sha256(path),
+                       "reason": "No pre-run attempt ledger, exact source identity or retained per-run traces; not used for resume or failure-rate claims.",
+                       "summaryOnly": old}}
 
 
 def summary_of(trace):
     cfg = trace["config"]
     out = {
-        "seed": cfg["seed"], "scenario": cfg["scenario"], "annealIters": cfg["solver"]["annealIters"],
+        "seed": cfg["seed"], "populationSeed": cfg.get("populationSeed", cfg["seed"]),
+        "solverSeed": cfg.get("solverSeed", cfg["seed"]),
+        "scenario": cfg["scenario"], "rotations": cfg["rotations"],
+        "annealIters": cfg["solver"]["annealIters"],
         "cpsatTime": cfg["solver"]["cpsatTime"], "workers": cfg["solver"]["workers"],
         "mu": cfg["network"]["mu"], "omega": cfg["network"]["omega"],
         "reciprocity": cfg["network"]["reciprocity"], "inGroupFrac": cfg["network"]["inGroupFrac"],
@@ -33,11 +113,14 @@ def summary_of(trace):
         "expectedDistinctRandom": cfg["baseline"]["expectedDistinctRandom"],
         "leakageForcedEdges": trace["leakage"]["forcedEdges"],
         "leakageStudents": trace["leakage"]["studentsWithForcedEdge"],
-        "fairness": trace["fairness"],
-        "yearSolveSeconds": cfg["yearSolveSeconds"],
+        "leakageFullyDeterminedStudents": len(trace["leakage"]["fullyDeterminedStudents"]),
+        "leakageCompleteTruePositiveRecoveryStudents": len(trace["leakage"].get("completeTruePositiveRecoveryStudents", [])),
+        "fairness": trace["fairness"], "yearSolveSeconds": cfg["yearSolveSeconds"],
         "screenReturned": cfg.get("screen", {}).get("nReturned"),
+        "screenUnresolved": cfg.get("screen", {}).get("nUnresolved"),
+        "config": cfg,
     }
-    out.update({k: v for k, v in trace["summary"].items()})
+    out.update(trace["summary"])
     out["pctExactly1ByRotation"] = [r["stats"]["pctExactly1"] for r in trace["rotations"]]
     out["metByRotation"] = [r["stats"]["meanDistinctMet"] for r in trace["rotations"]]
     out["metRandomByRotation"] = [r["stats"]["meanDistinctMetRandom"] for r in trace["rotations"]]
@@ -46,65 +129,261 @@ def summary_of(trace):
     return out
 
 
+def experiment_configuration(seed=7, scenario="honest", *, solver_seed=None,
+                             anneal_iters=300_000, cpsat_time=3.5, workers=8,
+                             deterministic=True, feasibility_time=20.0, rotations=16,
+                             first_state="mixed", mu=0.0, omega=0.0,
+                             cross_grade_group_frac=0.0, short_list_policy="none"):
+    generator = inspect.signature(make_cohort).bind_partial(seed=seed, mu=mu, omega=omega,
+                                                           cross_grade_group_frac=cross_grade_group_frac)
+    generator.apply_defaults()
+    return {"populationSeed": seed, "solverSeed": seed if solver_seed is None else solver_seed,
+            "scenario": scenario, "generator": dict(generator.arguments),
+            "submission": {"shortListPolicy": short_list_policy},
+            "run": {"anneal_iters": anneal_iters, "cpsat_time": cpsat_time, "workers": workers,
+                    "deterministic": deterministic, "feasibility_time": feasibility_time,
+                    "rotations": rotations, "first_state": first_state}}
+
+
+def _run_configuration(config, runner):
+    gen = config["generator"]
+    return runner(seed=config["populationSeed"], solver_seed=config["solverSeed"],
+                  scenarios=[config["scenario"]], log=None, generator_config=gen,
+                  mu=gen["mu"], omega=gen["omega"], cross_grade_group_frac=gen["cross_grade_group_frac"],
+                  short_list_policy=config["submission"]["shortListPolicy"], **config["run"])[config["scenario"]]
+
+
+def _valid_saved_success(attempt, output):
+    if attempt["status"] != "success" or not attempt.get("traceEvidence"):
+        return False
+    evidence = attempt["traceEvidence"]
+    path = output.parent / evidence["path"]
+    return path.is_file() and file_sha256(path) == evidence["sha256"]
+
+
+def _validate_requested_configuration(trace, config, source):
+    """Bind the returned full trace to the pre-run job and effective inputs."""
+    cfg = trace["config"]
+    provenance = cfg.get("provenance")
+    if not provenance:
+        raise ValueError("returned trace lacks source and effective-input provenance")
+    inputs = provenance["effectiveInputs"]
+    expected_run = {**config["run"], "scenario": config["scenario"], "seed": config["solverSeed"]}
+    expected_generator = {**config["generator"], "short_list_policy": config["submission"]["shortListPolicy"]}
+    checks = [
+        (provenance["effectiveSourceHash"], source["effectiveSourceHash"], "source hash"),
+        (provenance.get("sourceFiles"), source.get("sourceFiles"), "source files"),
+        (provenance["versions"], source["versions"], "runtime versions"),
+        (provenance["inputHash"], fingerprint(inputs), "effective input hash"),
+        (provenance["populationSeed"], config["populationSeed"], "population seed"),
+        (provenance["solverSeed"], config["solverSeed"], "solver seed"),
+        (inputs["network"]["seed"], config["populationSeed"], "effective network seed"),
+        (inputs["runConfig"], expected_run, "effective run configuration"),
+        (inputs["generatorConfig"], expected_generator, "effective generator configuration"),
+        (cfg["scenario"], config["scenario"], "scenario"),
+        (cfg["seed"], config["solverSeed"], "trace solver seed"),
+        (cfg.get("populationSeed", provenance["populationSeed"]), config["populationSeed"], "trace population seed"),
+        (cfg.get("solverSeed", cfg["seed"]), config["solverSeed"], "trace explicit solver seed"),
+        (cfg["rotations"], config["run"]["rotations"], "rotation horizon"),
+        (cfg["firstState"], config["run"]["first_state"], "first rotation state"),
+        (cfg["n"], config["generator"]["n11"] + config["generator"]["n12"], "population size"),
+        (cfg["K"], config["generator"]["K"], "public list cap"),
+        (cfg["network"]["mu"], config["generator"]["mu"], "trace community concentration"),
+        (cfg["network"]["omega"], config["generator"]["omega"], "trace community overlap"),
+        (inputs["network"]["grade"], [s["grade"] for s in trace["students"]], "effective grade vector"),
+    ]
+    for output_key, input_key in (("annealIters", "anneal_iters"), ("cpsatTime", "cpsat_time"),
+                                  ("workers", "workers"), ("deterministic", "deterministic"),
+                                  ("feasibilityTime", "feasibility_time")):
+        checks.append((cfg["solver"][output_key], config["run"][input_key], "solver " + output_key))
+    ids = [s["id"] for s in trace["students"]]
+    first_state = config["run"]["first_state"]
+    opposite = "same" if first_state == "mixed" else "mixed"
+    checks.append(([r["state"] for r in trace["rotations"]],
+                   [first_state if r % 2 == 0 else opposite for r in range(config["run"]["rotations"])],
+                   "rotation state schedule"))
+    effective_lists = [[ids[j] for j in row] for row in inputs["submittedLists"]]
+    checks.append((trace["listed"], effective_lists, "submitted lists"))
+    for actual, expected, label in checks:
+        if fingerprint(actual) != fingerprint(expected):
+            raise ValueError("returned trace does not match requested " + label)
+
+
+def run_experiments(jobs, output, *, runner=None, validator=None, source_reader=None, log=print):
+    """Execute (category, full configuration) jobs; persist every attempted run.
+
+    Exceptions are terminal error rows and do not erase prior successes or abort
+    unrelated jobs. Keyboard interruption is recorded and propagated. An abrupt
+    process termination leaves a running row, explicitly marked interrupted on
+    the next exclusive resume. A changed source/config/version or missing trace
+    cannot reuse a previous success.
+    """
+    output = Path(output).resolve()
+    runner = make_all if runner is None else runner
+    validator = validate_trace if validator is None else validator
+    check_imported_source = source_reader is None
+    source_reader = source_provenance if source_reader is None else source_reader
+    jobs = list(jobs)
+    with manifest_lock(output):
+        manifest = load_manifest(output)
+        for old in manifest["attempts"]:
+            if old["status"] == "running":
+                old.update(status="interrupted_unfinished", observedAtResume=utc_now(),
+                           note="Previous process did not persist a terminal outcome; never counted as success.")
+            elif old["status"] == "success" and not _valid_saved_success(old, output):
+                old.update(status="evidence_unavailable", originalTerminalStatus="success", observedAtResume=utc_now(),
+                           note="Previously successful run no longer has matching full trace evidence; excluded from verified summaries.")
+                summaries = []
+                for category in CATEGORIES:
+                    summaries.extend(row for row in manifest[category] if row.get("attemptId") == old["id"])
+                    manifest[category] = [row for row in manifest[category] if row.get("attemptId") != old["id"]]
+                for row in summaries:
+                    row["evidenceStatus"] = "evidence_unavailable"
+                old["unverifiedSummaries"] = summaries
+        batch = {"id": uuid.uuid4().hex, "startedAt": utc_now(), "plannedRuns": len(jobs),
+                 "attemptIds": [], "reusedAttemptIds": []}
+        manifest["batches"].append(batch)
+        atomic_json(output, manifest)
+        for category, config in jobs:
+            if category not in CATEGORIES:
+                raise ValueError(f"unknown experiment category: {category}")
+            source = source_reader()
+            identity = resume_fingerprint({"category": category, **config}, source)
+            reusable = next((a for a in reversed(manifest["attempts"])
+                             if a["fingerprint"] == identity and _valid_saved_success(a, output)), None)
+            if reusable:
+                batch["reusedAttemptIds"].append(reusable["id"])
+                continue
+            attempt = {"id": uuid.uuid4().hex, "batchId": batch["id"], "category": category,
+                       "fingerprint": identity, "configuration": config, "source": source,
+                       "status": "running", "startedAt": utc_now()}
+            manifest["attempts"].append(attempt)
+            batch["attemptIds"].append(attempt["id"])
+            atomic_json(output, manifest)  # necessarily before generation or solving
+            start = time.perf_counter()
+            try:
+                if check_imported_source and source["effectiveSourceHash"] != IMPORTED_SOURCE["effectiveSourceHash"]:
+                    raise RuntimeError("Source changed after Python imported the simulation; restart the experiment process.")
+                trace = _run_configuration(config, runner)
+                _validate_requested_configuration(trace, config, source)
+                validator(trace)
+                trace_path = output.parent / (output.stem + "_traces") / (attempt["id"] + ".json")
+                atomic_json(trace_path, trace)
+                attempt["traceEvidence"] = {"path": str(trace_path.relative_to(output.parent)),
+                                            "sha256": file_sha256(trace_path),
+                                            "validation": "passed"}
+                after = source_reader()
+                unchanged = (after["effectiveSourceHash"] == source["effectiveSourceHash"]
+                             and after["versions"] == source["versions"])
+                attempt["sourceUnchangedDuringRun"] = unchanged
+                if not unchanged:
+                    attempt.update(status="source_changed", sourceAfter=after,
+                                   note="Trace retained but excluded from verified summaries: source changed during execution.")
+                else:
+                    statuses = {k: v["status"] for k, v in trace["config"]["feasibility"].items()}
+                    attempt.update(status="success", preliminaryFeasibilityStatuses=statuses,
+                                   preliminaryUnknownStates=[s for s, status in statuses.items() if status == "UNKNOWN"],
+                                   feasibilityEvidence="validated full seating trace")
+                    summary = summary_of(trace)
+                    summary.update(attemptId=attempt["id"], fingerprint=identity, evidenceStatus="verified_trace",
+                                   traceEvidence=attempt["traceEvidence"], wallSeconds=round(time.perf_counter() - start, 3))
+                    manifest[category].append(summary)
+            except KeyboardInterrupt:
+                attempt.update(status="interrupted", error={"type": "KeyboardInterrupt", "message": "User/process interrupt"},
+                               finishedAt=utc_now(), wallSeconds=round(time.perf_counter() - start, 3))
+                atomic_json(output, manifest)
+                raise
+            except Exception as exc:
+                status = ("review_required" if isinstance(exc, SubmissionReviewRequired) else
+                          "infeasible_input" if isinstance(exc, InfeasibleInputError) else
+                          "unknown" if isinstance(exc, TimeoutError) else "error")
+                attempt.update(status=status, error={"type": type(exc).__name__, "message": str(exc),
+                                                    "traceback": traceback.format_exc()})
+                for attr in ("status", "solver_status", "feasibility_status"):
+                    if hasattr(exc, attr):
+                        attempt["error"][attr] = str(getattr(exc, attr))
+            attempt.update(finishedAt=utc_now(), wallSeconds=round(time.perf_counter() - start, 3))
+            atomic_json(output, manifest)
+            if log:
+                log(f"{category}: population {config['populationSeed']} {config['scenario']} "
+                    f"{config['run']['rotations']} rotations -> {attempt['status']} ({attempt['wallSeconds']:.1f}s)")
+        new_attempts = [a for a in manifest["attempts"] if a["id"] in batch["attemptIds"]]
+        batch.update(finishedAt=utc_now(), terminalCounts={s: sum(a["status"] == s for a in new_attempts)
+                                                         for s in sorted({a["status"] for a in new_attempts})})
+        batch["status"] = "completed" if all(a["status"] == "success" for a in new_attempts) else "completed_with_errors"
+        manifest["meta"].update(updatedAt=utc_now(), latestBatchStatus=batch["status"],
+                                attemptCount=len(manifest["attempts"]),
+                                terminalCounts={s: sum(a["status"] == s for a in manifest["attempts"])
+                                                for s in sorted({a["status"] for a in manifest["attempts"]})})
+        atomic_json(output, manifest)
+        return manifest
+
+
+def _csv(value, cast):
+    return [cast(x.strip()) for x in value.split(",") if x.strip()]
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--out", default=os.path.join(ROOT, "results", "experiments.json"))
-    ap.add_argument("--seeds", type=int, default=10, help="population seeds 1..N")
-    ap.add_argument("--skip-budgets", action="store_true")
-    ap.add_argument("--skip-communities", action="store_true")
+    ap.add_argument("--out", default=str(ROOT / "results" / "verified_experiments.json"))
+    ap.add_argument("--seeds", type=int, default=10, help="population seeds 1..N, unless --seed-values is supplied")
+    ap.add_argument("--seed-values", help="comma-separated explicit population seeds")
+    ap.add_argument("--scenarios", default="honest,coalition_min4", help="comma-separated scenario names")
+    ap.add_argument("--solver-seed", type=int, help="default: use each population seed")
+    ap.add_argument("--anneal-iters", type=int, default=300_000)
+    ap.add_argument("--cpsat-time", type=float, default=3.5)
+    ap.add_argument("--feasibility-time", type=float, default=20.0)
+    ap.add_argument("--rotations", type=int, default=16)
     ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--wall-time", action="store_true", help="use wall time instead of deterministic solver budgets")
+    ap.add_argument("--skip-budgets", action="store_true")
+    ap.add_argument("--anneal-budgets", default="100000,300000,900000")
+    ap.add_argument("--cpsat-budgets", default="", help="optional CP budget sweep at fixed annealing budget")
+    ap.add_argument("--horizons", default="", help="optional rotation horizons, e.g. 5,16,32; larger probes cost more")
+    ap.add_argument("--skip-communities", action="store_true")
+    ap.add_argument("--communities", default="0.6:0.3,1.0:0.0", help="comma-separated mu:omega settings")
+    ap.add_argument("--sensitivity-seeds", default="7", help="population seeds for each sensitivity setting")
+    ap.add_argument("--sensitivity-scenarios", default="honest")
     args = ap.parse_args(argv)
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    results = {"seeds": [], "budgets": [], "communities": [], "meta": {"started": time.strftime("%Y-%m-%dT%H:%M:%S")}}
-    if os.path.exists(args.out):
-        with open(args.out) as f:
-            results = json.load(f)
-
-    def save():
-        with open(args.out, "w") as f:
-            json.dump(results, f, indent=1)
-
-    done = {(r["scenario"], r["seed"]) for r in results["seeds"]}
-    for seed in range(1, args.seeds + 1):
-        for scenario in ("honest", "coalition_min4"):
-            if (scenario, seed) in done:
-                continue
-            t0 = time.perf_counter()
-            traces = make_all(seed=seed, scenarios=[scenario], log=None, workers=args.workers)
-            s = summary_of(traces[scenario])
-            s["wallSeconds"] = round(time.perf_counter() - t0, 1)
-            results["seeds"].append(s)
-            save()
-            print(f"seed {seed} {scenario}: exactly1 {s['pctExactly1Mean']} met {s['meanDistinctMetFinal']} vs {s['meanDistinctMetFinalRandom']} "
-                  f"(expected {s['expectedDistinctRandom']}) cluster {s.get('coalitionAvgCluster')} {s['wallSeconds']}s", flush=True)
-
+    seeds = _csv(args.seed_values, int) if args.seed_values is not None else list(range(1, args.seeds + 1))
+    scenarios = _csv(args.scenarios, str)
+    sensitivity_seeds = _csv(args.sensitivity_seeds, int)
+    sensitivity_scenarios = _csv(args.sensitivity_scenarios, str)
+    if args.seeds < 0 or any(s < 0 for s in seeds + sensitivity_seeds):
+        ap.error("seeds must be nonnegative")
+    if set(scenarios + sensitivity_scenarios) - set(SCENARIOS):
+        ap.error("unknown scenario; choices: " + ",".join(SCENARIOS))
+    base = {"solver_seed": args.solver_seed, "anneal_iters": args.anneal_iters,
+            "cpsat_time": args.cpsat_time, "feasibility_time": args.feasibility_time,
+            "workers": args.workers, "deterministic": not args.wall_time, "rotations": args.rotations}
+    jobs = []
+    def add(category, selected_seeds, selected_scenarios, **changes):
+        settings = {**base, **changes}
+        if not 1 <= settings["rotations"] <= 64:
+            ap.error("rotation horizons must lie in 1..64")
+        if settings["anneal_iters"] < 0 or settings["cpsat_time"] < 0 or settings["feasibility_time"] < 0 or settings["workers"] < 1:
+            ap.error("budgets must be nonnegative and workers positive")
+        for seed in selected_seeds:
+            for scenario in selected_scenarios:
+                jobs.append((category, experiment_configuration(seed, scenario, **settings)))
+    add("seeds", seeds, scenarios)
     if not args.skip_budgets:
-        done_b = {r["annealIters"] for r in results["budgets"]}
-        for iters in (100_000, 300_000, 900_000):
-            if iters in done_b:
-                continue
-            t0 = time.perf_counter()
-            traces = make_all(seed=7, scenarios=["honest"], log=None, anneal_iters=iters, workers=args.workers)
-            s = summary_of(traces["honest"])
-            s["wallSeconds"] = round(time.perf_counter() - t0, 1)
-            results["budgets"].append(s)
-            save()
-            print(f"budget {iters}: exactly1 {s['pctExactly1Mean']} met {s['meanDistinctMetFinal']} max solve {s['maxSolveSeconds']}s {s['wallSeconds']}s", flush=True)
-
+        for iters in _csv(args.anneal_budgets, int):
+            add("budgets", sensitivity_seeds, sensitivity_scenarios, anneal_iters=iters)
+        for budget in _csv(args.cpsat_budgets, float):
+            add("budgets", sensitivity_seeds, sensitivity_scenarios, cpsat_time=budget)
+    for horizon in _csv(args.horizons, int):
+        add("horizons", sensitivity_seeds, sensitivity_scenarios, rotations=horizon)
     if not args.skip_communities:
-        done_c = {(r["mu"], r["omega"]) for r in results["communities"]}
-        for mu, omega in ((0.6, 0.3), (1.0, 0.0)):
-            if (mu, omega) in done_c:
-                continue
-            t0 = time.perf_counter()
-            traces = make_all(seed=7, scenarios=["honest"], log=None, mu=mu, omega=omega, workers=args.workers)
-            s = summary_of(traces["honest"])
-            s["wallSeconds"] = round(time.perf_counter() - t0, 1)
-            results["communities"].append(s)
-            save()
-            print(f"community mu={mu} omega={omega}: exactly1 {s['pctExactly1Mean']} met {s['meanDistinctMetFinal']} vs {s['meanDistinctMetFinalRandom']} {s['wallSeconds']}s", flush=True)
-    results["meta"]["finished"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-    save()
+        for setting in _csv(args.communities, str):
+            try:
+                mu, omega = map(float, setting.split(":"))
+            except ValueError:
+                ap.error("community settings must be mu:omega")
+            if not 0 <= mu <= 1 or not 0 <= omega <= 1:
+                ap.error("mu and omega must lie in [0,1]")
+            add("communities", sensitivity_seeds, sensitivity_scenarios, mu=mu, omega=omega)
+    return run_experiments(jobs, args.out)
 
 
 if __name__ == "__main__":

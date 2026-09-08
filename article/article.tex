@@ -1,331 +1,309 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[margin=2.3cm]{geometry}
 \usepackage[T1]{fontenc}
-\usepackage{lmodern}
-\usepackage{microtype}
-\usepackage{amsmath,amssymb,amsthm}
-\usepackage{booktabs}
-\usepackage{graphicx}
-\usepackage{array}
-\usepackage{enumitem}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-\usepackage{xcolor}
-\usepackage{listings}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,booktabs,array,tabularx,graphicx}
+\usepackage{enumitem,algorithm,algpseudocode,xcolor,listings}
 \usepackage[numbers,sort&compress]{natbib}
-\usepackage[hidelinks]{hyperref}
-\usepackage{caption}
-\captionsetup{font=small,labelfont=bf}
-\setlist{nosep,leftmargin=*}
-
-\theoremstyle{plain}
-\newtheorem{theorem}{Theorem}[section]
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\hypersetup{pdftitle={Rotating Group Assignments with a Companion Guarantee},pdfauthor={Isaac Lin},pdfsubject={Structural limits, auditable screening, and a hybrid solver},pdfkeywords={group assignment, companion guarantee, constraint programming, privacy inference}}
+\usepackage{xurl,caption}
+\usepackage[section]{placeins}
+\graphicspath{{figures/}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{corollary}[theorem]{Corollary}
-\theoremstyle{definition}
-\newtheorem{definition}[theorem]{Definition}
-\newtheorem{problem}[theorem]{Problem}
-\newtheorem{example}[theorem]{Example}
-\theoremstyle{remark}
-\newtheorem{remark}[theorem]{Remark}
-
-\newcommand{\code}[1]{\texttt{#1}}
-\newcommand{\ind}[1]{\mathbf{1}[#1]}
-\newcommand{\cl}{\operatorname{cl}}
-\lstset{basicstyle=\ttfamily\small,columns=fullflexible,breaklines=true,frame=single,framerule=0.3pt}
-
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
 \input{macros}
-
-\title{Rotating Group Assignment with a Guaranteed Companion:\\
-Coercion, Capacity, Leakage, and a Hybrid\\ Local-Search / Constraint-Programming Solver}
-\author{Isaac Lin\\[2pt] \small [Affiliation and correspondence address to be added]}
-\date{}
-
+\input{author_metadata}
+\title{Rotating Group Assignments with a Companion Guarantee:\\Structural Limits, Auditable Screening, and a Hybrid Solver}
+\author{Isaac Lin\\\small \AuthorAffiliations}
+\date{First manuscript draft, September 2026}
 \begin{document}
 \maketitle
-
 \begin{abstract}
-Institutions that periodically reassign people to small groups (lunch tables, seminar sections, project teams) want mixing without isolation: everyone should meet many others, and nobody should arrive among strangers. We formalise the \emph{rotating group assignment problem with an anchor guarantee}: over a sequence of periods, partition a population into capacity-constrained groups, stratified into blocks in some periods, so that every participant who submitted a list of preferred companions shares a group with at least one of them, while minimising surplus familiarity and history-weighted repeated co-membership. Feasibility alone is NP-complete. Because the guarantee is a hard promise, participants can shape it: a set that lists only itself in a cycle is seated as a block. We characterise this \emph{coercion} exactly through closed bipartitions of the preference digraph that the guarantee actually uses in each period, prove with Thomassen's two-disjoint-cycles theorem that any self-contained set whose submitters list at least three names inside it can be split, show that a minimum-list rule alone does not prevent coercion in stratified periods (odd circulants of step two are coercive, and cross-block padding hides them from any screen run on full lists), and give an exact screen that runs on every period's effective digraph together with a capacity-demand test and a CP-SAT feasibility certificate. We also show that the guarantee leaks: from sixteen public charts and a known list cap, exact hitting-set inference recovers \LeakFraction\% of all directed list entries with no errors. A four-stage solver (anchored construction, repair, closure-move annealing whose accepted moves never increase the number of friendless participants, hinted CP-SAT) meets the guarantee for every participant in every period of a real-scale instance across \NSeeds{} independent populations, with \SeedExactlyOneMean\% of participants (mean over seeds) receiving exactly one listed companion and distinct acquaintances \SeedDiffMean{} relative to random assignment. The strongest compliant six-person coalition we found, by exhaustive search over its wiring, forces triples but never a table; the stratified attack captures a table in every stratified period until the screen is run on the right graph. Code, traces, experiments and an interactive visualisation are released.
+Repeated group assignment can combine a familiar companion with opportunities to meet other participants. A hard guarantee that each submitter shares a group with at least one named peer, however, can also enable coordinated submissions to force a coalition together. We formalize this directed-list assignment problem with capacities, eligibility states, and two kinds of meeting history. We establish NP-completeness of its general feasibility problem and distinguish structural forcing from global feasibility. An explicit seven-person cycle with a shared outside anchor defeats closure-only screening, including when the closure is large. We introduce a sound, bounded screening procedure that tests whether a candidate core can be separated after relaxing outside obligations; inconclusive solver outcomes remain unresolved. A four-stage heuristic combines construction, repair, simulated annealing, and guarded constraint programming, with independent validation of every retained chart. In a synthetic case study with 257 participants and alternating eligibility states, \NSeeds\ paired population seeds yield a mean exactly-one-listed-peer rate of \SeedExactlyOneMean\% and a mean increase of \SeedDiffMean\ distinct peers over a capacity-matched random baseline after 16 assignments. These outcomes are conditional on the specified generator and budgets. Published charts also reveal preferences: under a stated public list-size cap, \LeakFraction\% of submitted directed entries are logically forced in the reference run. Full traces, an attempt ledger, independent checks, and an interactive playback accompany the study. The procedure does not establish complete resistance to coordinated submissions, feasibility of every admitted input, or psychological and distributive benefits in a real population.
 \end{abstract}
-
-\noindent\textbf{Keywords.} group assignment; seating; social mixing; preference elicitation; strategic manipulation; inference from outputs; simulated annealing; constraint programming; digraph partitions.
+\noindent\textbf{Keywords:} group assignment; directed preferences; constraint programming; simulated annealing; strategic submissions; privacy inference
 
 \section{Introduction}
-\label{sec:intro}
+A rotating lunch assignment has two potentially competing aims: give participants access to a familiar peer and create contact beyond an established circle. We study a concrete operational version of these aims. A participant may submit a list of acceptable companions, and every retained assignment must place that participant with at least one eligible listed peer. Among assignments satisfying this requirement, the procedure discourages additional listed peers and repeated meetings. A declared acceptable companion is an input to an optimization problem; the model does not establish friendship quality, emotional security, or improved belonging.
 
-Institutions that want their members to know one another rotate them through small groups: schools reassign cafeteria tables every few weeks, universities shuffle discussion sections, companies rotate project teams. The instrument is random assignment, which mixes well but places most members among strangers, and a member who finds no familiar face tends to avoid the group or sit in silence. Attachment theory suggests a remedy short of seating friends together: a single trusted companion who is present, a \emph{secure base}, lowers the anxiety of an unfamiliar setting and frees attention for new contact \citep{bowlby1988}. The mechanism studied here guarantees one such companion per period and fills the rest of the group with new people.
+The guarantee changes the strategic possibilities. A directed cycle of one-name lists forces its members to remain together. Increasing a minimum list length is insufficient when some names become ineligible in a particular rotation, and even two eligible names can force a group through a shared outside anchor. Rejecting every unusual list structure is also unjustified: structural dependence can arise from sincere preferences. An operational system therefore needs explicit proof conditions, an honest account of screening coverage, and a procedure for unresolved submissions.
 
-Each participant may confidentially submit a list of preferred companions. In every period the mechanism partitions the population into groups of prescribed sizes so that every participant who submitted a list shares a group with at least one listed companion (the \emph{anchor guarantee}), keeps listed companions per group to one where it can, and avoids pairs who have already shared a group. Some periods are \emph{stratified}: groups may not mix blocks (grades, departments), which removes cross-block names from the set of usable anchors.
-
-A hard promise can be gamed by shaping the input. Participants who list only each other in a cycle force the mechanism to seat the cycle as a block. We give an exact account of this \emph{coercion}: whether a self-contained set can be broken into two parts each of which keeps every member anchored inside it. Three facts organise the analysis. First, coercion must be judged on the digraph the guarantee actually uses in a period; a set that is harmless on the full lists can be coercive once cross-block names are removed, and we exhibit a rule-compliant six-person attack that captures a table in every stratified period while passing any check run on full lists. Second, a set whose members list at least three names inside it can always be split (Theorem~\ref{thm:thomassen}), so a minimum-list rule of three internal names removes coercion outright, whereas the common rule ``at least four names, at least two in your block'' leaves internal degree two in stratified periods, exactly where odd circulants of step two are coercive (Proposition~\ref{prop:circulant}). Third, freedom from coercion is not feasibility: a core of five mutual listers with ten followers passes every structural test yet cannot be seated (Proposition~\ref{prop:demand}); a capacity-demand test and a constraint-programming feasibility certificate close that gap.
-
-The guarantee also leaks. Every published chart says of each participant ``one of these tablemates is on your list''. Over sixteen periods, with a known cap on list length, exact hitting-set reasoning turns those disjunctions into certainties for a large share of all list entries (Section~\ref{sec:privacy}). The earlier claim that charts reveal nothing beyond what participants already know was wrong, and we quantify what they reveal.
-
-Solving the assignment problem is hard even without objectives (Theorem~\ref{thm:np}). We give a hybrid method whose local-search phase moves \emph{closed groups} of participants and rejects any move that would increase the number of participants without an anchor, so that once a feasible assignment is reached the search never leaves the feasible region, and whose final phase is an exact constraint-programming model seeded with the local-search solution as a complete hint. Everything is deterministic in a seed on pinned software versions.
-
-\subsection{Contributions}
-\begin{enumerate}[label=(\roman*)]
-\item A model of rotating group assignment with an anchor guarantee, block stratification and a history-weighted objective, and NP-completeness of feasibility (Section~\ref{sec:problem}).
-\item An exact theory of coercion on effective digraphs: forcing (Proposition~\ref{prop:forcing}), splittability from internal degree three via Thomassen's theorem (Theorem~\ref{thm:thomassen}), coerciveness of odd step-two circulants (Proposition~\ref{prop:circulant}), a stratified capture attack that complies with the ``four names, two same-block'' rule, and a capacity-demand condition (Proposition~\ref{prop:demand}); a screen that is exact on self-contained candidates of every period's effective digraph, plus a feasibility certificate (Section~\ref{sec:coercion}).
-\item A quantified leakage analysis of the published charts (Section~\ref{sec:privacy}).
-\item A solver whose local-search stages provably never increase the number of friendless participants (Proposition~\ref{prop:monotone}), with a hinted CP-SAT polish and explicit handling of infeasible inputs (Section~\ref{sec:method}).
-\item A reproducible evaluation on a real-scale instance: five scenarios, \NSeeds{} independent populations, budget and community sensitivity, structural attacker bounds obtained by exhaustive search, and outcome tails by popularity (Sections~\ref{sec:population}--\ref{sec:case}).
-\end{enumerate}
+This paper makes four contributions. First, it specifies the assignment and history objectives precisely and proves a general feasibility hardness result. Second, it develops structural counterexamples and a sound relaxation for detecting forced candidate cores, together with capacity-demand tests. Third, it documents a working hybrid implementation whose final charts and intermediate stages are saved and independently checkable. Fourth, it evaluates that implementation on a reproducible synthetic study, including coordinated submissions, computational budgets, network structure, and information revealed by released charts. The accompanying website replays actual saved solver stages; it does not claim to optimize a new instance in the browser.
 
 \section{Related work}
-\label{sec:related}
+Practical seating optimization has been studied with application-specific objectives and local search \citep{lewis2016seating}. Work on optimal seat arrangement analyzes how preference and seating graph structure affect computational complexity \citep{ceylan2023seat}. Our feasible sets differ because a directed acceptable-companion condition is mandatory, groups have exact capacities, eligibility changes across rotations, and past meetings affect the objective. The social golfer problem provides a related repeated-grouping model focused on avoiding repeated pairs \citep{dotu2005golfers}. Here repeated listed companionship is sometimes unavoidable: with a fixed list of at most eight names and 16 guaranteed assignments, a submitter must repeat a listed companion.
 
-Seating and table assignment have been studied as optimisation problems: \citet{lewis2016seating} model wedding and gala seating with likes and dislikes and compare a heuristic with integer programming; \citet{ceylan2023seat} map the complexity of seat arrangement under various preference structures. Our setting adds repetition over periods with a history-dependent objective, a per-participant hard guarantee instead of a sum of pairwise utilities, and strategic participants. Repeated grouping with a mixing objective is the social golfer problem, a benchmark for symmetry breaking in constraint programming \citep{dotu2005golfers}; there repeats are forbidden, here they are penalised because sixteen periods with groups of six or seven in a population of 257 make some repetition unavoidable. Our local-search stage follows simulated annealing \citep{metropolis1953,kirkpatrick1983annealing} and the exact stage uses CP-SAT \citep{ortools}.
+The feasibility reduction uses the graph-factor framework of \citet{kirkpatrick1983factor}. The structural analysis connects to vertex-disjoint directed cycles \citep{thomassen1983} and partitions of directed graphs under degree conditions \citep{alon2006splitting}. Alon's directly related \emph{High School Coalitions} note studies the same one-listed-companion condition without the present capacities and changing eligibility states \citep{aloncoalitions}. It already uses the cycle-extension argument and distinguishes the strategic possibilities with two versus three names. We treat these arguments as prior results. Our contribution is their application to state-dependent assignment, an auditable targeted separation test, and the evaluated implementation; we do not claim the general coalition phenomenon as new. The optimization stages use the Metropolis acceptance rule and simulated annealing \citep{metropolis1953,kirkpatrick1983annealing}, followed by OR-Tools CP-SAT \citep{ortools}. Its status distinctions are essential: UNKNOWN supplies neither a feasibility nor an infeasibility certificate \citep{cpsatstatus}.
 
-Hardness of feasibility is inherited from graph factor problems \citep{kirkpatrick1983factor,garey1979}. The coercion analysis rests on partitioning digraphs under out-degree constraints: a closed part in our sense is a set inducing a subdigraph of minimum out-degree at least one, a closed bipartition is a $(1,1)$-splitting in the terminology of \citet{alon2006splitting}, and the tool that makes the analysis work is Thomassen's theorem that minimum out-degree three forces two vertex-disjoint cycles \citep{thomassen1983}. The complexity of related 2-partition problems is studied by \citet{bangjensen2016partitions1,bangjensen2016partitions2}; the sets we must decide are small enough for exact enumeration or a tiny SAT model. Closed sets are dual to kernels of digraphs \citep{richardson1953}; undirected degree-constrained decompositions go back to \citet{stiebitz1996}. The leakage analysis is a hitting-set argument and uses nothing beyond the published constraints.
-
-\section{The rotating group assignment problem}
-\label{sec:problem}
-
-\subsection{Instances}
-A population $V$ of $N$ participants is partitioned into \emph{blocks} by $g : V \to \mathcal{B}$. There are $R$ periods. Period $r$ specifies groups $\mathcal{T}_r$ with capacities $c^{(r)}_t$, $\sum_t c^{(r)}_t = N$, and is either \emph{unstratified} (any participant may join any group) or \emph{stratified} (group $t$ carries a block label $\beta^{(r)}_t$ and holds only that block, with $\sum_{t : \beta_t = b} c^{(r)}_t = |g^{-1}(b)|$). Each participant $i$ submits a list $L_i \subseteq V \setminus \{i\}$, possibly empty; $i$ is a \emph{submitter} if $L_i \neq \emptyset$. The \emph{effective} list in period $r$ is $L^{(r)}_i = L_i$ in an unstratified period and $\{ j \in L_i : g(j) = g(i)\}$ in a stratified one; $D_r$ denotes the \emph{effective digraph} with an arc $i \to j$ whenever $j \in L^{(r)}_i$.
-
-\subsection{Assignments, anchors and history}
-An assignment for period $r$ is $\sigma_r : V \to \mathcal{T}_r$ with $|\sigma_r^{-1}(t)| = c^{(r)}_t$ and, in stratified periods, $g(i) = \beta^{(r)}_{\sigma_r(i)}$. Let $s^{(r)}_i = |\{ j \in L^{(r)}_i : \sigma_r(j) = \sigma_r(i) \}|$. The \emph{anchor guarantee} is
+\section{Model and objectives}\label{sec:model}
+Let $V$ be a set of $N$ participants. Rotation $r$ assigns each participant to exactly one table in $\mathcal T_r$, with capacities $c_t$ summing to $N$. An eligibility state may restrict a table to a grade or other block. Let $L_i\subseteq V\setminus\{i\}$ be participant $i$'s submitted list, and let $U=\{i:L_i\ne\varnothing\}$ be the submitters. Filtering the list for rotation $r$ gives $L_i^{(r)}$. If $t_r(i)$ denotes the assigned table, define
 \begin{equation}
-s^{(r)}_i \ge 1 \qquad \text{for every submitter } i \text{ and every period } r. \label{eq:anchor}
+ s_i^{(r)}=\left|L_i^{(r)}\cap\{j:t_r(j)=t_r(i)\}\right|.
 \end{equation}
-A submitter whose effective list is empty makes the period infeasible; the rule ``at least two same-block names'' exists to prevent that, and the solver reports such an input rather than dropping the participant. History accumulates across periods: $m_{ab}$ counts earlier periods in which $a$ and $b$ shared a group while neither listed the other, and $\alpha_{ab}$ counts earlier periods in which they shared a group while one of them listed the other. (Counting both at the time of seating, rather than reclassifying old meetings by today's lists, keeps the history meaningful if lists change.)
-
-\subsection{Objective}
-Among assignments satisfying \eqref{eq:anchor} the mechanism prefers one familiar companion and new faces otherwise, and prefers not to repeat co-memberships, with incidental repeats charged more than repeats between listed companions, whose co-seating the guarantee itself requires. We maximise
-\begin{equation}
-E(\sigma_r) = \sum_{i} \Big( M\, \ind{s^{(r)}_i \ge 1} - \max(0, s^{(r)}_i - 1) \Big) - \lambda \sum_{\{a,b\} : \sigma_r(a) = \sigma_r(b)} \big( \kappa_m\, m_{ab} + \kappa_\alpha\, \alpha_{ab} \big), \label{eq:energy}
+A valid chart respects eligibility and exact capacities and satisfies
+\begin{equation}\label{eq:guarantee}
+ s_i^{(r)}\ge1\qquad(i\in U).
 \end{equation}
-with $M$ large enough to dominate the other terms and $\lambda, \kappa_m, \kappa_\alpha > 0$; the case study uses $M = 1000$, $\lambda = 1/10$, $\kappa_m = 5$, $\kappa_\alpha = 2$, so an incidental repeat costs $0.5$ per prior meeting and a listed one $0.2$. Assignments are produced greedily period by period; the history terms couple the periods.
+A nonempty submitted list that becomes empty after eligibility filtering remains an obligation and makes that state infeasible. A participant who submitted no list has no such obligation. The distinction prevents an implementation from silently converting impossible requests into opt-outs.
 
-\begin{problem}[Rotating group assignment with an anchor guarantee]
-Given an instance, produce $\sigma_1, \dots, \sigma_R$, each satisfying \eqref{eq:anchor} and maximising \eqref{eq:energy} given the history of the earlier periods.
-\end{problem}
+Under the defended submission policy, lists are empty or contain at least four distinct names, including two same-grade names. The study generator and attack constructions use at most eight names; the undefended one-name scenario deliberately relaxes the minimum. The generic runner does not enforce a universal eight-name cap on arbitrary custom inputs. The minimum-name rules do not imply global feasibility. List entries are directed: $j\in L_i$ need not imply $i\in L_j$.
 
-\subsection{Complexity}
-\begin{theorem}\label{thm:np}
-Deciding whether an assignment satisfying \eqref{eq:anchor} exists is NP-complete, already for one unstratified period, mutual lists and all capacities equal to three.
+For an unordered pair $\{a,b\}$, let $m_{ab}^{(r)}$ count prior incidental meetings, at which neither participant listed the other, and let $\alpha_{ab}^{(r)}$ count prior meetings at which at least one listed the other. Each meeting contributes to exactly one counter. The annealing objective for rotation $r$ is
+\begin{equation}\label{eq:cost}
+ C_r=\sum_{i\in U}\max(0,s_i^{(r)}-1)
+ +\lambda\sum_{\{a,b\}:t_r(a)=t_r(b)}\left(5m_{ab}^{(r)}+2\alpha_{ab}^{(r)}\right),\quad\lambda=0.1.
+\end{equation}
+The first term counts extra listed peers, not merely participants with two or more peers. The second penalizes repeated incidental meetings more strongly than repeated listed companionship. In particular, $m$ is not a count of all meetings with $\alpha$ added again. The CP improvement stage uses a different, explicitly stated surrogate (Section~\ref{sec:cp}), followed by an acceptance guard under the original objective.
+
+\section{Feasibility and structural limits}
+\subsection{General computational complexity}
+\begin{theorem}\label{thm:hard}
+Deciding whether a valid single-rotation chart exists is NP-complete, even with one eligibility block, all capacities equal to three, mutual lists, and every participant submitting a nonempty list.
 \end{theorem}
 \begin{proof}
-Membership in NP is clear. For hardness let $H$ be an undirected graph on $3q$ vertices, $V = V(H)$, $L_i = N_H(i)$, and take $q$ groups of capacity three. An assignment satisfies \eqref{eq:anchor} exactly when every group induces a subgraph of $H$ without isolated vertices, that is, a connected three-vertex subgraph, which is a path $P_3$ or a triangle, and a triangle contains a spanning $P_3$. So a feasible assignment exists iff $H$ has a $P_3$-factor, which is NP-complete to decide \citep{kirkpatrick1983factor}.
-\end{proof}
+Membership in NP follows by checking a proposed chart. Reduce from $P_3$-factor, the NP-complete problem of partitioning the vertices of an undirected graph into three-vertex paths \citep{kirkpatrick1983factor}. If the source graph has an isolated vertex or its order is not divisible by three, its answer is NO. Map it to a fixed NO assignment instance: the six vertices of a star $K_{1,5}$, mutual neighbor lists, and two tables of size three. Every leaf must sit with the center, which is impossible.
 
-\section{Coercion, capacity and screening}
-\label{sec:coercion}
+Otherwise create one participant per source vertex, make every graph edge a mutual list relation, and use tables of size three. Every list is nonempty. A source $P_3$-factor supplies a chart in which every participant has a listed tablemate. Conversely, each valid three-person table induces a graph with no isolated vertex. Such a graph is a path or a triangle and contains a spanning $P_3$. Selecting one path per table gives the required factor. The construction is polynomial.
+\end{proof}
+The preprocessing matters because an isolated source vertex would otherwise become a nonsubmitter with no obligation. The theorem establishes hardness of the general model. It does not establish hardness of every restricted four-name, six-or-seven-seat instance used below.
 
 \subsection{Closed sets and forcing}
-Fix a period and its effective digraph $D = D_r$.
-
-\begin{definition}\label{def:closed}
-$A \subseteq V$ is \emph{closed} if every submitter in $A$ has an out-neighbour in $A$; participants with an empty effective list impose nothing and never break closedness. $S \subseteq V$ is \emph{self-contained} if $L^{(r)}_i \subseteq S$ for every $i \in S$. A self-contained $S$ with at least two submitters is \emph{coercive} if there is no partition $S = A \uplus B$ into closed parts that both contain a submitter.
+\begin{definition}
+A set $S\subseteq V$ is \emph{guarantee-closed} in a fixed state if every $i\in S\cap U$ has at least one eligible listed peer in $S$. It is \emph{self-contained} if every eligible name of each such $i$ lies in $S$. A self-contained set is \emph{structurally coercive} if it admits no partition into two guarantee-closed parts each containing a submitter.
 \end{definition}
-The \emph{closure} $\cl(i)$ of a participant is the set reachable from $i$ along arcs of $D$, including $i$; closures are self-contained, and every self-contained set is a union of closures.
+Guarantee-closed means at least one internal acceptable peer, whereas self-contained means all acceptable peers remain inside. The forcing and demand arguments below require the latter condition.
 
-\begin{proposition}[forcing]\label{prop:forcing}
-If $S$ is self-contained and coercive then every assignment satisfying \eqref{eq:anchor} places all submitters of $S$ in one group.
+\begin{proposition}\label{prop:forcing}
+All submitters of a self-contained structurally coercive set must share a table in every valid chart.
 \end{proposition}
 \begin{proof}
-Suppose a feasible $\sigma$ separates the submitters of $S$. Let $x$ be one of them, $A = S \cap \sigma^{-1}(\sigma(x))$ and $B = S \setminus A$; both contain submitters. A submitter in $A$ has an anchor in its group, and by self-containment that anchor lies in $S$, hence in $A$. A submitter in $B$ has an anchor in its own group, which is not $x$'s group, and that anchor lies in $S$, hence in $B$. So $A$ and $B$ are closed, contradicting coerciveness.
+Intersect the set with each occupied table of a valid chart. Self-containment and the guarantee make each nonempty intersection guarantee-closed. If submitters occupy at least two tables, one intersection and the union of the others form a forbidden two-part partition.
 \end{proof}
-If the submitters of a coercive set fit one group, the mechanism seats them as a block in every period in which the set is self-contained; if they do not fit, the period is infeasible. The one-name cycle of Section~\ref{sec:intro} is the smallest example. Coerciveness is a property of the effective digraph: a set that is not self-contained on the full lists can become so when cross-block names are removed.
+This is a sufficient forcing certificate, not a global feasibility certificate. A noncoercive set may still be impossible to place because of capacities or other participants' obligations. Likewise, the ability to fit a forced group at one table does not certify the remaining population.
 
-\subsection{Splitting}
-\begin{theorem}[splitting]\label{thm:thomassen}
-Let $S$ be self-contained, let $S'$ be its submitters, and suppose every member of $S'$ has at least three out-neighbours in $S'$. Then $S$ admits a partition into two closed parts that both contain a submitter; in particular $S$ is not coercive.
-\end{theorem}
-\begin{proof}
-$D[S']$ has minimum out-degree at least three, so by Thomassen's theorem \citep{thomassen1983} it contains two vertex-disjoint directed cycles $C_1, C_2$. A cycle is closed (each vertex has its successor). Start with $A = C_1$, $B = C_2$, and repeatedly move any unassigned member of $S'$ that has an out-neighbour in $A$ or in $B$ into that part; both parts stay closed. When no such member remains, every unassigned member $v$ has all its out-neighbours outside $A \cup B$, hence inside the unassigned set $Rm$, so $Rm$ is closed; add it to $A$. Finally distribute the non-submitters of $S$ arbitrarily; they do not affect closedness. Both parts contain the submitters of a cycle.
-\end{proof}
-\begin{remark}
-An elementary argument gives the same conclusion for small sets without Thomassen's theorem: if each of the $n$ submitters lists at least $k \ge 3$ names inside $S$ and $n \le 2k$ then $kn > \binom{n}{2}$ forces a mutual pair $\{x,y\}$, which is closed, and every other submitter keeps at least $k - 2 \ge 1$ names outside the pair. The theorem removes the size restriction, so a rule requiring three names \emph{inside the effective digraph} would make coercion impossible at every size.
-\end{remark}
-
-The rule used by the school, and by many similar mechanisms, is weaker: at least four names in total, at least two in the participant's own block. In unstratified periods every submitter therefore has out-degree at least four and Theorem~\ref{thm:thomassen} applies to every self-contained set; in stratified periods the effective out-degree can be two, and degree two is exactly where coercion reappears.
-
-\begin{proposition}[odd circulants]\label{prop:circulant}
-Let $C_g(1,2)$ be the digraph on $\{0,\dots,g-1\}$ in which $i$ lists $i+1$ and $i+2 \pmod g$. For odd $g \ge 5$ it is coercive; for even $g$ it is not.
+\begin{proposition}\label{prop:three}
+A self-contained set $S$ with $S\cap U\ne\varnothing$ is not structurally coercive if every vertex of $S\cap U$ has at least three distinct eligible out-neighbors in $S\cap U$.
 \end{proposition}
 \begin{proof}
-A finite closed set contains a directed cycle. In $C_g(1,2)$ every arc advances the index by one or two around the circle, so a cycle advances by a positive multiple of $g$ in at most two units per step and has length at least $\lceil g/2 \rceil$. Two disjoint closed parts would contain two disjoint cycles with at least $2 \lceil g/2 \rceil = g + 1$ vertices when $g$ is odd. For even $g$ the parts of even and odd indices are both closed.
+The minimum-outdegree-three theorem gives two vertex-disjoint directed cycles \citep{thomassen1983}. We use the extension argument described by Alon \citep{aloncoalitions}, adapted to the obligated subgraph. Start with the two cycles as separate guarantee-closed sets. Repeatedly attach any remaining obligated vertex with an edge into an existing set. When no attachment is possible, every remaining obligated vertex has all its obligated out-neighbors among the remaining vertices; their union is guarantee-closed and can be merged into the first set. Non-obligated vertices can be assigned freely. Both sets still contain their original cycle.
 \end{proof}
+Three arbitrary names do not meet this hypothesis if some become ineligible or are outside the obligated subgraph. The implementation applies the shortcut only when all tested vertices have obligations and counts distinct neighbors.
 
-\begin{example}[stratified capture]\label{ex:strat}
-Let five juniors $c_0, \dots, c_4$ list $c_{i+1}, c_{i+2} \pmod 5$ and two distinct seniors each, and let a sixth junior list $c_0, \dots, c_3$. Every list has four names and at least two same-block names. On the full lists the six-set is not self-contained (it names ten seniors whose own closures are large), and any screen run on full lists sees nothing. In a stratified period the seniors vanish from the effective lists, $\{c_0, \dots, c_4\}$ is self-contained and is $C_5(1,2)$, hence coercive by Proposition~\ref{prop:circulant}; by Proposition~\ref{prop:forcing} the five share a group, and the sixth junior, whose every effective name is among them, is seated with them. All six are forced onto one table in every stratified period (Section~\ref{sec:case} confirms this on the full instance). A seven-junior version with two distinct seniors each is also coercive and needs no sixth member.
-\end{example}
+\subsection{Coordinated submissions and the shared-anchor counterexample}
+For odd $g\ge3$, the directed circulant with edges $i\to i+1$ and $i\to i+2$ modulo $g$ is structurally coercive. Any directed cycle contains at least $\lceil g/2\rceil$ vertices: its positive steps sum to a multiple of $g$ and each step is at most two. Two disjoint cycles are therefore impossible. Two nonempty guarantee-closed parts would each contain a directed cycle, giving a contradiction. For even $g\ge4$, the two parity classes instead provide a split.
 
-\subsection{Coercion is not feasibility}
-A set can be splittable in the sense above and still make the instance infeasible, because splitting ignores capacities and the demand that followers place on a core.
+Eligibility permits this construction despite a four-name minimum. Seven same-grade participants can list their next two coalition members and two participants from the other grade. In a same-grade rotation the last two names disappear, forcing the seven together. A related six-person attack uses an odd five-person core and a sixth participant dependent on it.
 
-\begin{proposition}[demand]\label{prop:demand}
-Let $C$ be self-contained with $n_1$ submitters and $n_0$ non-submitters, and let $F(C)$ be the set of submitters outside $C$ whose entire effective list lies in $C$. In any feasible assignment the members of $C \cup F(C)$ occupy at most $n_0 + \lfloor n_1/2 \rfloor$ groups. Hence if $|C| + |F(C)|$ exceeds the total capacity of that many largest groups admissible to them, no feasible assignment exists.
+\begin{proposition}\label{prop:shared}
+Let a coalition $C=\{v_0,\ldots,v_{g-1}\}$ have effective lists $L_{v_i}=\{v_{i+1\bmod g},h\}$ for a common outside anchor $h\notin C$. Every valid chart seats all members of $C$ together, regardless of $h$'s list.
 \end{proposition}
 \begin{proof}
-A group containing a follower contains an anchor of the follower, which lies in $C$. A group containing a submitter of $C$ contains an anchor of that submitter, which lies in $C$ too, so such a group holds at least two members of $C$. Every group meeting $C \cup F(C)$ therefore contains a member of $C$, and contains two of them unless its only member of $C$ is a non-submitter. The bound on the number of groups follows.
+A table containing a coalition member but not $h$ must contain that member's successor and, inductively, the entire cycle. If the coalition occupied two tables, at least one would exclude $h$, so that table would already contain the whole coalition, a contradiction.
 \end{proof}
-\begin{example}
-Five participants who list each other (a $K_5$) and ten followers who each list four of the five pass every structural test (the $K_5$ splits into a pair and a triple) but need fifteen seats at groups that each hold at least two of the five, so at most two groups, with at most fourteen seats. CP-SAT proves the 257-participant instance infeasible in a few seconds.
-\end{example}
+For $g=7$ and maximum capacity seven, the coalition captures a full table and $h$ sits elsewhere. Adding two opposite-grade names to each list satisfies the four-name rule while preserving the same-grade argument. A successor closure that follows $h$'s outgoing names can become very large. Even an unbounded test of that larger closure can find a split separating the intact coalition from the background without separating any coalition members. Closure size alone is therefore not the complete problem.
 
-\subsection{The screen}
-\label{sec:screen}
-The screen runs once on the submitted lists, before the first period, and separately on the effective digraph of every period state that will occur (here: unstratified, and stratified with cross-block names removed).
+\begin{figure}[tb]\centering
+\includegraphics[width=\linewidth]{structural_examples.pdf}
+\caption{Structural examples. The odd circulant and shared-anchor cycle force their cores together. In the six-person omission-star wiring, a feasible partition can be $3+3$, $4+2$, or $6$. A lower bound of three on member-weighted cluster size does not force exactly two triples or prevent an intact assignment.}\label{fig:structures}
+\end{figure}
 
-\paragraph{Candidates.} The candidates are the closures $\cl(i)$ of all submitters, with size at most 64 (closures larger than that are the ordinary population; a coercive one would exceed every capacity and is reported by the feasibility certificate below). Every candidate is self-contained.
-
-\paragraph{Coercion test.} A candidate $S$ is flagged exactly when it is coercive. For $|S| \le 20$ the test enumerates the $2^{|S|-1}$ subsets containing a fixed submitter and checks both parts for closedness on bitmasks, stopping at the first valid split. For larger $S$, if every submitter has at least three out-neighbours among the submitters of $S$ the candidate passes by Theorem~\ref{thm:thomassen}; otherwise a small CP-SAT model decides the existence of a closed bipartition exactly (one Boolean per member, one clause per submitter). A candidate with a single submitter is never coercive.
-
-\paragraph{Demand test.} For every candidate $C$ the bound of Proposition~\ref{prop:demand} is evaluated against the capacities admissible in that state; a violation is flagged with the core and its followers.
-
-\paragraph{Outcome.} Submitters of flagged coercive sets and the submitters and followers of over-demanded cores are \emph{returned} for diversification; violations of the minimum-list and same-block rules and submitters with an empty effective list are reported alongside. Passing the screen is not a feasibility certificate. Before each year the hard constraints alone are solved by CP-SAT for both states with a deterministic budget, and the status (\code{OPTIMAL}, \code{INFEASIBLE} or \code{UNKNOWN}) is recorded; an infeasible instance stops the pipeline with the certificate rather than an assignment.
-
-\paragraph{What the screen does and does not establish.} On self-contained candidates the coercion verdict is exact, and by Proposition~\ref{prop:forcing} a flagged set is one every feasible assignment would seat as a block. Whether every set that some mechanism is forced to seat together is contained in a self-contained candidate of size at most 64 is not established; a forced set whose members list outsiders with large closures would escape. We know no such example and no proof that none exists. The screen's unit is the effective digraph of each state, which is what closes Example~\ref{ex:strat}; the test would also catch an attack hidden in any other systematic filtering of names.
-
-\paragraph{Properties.} Tests verify on wirings written in closed form that complete digraphs on 4--12 vertices never flag, one-name cycles and hub wirings (everyone lists a hub and the next member of a chain) always flag, $C_g(1,k)$ with $k \ge 3$ never flags, $C_g(1,2)$ flags exactly for odd $g$, a set of six listing each other three times plus one shared outsider is not flagged, six members who list the next member and one shared non-submitting outsider are flagged (the outsider cannot separate them), a lone submitter with four non-submitting names is not flagged, a reciprocal pair with three outside names each is not flagged, and the stratified attack of Example~\ref{ex:strat} is flagged on the stratified digraph and passes on the unstratified one.
-
-\section{Leakage from the charts}
-\label{sec:privacy}
-
-Lists are confidential, but the charts are not, and the guarantee is public knowledge. For participant $i$ and period $r$ let $T_{i,r}$ be $i$'s group-mates. Anyone who knows that $i$ submitted a list learns the disjunction $\sum_{j \in T_{i,r}} \ell_{ij} \ge 1$, where $\ell_{ij}$ indicates that $j$ is on $i$'s list. If lists are fixed for the year and hold at most $K$ names, $i$'s list is a hitting set of size at most $K$ for the family $\{T_{i,r}\}_r$. A name $j$ is \emph{forced} if every such hitting set contains it, which is decided exactly by computing the minimum hitting set of the family with $j$ removed (a bitmask dynamic programme over the $R$ periods) and comparing with $K$.
-
-We run this inference on every exported trace and score it against the true lists, which the inference never reads. On the committed honest year (\Seed{} as seed, $R = 16$, $K = 8$) it forces \LeakForced{} directed list entries, \LeakFraction\% of the \LeakEdges{} submitted, all \LeakCorrect{} of them correct, touching \LeakStudents{} of 257 participants; the number of participants whose entire list is determined is \LeakFull. Across \NSeeds{} independent populations the count ranges from \SeedLeakMin{} to \SeedLeakMax. The leakage is inherent: any mechanism that publishes charts satisfying a hard guarantee publishes the disjunctions, and repeated periods sharpen them. What can be varied is the side information: an unannounced or larger cap on list length weakens the exact deductions (they rely on $K$), lists that may change between periods break the fixed-list assumption, and the mechanism should never publish which tablemate served as the anchor. Participants should be told that a determined observer of a year of charts can infer a substantial fraction of their list; the earlier assurance that charts reveal only what participants already know does not hold.
-
-\section{Solution method}
-\label{sec:method}
-
-Each period is solved by the four-stage pipeline of Algorithm~\ref{alg:pipeline}. Stages 1--3 keep a complete assignment and minimise $C = -E + \text{const}$ with the full history; Stage 4 is an exact model over the previous period's pairs whose solution is kept only if it does not worsen the full-history cost. Every term of $C$ is scaled by ten to stay integral and the temperature is scaled identically, so acceptance probabilities are unchanged.
-
-\begin{algorithm}[t]
-\caption{One period}\label{alg:pipeline}
-\begin{algorithmic}[1]
-\State reject the input if a submitter has an empty effective list (InfeasibleInputError)
-\State $\sigma \gets$ \textsc{AnchoredConstruction} \Comment{Stage 1}
-\State \textsc{Repair}$(\sigma)$ \Comment{Stage 2: violated set may only shrink}
-\State $\sigma \gets$ \textsc{ClosureAnneal}$(\sigma, I)$ \Comment{Stage 3: violation count never increases}
-\For{up to 6 attempts while some submitter has $s_i = 0$}
-  \State \textsc{Repair}$(\sigma)$; $\sigma \gets$ \textsc{ClosureAnneal}$(\sigma, I/2)$
-\EndFor
-\State $\sigma' \gets$ \textsc{CPSAT}$(\text{hint} = \sigma)$ \Comment{Stage 4, previous-period pairs}
-\If{$\sigma'$ exists, satisfies \eqref{eq:anchor}, and $C(\sigma') \le C(\sigma)$} $\sigma \gets \sigma'$ \EndIf
-\If{some submitter still has $s_i = 0$} \State $\sigma' \gets$ \textsc{CPSAT}$(\text{hint} = \sigma)$ with six times the budget; keep it only if it satisfies \eqref{eq:anchor} \EndIf
-\State validate $\sigma$; raise if any submitter is friendless \Comment{nothing invalid is ever returned}
-\end{algorithmic}
-\end{algorithm}
-
-\subsection{Group costs, moves and the monotonicity invariant}
-For a group with member set $T$,
-\begin{gather*}
-\mathrm{cost}(T) = \sum_{i \in T} \mathrm{pen}_i(s_i) + \sum_{\{a,b\} \subseteq T} W_{ab}, \qquad W_{ab} = \lambda(\kappa_m m_{ab} + \kappa_\alpha \alpha_{ab}), \\
-\mathrm{pen}_i(s) = \begin{cases} M & s = 0 \text{ and } i \text{ is a submitter} \\ \max(0, s - 1) & \text{otherwise,} \end{cases}
-\end{gather*}
-so $C(\sigma) = \sum_t \mathrm{cost}(\sigma^{-1}(t))$. The state also caches, per group, the number of friendless submitters, and $\nu(\sigma)$ denotes their total. Every move exchanges a set $G_a$ in group $t_a$ with an equally sized set $G_b$ in group $t_b$ of the same block class; its effect on $C$ and on $\nu$ is computed exactly by re-costing the two groups (at most seven members each).
-
-\begin{proposition}[monotonicity]\label{prop:monotone}
-Stage 3 never accepts a move with $\Delta\nu > 0$. Consequently, once $\nu(\sigma) = 0$, every assignment visited by Stage 3 satisfies \eqref{eq:anchor}.
+\subsection{A sound targeted-core relaxation}\label{sec:screen}
+Choose a candidate $C\subseteq U$ and let $B=(\bigcup_{i\in C}L_i)\setminus C$. On $C\cup B$, retain every original outgoing name of each member of $C$, while removing all obligations of $B$. Test whether this relaxed system has a guarantee-closed bipartition with a member of $C$ on each side.
+\begin{proposition}\label{prop:target}
+If no such relaxed bipartition exists, every valid original chart places all of $C$ together.
 \end{proposition}
 \begin{proof}
-Every candidate move, of any type, is discarded before the Metropolis test if the recomputed friendless count of the two affected groups exceeds the cached one; groups not involved in the move are unchanged. From $\nu = 0$ only moves with $\Delta\nu \le 0$ are accepted, so $\nu$ stays $0$.
+Any original chart separating two core members induces a partition of $C\cup B$ by tables. Every core member retains its actual supporting edge in this restriction, since all its outgoing names were included. Outside vertices have no obligations in the relaxation. Merge the table parts into two groups, retaining a core member in each. The result is a relaxed guarantee-closed bipartition, contradicting the test outcome.
 \end{proof}
-This is the invariant we claim for the local search, and it is checked by a test that instruments the accept step. It is deliberately weaker than ``moves preserve every individual's guarantee'': while $\nu > 0$ a move may transfer a violation from one participant to another, which is how a chain is assembled. Closure moves (below) make feasible proposals frequent; the filter makes the invariant hold regardless of how a group was built.
+A found split clears this necessary test only; it need not extend to a valid chart with the original outside obligations and physical capacities. Outside anchors are not themselves returned merely because they occur in a forcing certificate for the core.
 
-\subsection{Stage 1: anchored construction}
-Participants are processed in increasing order of effective list size, so the participant with the fewest options is seeded first, $i^\ast = \arg\min_{i \in U} |L_i \cap U|$ over the unmatched set $U$. Each $i$ is paired with an unmatched listed companion $j$, preferring one who lists $i$ back, then the smallest $W_{ij}$, then the shortest list; a companion who does not list $i$ back and has strictly fewer options than $i$ is never taken. Unmatched participants become singleton pods. Pods are then merged until every submitter has a listed companion inside their own pod, needy participants first in increasing order of list size, each merging into the pod of a listed companion if the merged size does not exceed the smallest capacity, choosing by the number of extra familiar faces created, then accumulated history, then size; this assembles one-directional chains before anyone else claims their seats. Pods are placed largest first into the group with enough free seats (and the right block) that minimises accumulated history plus one unit per list relation with the occupants, ties toward emptier groups; a pod that fits nowhere is split into singletons. The result fills every group exactly.
+The implementation enumerates successor closures of at most 64 vertices and strongly connected cores of sizes 2--12 in the original directed graph and in graphs formed by deleting one vertex. Candidates are deduplicated, sorted by size and identifiers, and limited to 256 targeted cores. Deleted-anchor edges are restored before testing. Relaxations with at most 20 vertices are exhaustively checked; larger ones use CP-SAT with a deterministic-time budget of 10, one worker, and seed zero. Each candidate receives one of three outcomes: proved separable under the test, proved coercive, or unresolved. UNKNOWN is unresolved and never triggers an automatic coercion return. Coverage limits and unexamined candidate counts are recorded. This candidate family is intentionally bounded and is not a complete anti-capture algorithm.
 
-\subsection{Stage 2: repair}
-For up to twenty rounds, each friendless submitter $i$ evaluates the single swap with every non-anchor member of every group holding one of $i$'s listed companions, and applies the cheapest swap after which $i$ has an anchor \emph{and} the set of friendless submitters is a strict subset of what it was; a swap that satisfies $i$ by stranding someone else is never accepted. If no such swap exists, the compound move \textsc{KickAndRepair}$(i, j)$ is tried for $i$'s companions $j$: the closure of $i$ is forced into $j$'s group, an equally sized set of $j$'s group-mates outside $j$'s closure is evicted to $i$'s former group, every evicted or stranded participant is re-seated by its own cheapest non-stranding swap, and the compound is kept only if the total cost fell and no participant who was satisfied before is friendless afterwards; otherwise it is undone in place. Repair can stop short of feasibility on hard instances (a twelve-participant instance from the audit of an earlier draft has a feasible seating that no single swap reaches); Stage 3 and Stage 4 then take over.
+\subsection{Demand and eligibility-specific capacities}
+\begin{proposition}\label{prop:demand}
+Consider a self-contained core with $n_1$ submitters and $n_0$ nonsubmitters, together with submitting followers whose nonempty eligible lists lie entirely in the core. At most $n_0+\lfloor n_1/2\rfloor$ tables can contain any of these participants in a valid chart. Their total number must not exceed the sum of that many largest capacities in their admissible eligibility pool.
+\end{proposition}
+\begin{proof}
+Every occupied follower table contains a core member. A table with no nonsubmitting core member requires at least two submitting core members, because a submitting core member must find a core peer. Tables with a nonsubmitting core member account for at most $n_0$ tables; all remaining tables account for at most $\lfloor n_1/2\rfloor$. The capacity bound follows.
+\end{proof}
+For example, five mutually linked core submitters and ten followers require 15 seats but can use at most two seven-seat tables. A grade-specific example has 13 senior core members and 29 followers, demanding 42 seats. Their six largest senior tables supply only 41 seats; using the combined grade pools would incorrectly supply 42. If the appropriate pool is unavailable, the implementation reports an unresolved check rather than borrowing another grade's capacities.
 
-\subsection{Closures}
-\label{sec:closure}
-Moving one participant away from their only anchor strands both, so the annealer moves \emph{closures}. The closure of a set $G$ within its group $T$ is the smallest superset of $G$ stable under two rules: any submitter of $T \setminus G$ all of whose anchors in $T$ lie in $G$ joins $G$; any submitter in $G$ without a listed companion inside $G$ pulls in one of its anchors in $T$ (chosen at random). Closures larger than the largest capacity are abandoned. Moving a closure orphans no one who stays and keeps every mover with an internal companion whenever it has one in $T$. When two closures of different sizes are to be exchanged, the smaller is padded with a random group-mate \emph{and re-closed}, so padding cannot strand the participants the padded member anchored; if the sizes still differ after four attempts the move is skipped. Padding was not re-closed in an earlier version, which produced infeasible proposals; the monotonicity filter would have rejected them, but the proposals were wasted.
+Before generating a year, the implementation also attempts a hard-constraint feasibility solve for each distinct eligibility state. FEASIBLE or OPTIMAL supplies a witness; INFEASIBLE proves impossibility; UNKNOWN leaves the question open. A subsequently constructed and independently validated chart establishes feasibility for that state even if the preliminary solve was inconclusive.
 
-\subsection{Stage 3: closure-move simulated annealing}
-The annealer runs $I$ iterations ($I = 300\,000$ in the case study) of Metropolis acceptance on $C$, $P(\text{accept } \Delta C > 0) = e^{-\Delta C / T}$, $T$ geometric from $2.5$ to $0.02$ in energy units, and returns the best assignment visited under the lexicographic order (friendless count, cost). Each iteration draws a participant $a$ and one of four move types: with probability $1/4$ a raw single swap with a uniform $b$ of the same block class; with probability $1/4$ a companion-directed single swap ($b$ is a group-mate of one of $a$'s listed companions, so participants are often proposed beside a friend); otherwise a closure swap $\cl(a) \leftrightarrow \cl(b)$ with re-closed padding; and, while $\nu > 0$, every eighth iteration a targeted move in which $a$ is a friendless submitter and $b$ sits with one of $a$'s companions, every sixty-fourth of these being a \textsc{KickAndRepair}. Every move passes the $\Delta\nu \le 0$ filter before the Metropolis test. An iteration re-costs two groups and takes about $15\,\mu$s; the stage takes about four seconds.
+\section{Hybrid solution method}\label{sec:method}
+Screen-enabled inputs with certified returns, unresolved screening checks, or invalid lists require review before scheduling. The procedure does not invent substitute preferences. Attack scenarios with screening disabled are experiments on the guarantee's strategic consequences. The screened reference scenario explicitly replaces a returned six-person attack by a specified six-person star; it is one modeled resubmission, not an optimal attacker response.
 
-\subsection{Stage 4: exact polishing, certification and failure}
-The annealed assignment is passed as a complete hint to CP-SAT \citep{ortools}. With $x_{i,t}$ the assignment indicators over the groups allowed for $i$ and $\ell_i = |L^{(r)}_i|$,
-\begin{gather*}
-\textstyle\sum_t x_{i,t} = 1 \ \ \forall i, \qquad \sum_i x_{i,t} = c_t \ \ \forall t, \\
-y_{i,t} \le x_{i,t}, \qquad y_{i,t} \le \textstyle\sum_{j \in L^{(r)}_i} x_{j,t}, \qquad \sum_t y_{i,t} \ge 1 \quad \text{for every submitter } i, \\
-\textstyle\sum_{j \in L^{(r)}_i} x_{j,t} \le 1 + (\ell_i - 1)\, z_i + \ell_i (1 - x_{i,t}) \quad \forall t, \ \text{whenever } \ell_i \ge 2,
-\end{gather*}
-so that $z_i = 1$ whenever $i$ sits with two or more listed companions (a per-participant encoding with no pairwise companion variables). For each pair $(a,b)$ that shared a group in the previous period with $W_{ab} > 0$, a repeat indicator obeys $r_{ab} \lor \lnot x_{a,t} \lor \lnot x_{b,t}$ for every $t$. The objective is $\min\ \omega_2 \sum_i z_i + \sum_{(a,b)} \omega_r W_{ab} r_{ab}$ with $\omega_2 = 300$ and $\omega_r W_{ab} = 100(\kappa_m m_{ab} + \kappa_\alpha \alpha_{ab})$. Hints cover every variable. The solver runs in deterministic interleaved mode with a deterministic-time budget and eight workers, which makes the outcome a function of model and hint; with sixteen workers on the eight-core machine used here repeated solves were \emph{not} identical, so worker count is part of the reproducibility contract.
+\begin{figure}[tb]\centering
+\includegraphics[width=\linewidth]{pipeline.pdf}
+\caption{Actual optimization stages for honest population seed 2, rotation 1 (mixed). The four saved stage endpoints are actual assignments. Construction and repair can remain invalid; only a final chart that passes all hard-constraint checks is released.}\label{fig:pipeline}
+\end{figure}
 
-A complete hint does not certify anything: a hint can be complete yet infeasible, and a time-limited solve can return \code{UNKNOWN}. The pipeline therefore validates every returned assignment itself. The CP-SAT assignment is accepted only if it satisfies \eqref{eq:anchor} and $C(\sigma') \le C(\sigma)$ on the full history, which the model cannot see; empirically CP-SAT wins early in a year and the annealer later (Table~\ref{tab:honest}). If any stage leaves a submitter friendless, CP-SAT is rerun with six times the budget, its answer is again validated, and if the period is still unsolved the pipeline raises an error that names the period; reported solve times include that fallback. On the instances of Section~\ref{sec:case} the fallback never ran.
+\subsection{Construction and repair}
+Construction prioritizes participants with few supporting options, forms mutually compatible pods when possible, and merges pods using compatibility and history scores without exceeding the minimum capacity. Packing failures can require singleton placement. The constructed chart has correct capacities but need not satisfy every companion obligation.
 
-\subsection{Baseline and determinism}
-The comparison baseline is uniformly random assignment respecting the period's stratification, seeded independently; its closed-form expectation is given in Section~\ref{sec:case}. All randomness (population, per-period local search, baseline, CP-SAT) is seeded. Re-running the export reproduced the committed traces byte for byte apart from timestamps and timings on the pinned versions (\Versions), which are recorded in every trace together with the source commit. Reproducibility across other versions is not claimed.
+Repair uses directed exchanges and compound moves that close supporting dependencies. It attempts to reduce the unsatisfied set without orphaning a previously supported participant; a compound repair is kept only when the prescribed violation and cost checks succeed. A failed local repair does not imply infeasibility.
 
-\section{Synthetic population model}
-\label{sec:population}
+\subsection{Closure-preserving simulated annealing}
+Let $\nu$ count violated companion obligations. The search uses the integer energy
+\begin{equation}
+ E=10C_r+10000\nu.
+\end{equation}
+The finite violation penalty is not itself a proof that a returned solution satisfies the guarantee. The acceptance filter separately requires $\Delta\nu\le0$, and the best assignment is retained lexicographically by violations and cost. Once $\nu=0$, accepted moves cannot break the guarantee. Before feasibility is reached, the total violation count can remain unchanged even if the identities of unsatisfied participants change.
 
-Real lists are confidential, so evaluation uses synthetic populations with the structural features that matter for the mechanism: blocks, unequal popularity, partial reciprocity, community structure, and the submission rules' effect on honest participants. Each participant receives a popularity weight $\pi_i \sim \mathrm{LogNormal}(0, \sigma^2)$ and $K$ true friendships, sampled in random order over participants: when $i$ is processed its open slots are filled with distinct $j \ne i$ drawn without replacement with probability proportional to $\pi_j \cdot (\rho \text{ if } g(j) = g(i) \text{ else } 1)$; each new arc $i \to j$ is reciprocated with probability $p$ if $j$ has an open slot, so every participant ends with exactly $K$ friends; $p$ is calibrated deterministically to a target reciprocity. Latent groups add community structure: participants of each block are cut into groups of sizes uniform on 6--12 (optionally spanning two blocks); with probability $\omega$ a participant joins a secondary group; each friendship draw is assigned to the participant's group pool with probability $\mu$ (popularity-weighted, background draws excluding the own group so the in-group share is $\mu$ in expectation). At $\mu = 1$ groups are isolated and small groups yield fewer than $K$ friends. Unit tests confirm the in-group share is within $\pm 0.05$ of $\mu$, the secondary-group frequency within $\pm 0.05$ of $\omega$, and that $\mu = 0$ reproduces the plain block-biased network exactly.
+The proposal mix uses uniform swaps, directed moves, and two-table group moves with probabilities $1/4$, $1/4$, and $1/2$. Group moves close supporting dependencies, balance table sizes, and retry bounded padding choices. During infeasible search, targeted proposals occur every eight iterations and compound repair attempts every 64. Costs are recomputed on affected tables, including all historical pair weights. A proposal passing the hard acceptance filter is accepted with probability $\min(1,\exp(-\Delta E/T))$. Temperature decreases from 25 to 0.2 over the specified budget, normally 300,000 iterations. This is a finite heuristic; no asymptotic convergence claim is used.
 
-Honest participants submit their true friends subject to the rules. A list with fewer than four names or fewer than two same-block names is \emph{not} a valid submission and is recorded as no submission; the participant keeps no guarantee and the count of such participants is reported rather than hidden by padding the list with acquaintances (padding remains available as an explicit option for modelling participants who name acquaintances to qualify, and is not used here). With $K = 8$ and the 9:1 block bias no participant of the committed cohort is affected (\RejectedByRules{} rejected, \NonSubmitters{} non-submitters); cohorts with shorter or more cross-block friendship lists would be, and that cost belongs in any deployment decision. A planted set of six mutual friends plays the colluding group.
+\subsection{Constraint-programming improvement and guard}\label{sec:cp}
+For participant $i$ and eligible table $t$, binary $x_{it}$ denotes assignment. Exact-one constraints and $\sum_i x_{it}=c_t$ enforce placement and capacities. Supporting indicators satisfy
+\begin{equation}
+ y_{it}\le x_{it},\qquad y_{it}\le\sum_{j\in L_i^{(r)}}x_{jt},\qquad\sum_t y_{it}\ge1\quad(i\in U).
+\end{equation}
+For each submitter, binary $z_i$ marks two or more listed peers at the assigned table. With $\ell_i=|L_i^{(r)}|$, the formulation includes
+\begin{equation}
+ \sum_{j\in L_i^{(r)}}x_{jt}\le1+(\ell_i-1)z_i+\ell_i(1-x_{it}).
+\end{equation}
+Let $P_{r-1}$ contain the unordered pairs sharing a table in the immediately preceding rotation. For these pairs only, $q_{ab}\ge x_{at}+x_{bt}-1$ over tables marks a repeated meeting. The coefficient uses each pair's full history, but pairs absent from the preceding chart are omitted from this surrogate. CP-SAT minimizes
+\begin{equation}\label{eq:cp}
+ 300\sum_{i\in U}z_i+100\sum_{\{a,b\}\in P_{r-1}}(5m_{ab}+2\alpha_{ab})q_{ab}.
+\end{equation}
+This objective counts surplus-affected participants rather than all extra peers. Assignment and auxiliary hints are derived consistently from the incumbent, but an invalid incumbent does not become a valid hint merely by being supplied to the solver. The default improvement budget is 3.5 deterministic-time units with eight workers.
 
-\section{Case study: a secondary-school lunch period}
-\label{sec:case}
+A CP candidate replaces a feasible annealing incumbent only if it remains feasible and does not worsen the original cost. If the incumbent is invalid, feasibility takes priority. If annealing remains infeasible, it permits up to six repair-and-anneal retries, each with $\max(I/2,20000)$ iterations for initial budget $I$. If the guarded result remains infeasible, a final CP attempt uses $6\max(b,1)$ deterministic-time units for improvement budget $b$; if it cannot obtain a valid chart, it records an unsuccessful attempt instead of releasing the chart. Every accepted final chart is checked for unique placement, exact capacities, eligibility, and all submitted obligations. Construction, repair, annealing, and final assignments, their costs, and their elapsed times are retained for inspection.
 
-\subsection{Instance and scenarios}
-The instance mirrors a real school's lunch period: $N = 257$ students in two blocks (grade 11: 132, grade 12: 125), 40 groups of which 17 seat 7 and 23 seat 6, $R = 16$ periods alternating unstratified (``mixed'') and stratified (``same-grade''), the stratified partition giving juniors 12 seven-seat and 8 six-seat tables and seniors 5 and 15. Population parameters: $K = 8$, $\sigma = 0.6$, $\rho = 9$, target reciprocity $0.5$ (measured \Reciprocity), within-block share \WithinGrade, $\mu = \omega = 0$. Rule: four names, two same-block. Energy parameters as in Section~\ref{sec:problem}; $I = \AnnealIters$; CP-SAT deterministic-time budget \CpsatTime{} with \Workers{} workers; feasibility certificates for both states before each year (\FeasMixed{} / \FeasSame, \FeasSeconds{} s together); seed \Seed. Table~\ref{tab:params} collects every parameter.
+\section{Information revealed by published charts}\label{sec:privacy}
+A public chart can reveal private list entries even when the lists themselves are hidden. We analyze an observer who knows that participant $i$ submitted a fixed list, knows a public upper bound $K$, knows the guarantee was honored, and observes all published charts. Let $T_i^{(r)}$ be the set of $i$'s tablemates in rotation $r$. Every candidate list $A$ must satisfy
+\begin{equation}\label{eq:hit}
+ |A|\le K,\qquad A\cap T_i^{(r)}\ne\varnothing\quad\text{for all observed }r.
+\end{equation}
+A name $v$ is forced if excluding $v$ makes these hitting-set constraints impossible under the cap. An exact dynamic program over covered-rotation bitmasks computes minimum hitting-set sizes. An independent CP-SAT set-cover formulation checks the resulting exclusion certificates.
 
-Five scenarios share the population and differ only in the six colluders' lists:
-\begin{itemize}
-\item \emph{honest}: everyone submits true friends;
-\item \emph{no defenses}: the six submit a one-name cycle; no rule, no screen;
-\item \emph{min-4 rule}: the six submit the strongest 4-of-5 wiring we found, the \emph{omission star} (member $c_0$ omits $c_1$, everyone else omits $c_0$, so nobody lists $c_0$); screen off;
-\item \emph{same-grade attack}: Example~\ref{ex:strat}; rule on, screen off;
-\item \emph{screens on}: Example~\ref{ex:strat} is screened on both effective digraphs and returned; the group resubmits the strongest wiring that passes (the omission star), which is the adversarial response rather than the honest one, and the year is played with that.
-\end{itemize}
+The production inference uses the public cap, not the private true list length. The assumed-public submitter identities are obtained from the input. Actual positive list entries are consulted only afterward to score correctness and the fraction of directed entries recovered. Recovering every true positive entry does not generally determine the entire list: additional names may still fit below the public cap. A list is uniquely determined by forced positives only when those positives fill the public cap, or fill an independently known exact list length. Exhausting the possible peer universe is another sufficient uniqueness condition; this degenerate case does not arise in the study. The output distinguishes complete true-positive recovery from uniquely determined lists.
 
-\subsection{Attacker strength}
-For a coalition whose lists stay inside the coalition, every feasible seating induces a partition of the coalition into closed parts, and the member-weighted mean cluster size $\sum_c |c|^2/6$ of the best such partition is a lower bound on the cohesion any solver must grant, independent of seed, budget and history. Table~\ref{tab:bounds} gives these bounds. The one-name cycle admits only the trivial partition (bound 6). The wiring used in an earlier version of this work, whose omitted names form two 3-cycles, can be split into three mutual pairs (bound 2). The omission star cannot: nobody lists $c_0$, so $c_0$ cannot sit in a coalition pair, the part containing $c_0$ has size at least three, and the only patterns are $3{+}3$, $4{+}2$ and $6$, with member-weighted means $3$, $10/3$ and $6$ (bound 3). Exhaustive enumeration of all $5^5$ four-of-five wirings (member $c_0$'s omission fixed by symmetry) shows that \StarBound{} is the largest bound any such wiring can force (\StarBoundWirings{} wirings attain it). This is the attacker's best structural guarantee with six members and purely internal lists; it says nothing about adaptive lists, mixed honest and strategic members, larger coalitions, or the use of outsiders as scarce anchors, none of which we model.
+Under this observer model, no individual name is forced in the first $K$ rotations when every observed table has at least three members. After excluding any one name, each tablemate set remains nonempty; choosing one remaining peer per rotation gives a hitting set of size at most $R\le K$. This explains the initial flat portion of the leakage curve. It does not mean that charts reveal no information: they already restrict the set of possible lists even without forcing an individual entry.
 
-\subsection{Results}
-Table~\ref{tab:summary} summarises the five scenarios on the committed seed; Table~\ref{tab:honest} follows the honest scenario period by period; Table~\ref{tab:coalition} follows the colluders under each defense level; Table~\ref{tab:screen} lists the screen's verdicts; Table~\ref{tab:seeds} reports \NSeeds{} independent populations and Table~\ref{tab:sensitivity} the budget and community sensitivity.
-\input{tables}
+This observer model omits some possible side information. Additional eligibility or input-rule knowledge can strengthen deductions; uncertainty about submission or compliance can weaken them. These calculations are therefore conditional logical implications under stated knowledge, not a universal privacy-loss metric. The system provides no formal privacy guarantee, and the study does not evaluate a privacy-preserving replacement.
 
-\paragraph{Guarantee, novelty and baseline.} The anchor guarantee holds for every submitter in every period of every scenario and every seed (Table~\ref{tab:seeds}: \SeedGuaranteeAll), as asserted before export and re-checked by the tests; this is the checked condition on completed runs, and no run failed or timed out. On the committed seed \HonestExactlyOne\% of submitters have exactly one listed companion on average (worst period \HonestExactlyOneMin\%); across seeds the mean is \SeedExactlyOneMean\% (range \SeedExactlyOneMin--\SeedExactlyOneMax). Students meet \HonestMet{} distinct others by the end of the committed year against \RandomMet{} under the simulated random baseline; the closed-form expectation of the random baseline for this schedule is \RandomMetExpected{} (it would be \RandomMetExpectedAllMixed{} if all sixteen periods were unstratified, so alternation itself costs the baseline about 2.4 acquaintances). Across seeds the difference between the proposed system and its paired random baseline ranges from \SeedDiffMin{} to \SeedDiffMax{} acquaintances (mean \SeedDiffMean), so the history penalties spread students at least as well as random assignment does; on the committed seed the proposed seating produces more repeat pairs than the random one in \RepeatsWorseCount{} of 16 periods (periods \RepeatsWorseRotations), all early in the year when the random draw happens to avoid repeats. The baseline seats \RandomGeOne\% of submitters with a listed companion in a typical period (closed form \RandomGeOneExpected\%: \RandomGeOneExpectedMixed\% in unstratified and \RandomGeOneExpectedSame\% in stratified periods).
+\section{Experimental design}\label{sec:design}
+\subsection{Synthetic population and admission policy}
+The reference population has 257 participants: 132 in grade 11 and 125 in grade 12. Forty tables contain 17 groups of seven and 23 groups of six. Same-grade rotations allocate twelve seven-seat and eight six-seat tables to grade 11, and five seven-seat and fifteen six-seat tables to grade 12. Sixteen rotations alternate mixed-grade and same-grade states, starting mixed.
 
-\paragraph{Coalition.} With no defenses the cycle is seated together in \NoneIntact/16 periods, as Proposition~\ref{prop:forcing} requires. Under the min-4 rule the omission star is never intact (\StarIntact/16) and its mean cluster is \StarAvgCluster{} (\StarPatterns), which matches the structural bound of 3 and shows the solver is not being generous; across seeds the star is intact in \SeedStarIntact{} periods in total and its mean cluster ranges from \SeedStarClusterMin{} to \SeedStarClusterMax. The same-grade attack is scattered in every unstratified period (\StratIntactMixed/8 intact) and seated as a block in every stratified one (\StratIntactSame/8), \StratIntact/16 overall, exactly as Example~\ref{ex:strat} predicts, while every list satisfies the rule and a screen on full lists sees nothing. With the screen run on both effective digraphs, the stratified candidates \ScreenFlaggedSets{} are flagged (Table~\ref{tab:screen}), all \ScreenReturned{} colluders are returned and no honest student is; the adversarial resubmission passes and yields mean cluster \ScreenedAvgCluster{} with \ScreenedIntact/16 intact.
+A directed synthetic network targets up to eight true nominations per participant, using lognormal popularity, a within-grade weight, and reciprocal-edge generation. The reference regime reaches eight names; small latent groups at $\mu=1$ can yield shorter lists. Optional latent groups alter within-group preference and overlap. These parameters are scenario assumptions, not estimates from a school network. A six-person mutual clique is planted for attack comparisons, within one junior latent group when groups are enabled. The construction preserves within-group isolation at $\mu=1,\omega=0$. The shared-anchor experiment adds a deterministic seventh coalition member and changes submitted lists while retaining the underlying population. Honest participants whose generated lists fail the admission rule become nonsubmitters; names are not padded in this study. Thus the guarantee's denominator is the admitted submitter set, and admission exclusions must be reported separately from seating violations. In the retained study every participant submitted an accepted list and there were no rule-based exclusions; this study therefore supplies no outcomes for actually excluded participants.
+\input{generated/parameters}
 
-\paragraph{Leakage and tails.} Section~\ref{sec:privacy} gives the leakage numbers. Outcomes are not uniform: on the committed seed the number of distinct schoolmates met ranges from \FairMin{} to \FairMax{} (quartiles \FairQOne{} and \FairQThree); the quartile of students least often listed by others (mean in-degree \FairLowInDeg) meets \FairLowIn{} on average and the most-listed quartile (\FairHighInDeg) meets \FairHighIn, so low popularity does not translate into fewer acquaintances under this mechanism, while popular students absorb more repeat demand. These are descriptive facts about one synthetic family, not a fairness result.
+\subsection{Scenarios and structural attack score}
+The six website reference scenarios share population seed seven: honest submission; an undefended one-name coalition cycle; a six-person four-of-five omission star; a six-person same-grade attack; the seven-person shared-anchor attack; and the six-person attack followed by the specified screened resubmission. The shared-anchor charts are deliberately generated with screening disabled, while a diagnostic records what the revised screen would return.
 
-\paragraph{Sensitivity and cost.} Table~\ref{tab:sensitivity} varies the annealing budget by a factor of three either way and the community regime at fixed budget. A third of the budget costs about half a point of exactly-one and half an acquaintance; three times the budget gains a quarter of a point and two thirds of an acquaintance but roughly doubles the per-period time. The realistic community regime ($\mu = 0.6$, $\omega = 0.3$) behaves like the plain cohort. Fully isolated friend groups ($\mu = 1$) are the one setting that changes the picture: when every friend of every student sits inside a group of six to twelve, the solver cannot avoid seating many students with two listed companions, exactly-one drops to about 90\%, and no honest group is flagged, since an isolated honest group of size at least four splits by Theorem~\ref{thm:thomassen}. Solve time per period is \MeanSolve{} s on average and at most \MaxSolve{} s across the committed scenarios (\SeedMaxSolve{} s across seeds) on an eight-core desktop; the committed export of five scenarios took \ExportSeconds{} s of solver time.
+For a coalition of size $q$, the member-weighted cluster size is
+\begin{equation}
+ H=\frac{1}{q}\sum_{G}|G\cap C|^2.
+\end{equation}
+An intact count records rotations with all coalition members together. For $q=6$, all six together may share a seven-seat table with an outsider; this is distinct from capturing a full table. The seven-member coalition fills a maximum-size table when intact.
 
-\paragraph{Relation to earlier figures.} An earlier proposal for the same school reported about 75\% of students with exactly one listed companion and 67--69 distinct acquaintances against 73--75 under random seating. Those figures came from a different mechanism (it rewarded a second companion rather than penalising it), a different schedule (all periods unstratified, whose random baseline is \RandomMetExpectedAllMixed), and code and data that are no longer available, so they are not comparable with the present ones and are not reproduced here.
+In the omission-star wiring, every member lists four of the other five, and no one lists the central omitted member. Its feasible internal partition patterns are $3+3$, $4+2$, and $6$, with $H=3$, $10/3$, and $6$. The minimum $H=3$ is a structural lower bound on any valid outcome, not a prediction that every outcome has two triples. Exhaustive enumeration of $5^5$ wirings after fixing one omitted name gives the best lower bound \StarBound\ among that restricted internal six-person family. It does not optimize larger, externally anchored, or adaptive coalitions.
 
-\section{Discussion}
-\label{sec:discussion}
+\subsection{Paired random baseline and metrics}
+Each proposed schedule is compared with independently randomized seat permutations using the same capacities, grade restrictions, and population. For a uniform random rotation in a block of size $n$, a particular pair meets with probability
+\begin{equation}
+ q_r=\frac{\sum_t c_t(c_t-1)}{n(n-1)}.
+\end{equation}
+Pairs in different blocks have probability zero. Independence across randomized rotations gives expected distinct peers by summing $1-\prod_r(1-q_{ab,r})$ over peers. It does not require independence between different pairs within one rotation. For a participant with $k_i$ eligible names at a table of size $c$, random companion coverage is
+\begin{equation}
+ 1-\frac{\binom{n-1-k_i}{c-1}}{\binom{n-1}{c-1}},
+\end{equation}
+averaged over table sizes with seat-share weights and over submitters. In the reference population, expected random coverage is \RandomGeOneExpectedMixed\% in mixed rotations and \RandomGeOneExpectedSame\% in same-grade rotations. Expected final distinct peers are \RandomMetExpected\ for the alternating schedule; the all-mixed value \RandomMetExpectedAllMixed\ is a different design and is not the applicable comparator.
 
-\paragraph{What the rules buy.} The minimum-list rule is often described as the defense against private tables. Its actual content is Theorem~\ref{thm:thomassen}: three names \emph{inside the digraph the guarantee uses} make coercion impossible at any coalition size. ``Four names, two in your block'' delivers that in unstratified periods and not in stratified ones, where two same-block names leave odd circulants coercive; the screen on effective digraphs, not the rule, is what stops Example~\ref{ex:strat}. A rule of three same-block names would remove the stratified loophole by theorem, at the cost of excluding honest students with fewer than three same-block friends. Either way, a compliant coalition of six retains a structural cohesion of three: the mechanism gives each of them one familiar face, then two, never a table.
+Coverage and exactly-one percentages use submitters as the denominator. Distinct-peer means use all 257 participants. Repeat-pair counts count previously encountered unordered pairs in the current chart; they are not the weighted history cost in Equation~\eqref{eq:cost}. Coalition metrics use the actual scenario size. Distributional checks report individual distinct-peer ranges and nomination-degree quartiles, without interpreting those associations as causal effects.
 
-\paragraph{Guarantees, certificates and promises.} A hard guarantee is the right instrument for participants with few options, who are precisely the ones a soft version would fail. Its price is that the mechanism must say clearly what it certifies: a returned assignment satisfies every submitter (validated), a feasibility certificate says whether any assignment can, a screen says which sets would be seated as blocks. None of these is a promise that arbitrary submissions will be seated: the $K_5$-plus-followers input is admissible, passes the structural screen, and is infeasible, and a deployment needs an exception process for that case.
+\subsection{Study plan, evidence, and uncertainty}
+The primary comparison uses population seeds 1--10, each with honest and omission-star scenarios at the default budget and 16 rotations. Four additional seed-seven scenarios supply the remaining website references. Sensitivity runs vary annealing budgets to 100,000 and 900,000 iterations, CP budgets to 0.1 and 1.0 deterministic-time units, horizons to 5 and 32 rotations, and latent-group settings to $(\mu,\omega)=(0.6,0.3)$ and $(1,0)$. Each sensitivity changes its named setting relative to the seed-seven honest reference; it is not a factorial exploration. Population seeds and solver seeds are separate recorded fields.
 
-\paragraph{Leakage.} Confidential collection does not make the output uninformative. The published charts of one year determine a large share of list entries when the list cap is known, and they constrain the rest. A deployment should say so, avoid publishing anchors or the cap, and consider allowing lists to change.
+Every attempted run is written to an atomic ledger before execution. Successful rows retain complete chart traces, effective inputs, configuration, source-file hashes, dependency versions, the full Git commit, and dirty-tree status. Interrupted, invalid, failed, and unresolved attempts remain visible. Resumption requires matching effective source and configuration identity and verified trace hashes. Table~\ref{tab:ledger} reports actual attempts, including interruptions. Historical summary-only results are retained separately and are excluded from the new numerical tables.
+\input{generated/ledger}
 
-\paragraph{Honest-user costs.} The rules exclude honest participants with fewer than four friends or fewer than two in their block; the committed cohort has none, real cohorts will. Returning a flagged group for diversification presumes its members have other acceptable names; an honest small group and a strategic one can submit identical digraphs, so the screen cannot infer intent, and the exception process has to be human.
+Population seeds, rather than students or rotations, are the independent units for paired comparisons. Reported ranges and a 95\% paired-population bootstrap percentile interval (20,000 resamples, PCG64 seed 20260908, linear sample quantiles) describe variation under this generator, conditional on the budgets and fixed study design; they are not uncertainty intervals for a real school population. Runtime measurements were collected with concurrent experiments on a shared machine and are not isolated hardware benchmarks.
 
-\paragraph{Limitations.} The population family is synthetic and, although \NSeeds{} independent cohorts and two budget levels are reported, no real list statistics calibrate it. The attacker model is static: lists fixed for the year, one coalition of six with internal lists, best-found rather than optimal wirings beyond the exhaustive 4-of-5 search, and an adversarial resubmission chosen by us. The screen's completeness beyond self-contained candidates is open. Stage 4 sees only the previous period's pairs. Timing is from one machine and one software version. Nothing here measures belonging or psychological safety in a real pilot.
+\section{Results}\label{sec:results}
+\subsection{Guarantee satisfaction and contact diversity}
+All successful charts included in the results pass independent checks of placement, capacities, eligibility, and the companion guarantee. This is a statement about retained, validated outputs; it is not evidence that every rule-compliant input is feasible or that every attempt succeeds. Across \NSeeds\ honest population seeds, mean exactly-one coverage is \SeedExactlyOneMean\%, with population means ranging from \SeedExactlyOneMin\% to \SeedExactlyOneMax\%. The paired change in final distinct peers averages \SeedDiffMean, ranging from \SeedDiffMin\ to \SeedDiffMax; the conditional 95\% bootstrap interval for the mean is [\SeedDiffCILow, \SeedDiffCIHigh].
+\input{generated/summary}
+\input{generated/seeds}
+
+For the seed-seven honest reference, mean exactly-one coverage is \HonestExactlyOne\%, and its minimum rotation value is \HonestExactlyOneMin\%. Mean final distinct peers are \HonestMet\ under the proposed schedule and \RandomMet\ under the paired random schedule. Figure~\ref{fig:year} shows the full trajectory, while Figure~\ref{fig:population} shows population-level variation. The proposed schedule has more repeated pairs than its random comparator in \RepeatsWorseCount\ reference rotations (\RepeatsWorseRotations). An aggregate diversity improvement therefore does not imply a per-rotation dominance result, and exactly-one coverage is an optimization statistic rather than a measure of social benefit.
+
+\begin{figure}[tb]\centering\includegraphics[width=\linewidth]{reference_year.pdf}
+\caption{Seed-seven honest reference, using actual saved charts. Contact diversity is compared with the capacity- and eligibility-matched random schedule and its analytic expectation. Pale bands denote same-grade rotations. Companion statistics use submitters; contact diversity uses the whole population.}\label{fig:year}\end{figure}
+\begin{figure}[tb]\centering\includegraphics[width=\linewidth]{population_results.pdf}
+\caption{Honest results across independent synthetic population seeds. Pairing preserves the population and eligibility schedule. The line and band in the difference panel show the paired mean and its 95\% population-bootstrap interval. They describe this synthetic design, not a sampled school population.}\label{fig:population}\end{figure}
+
+\subsection{Coordinated submissions and screening}
+The undefended cycle remains intact in \NoneIntact\ reference rotations. The omission star is intact in \StarIntact\ rotations and has mean cluster size \StarAvgCluster; observed patterns are \StarPatterns. These observations are compatible with all three feasible structural patterns in Figure~\ref{fig:structures}.
+
+The six-person stratified attack remains intact in \StratIntactSame\ same-grade and \StratIntactMixed\ mixed-grade rotations. The seven-person shared-anchor attack remains intact in \SharedIntactSame\ same-grade rotations, consistent with Proposition~\ref{prop:shared}. The revised diagnostic returns \SharedReturned\ coalition members; it does not return the common anchor solely because it supports the proof. The screened six-person resubmission has mean cluster size \ScreenedAvgCluster\ and is intact in \ScreenedIntact\ rotations. This one response illustrates changed behavior after a certified return, not complete strategic resistance. The shared-anchor run also has fewer room-wide distinct contacts than the common random baseline, despite satisfying every hard companion constraint. The honest-regime diversity gain therefore does not extend to every tested submission regime.
+\input{generated/screen}
+
+\subsection{Budget and network sensitivity}
+Table~\ref{tab:sensitivity} and Figure~\ref{fig:sensitivity} vary computational budgets, horizon, and latent network structure. A larger budget changes a finite search opportunity; it need not monotonically improve every downstream-year metric. The $\mu=1,\omega=0$ latent-group setting has exactly-one coverage \IsolatedExactlyOne\%, compared with \HonestExactlyOne\% in the reference. Network concentration can therefore substantially change the apparent ability to minimize extras. At $\mu=1$, smaller groups also shorten realized lists (mean \IsolatedMeanList\ names rather than eight), so this comparison changes both network concentration and the list-length distribution. It is not an isolated causal estimate of community structure. One-population sensitivity runs identify dependence on assumptions but cannot establish general robustness.
+\input{generated/sensitivity}
+\begin{figure}[tb]\centering\includegraphics[width=\linewidth]{sensitivity.pdf}
+\caption{Sensitivity of the seed-seven honest scenario to annealing effort, CP improvement budget, and latent community structure. Other settings use the reference values. Each point represents a single generated population and finite solver run; these are descriptive comparisons.}\label{fig:sensitivity}\end{figure}
+
+\subsection{Privacy implications and distributional observations}
+In the reference run, the public-cap inference forces \LeakForced\ of \LeakEdges\ directed submitted entries (\LeakFraction\%), affecting \LeakStudents\ participants. Comparison with private synthetic truth confirms \LeakCorrect\ forced entries as correct. The inference classifies \LeakFull\ lists as uniquely determined under the public cap; this count is separate from complete recovery of a shorter true list. Figure~\ref{fig:privacy} displays the accumulation of forced entries and the distribution of distinct contacts.
+
+The 32-rotation sensitivity forces \LongLeakForced\ directed entries (\LongLeakFraction\%) and uniquely determines \LongLeakFull\ lists under the public cap. The five-rotation probe forces no entries, as predicted by the preceding hitting-set argument. These are one-population horizon comparisons under fixed submissions; they do not imply that every population has the same disclosure rate.
+
+Individual final distinct-peer counts range from \FairMin\ to \FairMax. Participants in the lowest and highest incoming-nomination quartiles average \FairLowIn\ and \FairHighIn\ distinct peers, respectively. These descriptive group means neither demonstrate equal treatment nor establish that nomination degree caused an outcome. They omit other dimensions of fairness, including satisfaction quality and the burden on participants with few acceptable peers.
+\begin{figure}[tb]\centering\includegraphics[width=\linewidth]{leakage_fairness.pdf}
+\caption{Information implied by successive published charts under the stated public cap across the six reference scenarios (left), and individual contact diversity by incoming nomination degree in the honest reference population (right). Private truth scores inference afterward; it is not supplied to the observer. Pale bands denote same-grade rotations; larger scatter markers combine students at identical coordinates. The degree association is descriptive.}\label{fig:privacy}\end{figure}
+
+\section{Discussion and limitations}
+The strongest guarantees in this work are local and explicit: every released chart satisfies the stated constraints, and every certified targeted core is forced together under the relaxation's hypotheses. Neither statement implies that the screen detects every forceable coalition. Single-anchor deletion and a bounded core size target useful counterexamples, but multiple anchors, larger cores, and adaptive submissions remain outside an exhaustive analysis. A screen passage means only that the implemented checks did not certify a problem. A proved-coercive structure does not establish dishonest intent.
+
+Global feasibility remains a distinct question. Minimum list length and two same-grade names do not imply it, and a time-limited unknown solve must not be described as a proof of failure. Where an instance needs review, an operational deployment would need a transparent process involving participants or administrators; this study does not validate such a process. Turning short generated lists into nonsubmission is a documented simulation policy, not evidence that excluding real participants would be acceptable.
+
+The objectives are operational proxies. Fewer extra listed peers and more distinct contacts may be useful design choices, but this study contains no intervention, calibrated friendship network, or measured wellbeing outcome. The synthetic generator, planted coalition, public cap, and fixed budgets restrict external validity. The random baseline measures a particular unconstrained alternative; it does not establish superiority over every feasible heuristic. The study also lacks a full-year optimality certificate and extensive algorithmic ablations.
+
+Publication of charts has a substantive privacy cost in the observer model. Hiding list lengths does not eliminate deductions when a public cap and repeated guarantee are known. The project should not be presented as privacy-preserving. Any future deployment would need a separately specified data policy and a study of mitigations and their effect on the guarantee.
+
+Source and input fingerprints improve auditability, but multiworker optimization and platform differences can still change search trajectories. The attempt ledger and independently validated trace are the evidence for each reported outcome. Historical proposal files describing maximization of two-friend coverage or all-mixed baselines are not the current specification. The original external prototype and collusion-result files described in earlier materials were not available in the repository used for this revision; no claim of reproducing those historical experiments is made.
 
 \section{Conclusion}
-Rotating group assignment with an anchor guarantee is NP-complete to decide, coercible by design, and leaky by design; each of these has a precise form. Coercion is decided exactly on self-contained sets of each period's effective digraph, is impossible whenever members list three names inside the set, and reappears in stratified periods under the common ``two same-block names'' rule through odd step-two circulants, which a screen on the right graph catches before the first period. Freedom from coercion is not feasibility, so a demand test and a constraint-programming certificate accompany the screen. The charts leak a quantifiable share of the lists. A hybrid solver whose local search never increases the number of friendless participants meets the guarantee for every participant in every period across independent populations while matching random assignment's mixing, and the strongest compliant coalition we could construct obtains triples, not a table.
+A hard companion guarantee creates both an assignment constraint and a strategic dependency structure. Shared outside anchors show why closure-only reasoning can miss full-table capture. A targeted relaxation yields sound forcing certificates for examined cores, while explicit unresolved states prevent time limits from masquerading as proofs. The implemented hybrid solver produces independently validated synthetic schedules with high exactly-one coverage and modest gains in distinct contacts relative to a matched random baseline. Those gains coexist with detectable preference disclosure and unresolved questions about complete screening, real-world feasibility, and social outcomes.
 
-\paragraph{Acknowledgements.} An independent audit of an earlier draft (September 2026) produced the stratified capture attack, the $K_5$-plus-followers infeasibility, the odd-circulant counterexample, the omission-star wiring, the leakage analysis, and the repair and padding counterexamples; every one of them is addressed above, and the audit's reproduction scripts informed the regression tests.
+\section*{Declarations}
+\paragraph{Author and affiliations.} Isaac Lin; \AuthorAffiliations. The institutional labels were supplied by the author. The full institutional name represented by SMU and the final contribution statement must be confirmed before submission.
+\paragraph{Funding.} \FundingDeclaration
+\paragraph{Competing interests.} \ConflictDeclaration
+\paragraph{Ethics and participants.} The reported experiments use synthetic participants and synthetic preference networks. No human-subject intervention or real student preference data are reported. No ethics approval for a future deployment is asserted.
+\paragraph{Data and code availability.} Code, traces, verification scripts, and manuscript sources are available at \url{https://github.com/IsaacLin247/lunch-seating-visual}. The interactive trace playback is at \url{https://isaaclin247.github.io/lunch-seating-visual/}. The verified attempt manifest identifies the precise effective source and inputs of each experiment.
+\paragraph{Use of generative AI.} OpenAI Codex assisted with implementation, counterexample checks, manuscript drafting, and figure-generation scripts. Numerical results are calculated from archived program outputs, not generated as prose estimates. The author must review and approve the manuscript, references, and final declarations before journal submission.
+\paragraph{Acknowledgments.} Independent audit findings motivated the regression suite and the separation of mathematical certificates, heuristic outcomes, and empirical scope.
 
-\paragraph{Data and code availability.} Implementation, committed traces, experiments, tests and the interactive visualisation: \url{https://github.com/IsaacLin247/lunch-seating-visual}; visualisation at \url{https://isaaclin247.github.io/lunch-seating-visual/}. Every number in this article is generated from the committed data by a script in the repository.
-
-\bibliographystyle{plainnat}
+\bibliographystyle{unsrtnat}
 \bibliography{refs}
-
 \appendix
-\section{Reproduction}
-\begin{lstlisting}
-python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
-python sim/export_traces.py                 # five scenarios, deterministic, ~15 min
-python sim/experiments.py --seeds 10        # seeds, budgets, communities -> results/experiments.json
-pytest                                      # unit tests + trace invariants + audit regressions
-python paper/make_tables.py && cd article && latexmk -pdf article.tex
-\end{lstlisting}
+\section{Reproduction and independent verification}
+The repository pins simulation dependencies in \texttt{requirements.txt} and figure dependencies in \texttt{requirements-paper.txt}. The exact fresh-study commands and concurrency conditions are documented in \texttt{results/STUDY.md}. The saved manifests include population and solver seeds separately, the complete generator and solver configuration, effective input hashes, full Git identity, dirty status, source-file fingerprints, and versions. A source fingerprint covers executable simulation files and simulation requirements, excluding generated figures, manuscript files, and outputs. A dirty checkout is therefore identified explicitly rather than being mislabeled by a short commit alone. The archived study source precedes final hardening of cached-evidence withdrawal, returned-configuration validation, the exact-public-length universe case, and CP feasibility priority over an invalid incumbent. Compatibility checks cover all retained traces. In the seven recorded rotations with invalid annealing endpoints, the first CP call either supplied no candidate or already supplied an accepted lower-cost feasible chart; the priority correction changes no recorded decision.
 
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true]
+python -m pip install -r requirements-paper.txt
+python -m pytest -q
+python paper/assemble_evidence.py --retained-source
+python paper/make_tables.py
+python paper/make_figures.py --retained-source
+python results/verification/verify_traces.py \
+  results/verified_experiments.json \
+  --out results/verification/combined_charts.json
+cd article
+latexmk -pdf -interaction=nonstopmode article.tex
+\end{lstlisting}
+The assembler rejects unfinished inputs for a final release and verifies saved hashes. The trace checker independently recomputes table feasibility, stage costs, rotation statistics, coalition patterns, distributional summaries, and aggregate results. A separate CP formulation checks privacy exclusion claims. The website receives the six completed seed-seven traces, including actual construction, repair, annealing, and final endpoints.
+
+\section{Regression evidence and audit scope}
+The regression suite covers the 257-participant shared-anchor witness, restoration of anchor edges during targeted testing, exact senior capacity pools, and unknown solver statuses. Exhaustive seating partitions of 180 small random graphs independently check that every certified core is forced together. These tests validate soundness on the enumerated cases; they do not prove completeness of candidate generation. The star enumeration checks all restricted four-of-five wirings and retains all feasible partition patterns. Privacy tests distinguish a recovered short list from a uniquely determined list under a public cap. Ledger tests preserve interrupted attempts, reject stale or modified traces, and bind resumption to matching source and configuration identity.
+
+The accompanying audit-resolution document maps each follow-up finding to its correction or remaining limitation. Historical source documents and summary-only experiments are preserved as history. Their former objective and numbers are excluded from current claims rather than silently treated as fresh evidence.
 \end{document}

@@ -1,0 +1,58 @@
+{
+  "figure": "structural_examples.pdf",
+  "pdfSha256": "56d41436ceb44e5b497bb379f590466690a95720d878c808c14f368e0bc912f9",
+  "generatorSha256": "8d6a58ed879a7df455483aef3bede8cdd8e06d7f348e635b4d8405549f6c6fb2",
+  "type": "structural",
+  "inputs": {},
+  "effectiveSourceHash": null,
+  "sourceVerification": null,
+  "plottedValues": {
+    "oddGraph": {
+      "n": 7,
+      "steps": [
+        1,
+        2
+      ]
+    },
+    "sharedAnchor": {
+      "coalition": 7,
+      "capacity": 7
+    },
+    "omissionStarPartitions": [
+      [
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          1,
+          4,
+          5
+        ]
+      ],
+      [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      ]
+    ]
+  }
+}

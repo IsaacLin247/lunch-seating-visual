@@ -1,0 +1,128 @@
+{
+  "manuscript": "article/article.pdf",
+  "pages": 18,
+  "figures": 6,
+  "tables": 6,
+  "evidenceManifestSha256": "18fa11f92db61a4396d3a6b60f3bc6384e175b60cee7fad38500ff60cc3f489b",
+  "verifiedRuns": 32,
+  "recordedAttempts": 34,
+  "proposedRotations": 517,
+  "pytest": {
+    "passed": 220,
+    "skipped": 1,
+    "skipReason": "redundant circulant parameter case"
+  },
+  "browser": {
+    "base": "http://127.0.0.1:8765",
+    "scenarioFiles": [
+      "honest",
+      "coalition_none",
+      "coalition_min4",
+      "coalition_stratified",
+      "coalition_shared_anchor",
+      "coalition_screened"
+    ],
+    "scenarios": [
+      {
+        "button": "No defenses",
+        "proof": "With a single successor on each list, following the directed cycle forces all members onto one table in every feasible seating. This violates the four-name rule."
+      },
+      {
+        "button": "Min-4 rule",
+        "proof": "For this six-member omission star, the possible coalition patterns are 3+3, 4+2, and 6. The member-weighted mean cluster is at least 3. A shared table is allowed but cannot be forced solely by these lists."
+      },
+      {
+        "button": "Same-grade attack",
+        "proof": "In same-grade rounds, the five-member step-two cycle has no closed split. The sixth member lists only that core, so all six must share a table. Cross-grade names provide extra eligible choices only in mixed rounds."
+      },
+      {
+        "button": "Shared-anchor attack",
+        "proof": "Seven cycle members also name one shared outside junior. At capacity seven, the seven plus their anchor cannot share a table. A member seated without that anchor needs their successor, forcing all seven together in every same-grade chart."
+      },
+      {
+        "button": "Screens on",
+        "proof": "The submitted same-grade attack is detected and returned. The experiment then specifies an omission-star resubmission: allowed patterns are 3+3, 4+2, and 6. This is one chosen response, not proof that all strategic responses are safe."
+      }
+    ],
+    "stagesChecked": [
+      {
+        "rotation": 1,
+        "stage": "construction",
+        "violations": 24
+      },
+      {
+        "rotation": 1,
+        "stage": "repair",
+        "violations": 0
+      },
+      {
+        "rotation": 1,
+        "stage": "annealing",
+        "violations": 0
+      },
+      {
+        "rotation": 1,
+        "stage": "final",
+        "violations": 0
+      },
+      {
+        "rotation": 2,
+        "stage": "construction",
+        "violations": 19
+      },
+      {
+        "rotation": 2,
+        "stage": "repair",
+        "violations": 0
+      },
+      {
+        "rotation": 2,
+        "stage": "annealing",
+        "violations": 0
+      },
+      {
+        "rotation": 2,
+        "stage": "final",
+        "violations": 0
+      },
+      {
+        "rotation": 16,
+        "stage": "construction",
+        "violations": 18
+      },
+      {
+        "rotation": 16,
+        "stage": "repair",
+        "violations": 1
+      },
+      {
+        "rotation": 16,
+        "stage": "annealing",
+        "violations": 0
+      },
+      {
+        "rotation": 16,
+        "stage": "final",
+        "violations": 0
+      }
+    ],
+    "javascriptErrors": [],
+    "mobileOverflow": false,
+    "pdfAvailable": true
+  },
+  "files": {
+    "article/article.tex": "a5380a184fdfa83a6a7b46f61aed4cf2450f84089d5880cc85fab3379b3e8cdc",
+    "article/article.pdf": "b6560ce829bc94de96418d4e920903816ef9796302af7980df68255c49298dea",
+    "article/macros.tex": "b9e9448d985d905498044574185ae9ee742686d4b218db51492a35d20090af95",
+    "article/tables.tex": "082213faa4984945ca0f153bf6d512ff09ac5c7fc1c7412235f57acecc401114",
+    "paper/make_tables.py": "bd18c4a2cb3a89594cf6da525c11a0169c55e0c84d90886be93a33724192cc71",
+    "paper/make_figures.py": "8d6a58ed879a7df455483aef3bede8cdd8e06d7f348e635b4d8405549f6c6fb2",
+    "docs/article.pdf": "b6560ce829bc94de96418d4e920903816ef9796302af7980df68255c49298dea"
+  },
+  "remainingAuthorDetails": [
+    "Full expansion of SMU",
+    "Funding declaration",
+    "Competing-interest declaration",
+    "Final author review and contribution statement"
+  ]
+}
