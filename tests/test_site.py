@@ -67,3 +67,4 @@ def test_katex_loaded_from_cdn_and_four_tabs():
     assert "KaTeX" in html and "katex.min.js" in html and "auto-render.min.js" in html and "katex.min.css" in html
     assert len(re.findall(r'class="tab[ "].*?data-tab="', html)) == 4
     assert 'data-tab="math"' in html
+    assert len(re.findall(r'data-mode="coalition_', html)) == 4

@@ -1,0 +1,119 @@
+{
+ "seeds": [
+  {
+   "seed": 1,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.517,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 586,
+   "leakageStudents": 244,
+   "fairness": {
+    "distinctMet": {
+     "min": 66,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 83,
+     "mean": 74.74
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.19,
+     "meanDistinctMet": 76.41
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.64,
+     "meanDistinctMet": 73.19
+    }
+   },
+   "yearSolveSeconds": 138.0,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.61,
+   "pctExactly1Min": 98.44,
+   "pctGe1RandomMean": 21.4,
+   "meanDistinctMetFinal": 74.74,
+   "meanDistinctMetFinalRandom": 71.55,
+   "repeatsWorseThanRandomRotations": [
+    5
+   ],
+   "totalSolveSeconds": 137.9,
+   "maxSolveSeconds": 9.28,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    99.61,
+    99.61,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    99.22,
+    99.61,
+    99.61,
+    98.44,
+    99.61,
+    98.44
+   ],
+   "metByRotation": [
+    5.46,
+    10.9,
+    16.16,
+    21.34,
+    26.29,
+    31.14,
+    35.98,
+    40.61,
+    45.24,
+    49.6,
+    54.09,
+    58.2,
+    62.68,
+    66.68,
+    70.98,
+    74.74
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.0,
+    21.0,
+    26.02,
+    30.65,
+    35.41,
+    39.67,
+    44.19,
+    48.33,
+    52.69,
+    56.37,
+    60.47,
+    64.12,
+    68.33,
+    71.55
+   ],
+   "wallSeconds": 141.9
+  }
+ ],
+ "budgets": [],
+ "communities": [],
+ "meta": {
+  "started": "2026-09-07T19:29:06"
+ }
+}

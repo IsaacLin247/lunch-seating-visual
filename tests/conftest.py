@@ -7,7 +7,7 @@ import pytest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 DATA = os.environ.get("LSV_DATA_DIR", os.path.join(ROOT, "docs", "data"))
-SCENARIOS = ["honest", "coalition_none", "coalition_min4", "coalition_screened"]
+SCENARIOS = ["honest", "coalition_none", "coalition_min4", "coalition_stratified", "coalition_screened"]
 
 
 def load(name):

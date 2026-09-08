@@ -6,7 +6,6 @@
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
 \usepackage{array}
-\usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -24,97 +23,51 @@
 
 \input{macros}
 
-\title{Guaranteed-Friend Lunch Seating:\\ Simulation Methodology, Solver Pipeline and Results}
-\author{Isaac Lin\thanks{Code and traces: \url{https://github.com/IsaacLin247/lunch-seating-visual}. Interactive site: \url{https://isaaclin247.github.io/lunch-seating-visual/}.}}
+\title{Guaranteed-Friend Lunch Seating:\\ Implementation Report for the Simulation and Solver}
+\author{Isaac Lin\thanks{Code and traces: \url{https://github.com/IsaacLin247/lunch-seating-visual}. Interactive site: \url{https://isaaclin247.github.io/lunch-seating-visual/}. The companion article (\code{article/article.tex}) contains the general problem statement, proofs and the case-study analysis; this report documents the implementation stage by stage.}}
 \date{September 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-This document is a complete description of the simulation behind the guaranteed-friend lunch seating demonstration: the synthetic cohort generator, the submission rules and the exact coercion-capability screen, the four-stage seating solver (pod construction, swap repair, group-swap simulated annealing, hinted CP-SAT), the random-seating baseline, the statistics reported, and the validation, determinism and timing guarantees. Every number quoted here is read from the committed trace files (\code{docs/data/*.json}) by \code{paper/make\_tables.py}, so the text cannot drift from the data. In the honest scenario every submitter sits with a listed friend in all 16 rotations, \HonestExactlyOne\% of submitters sit with exactly one listed friend on average, and students meet \HonestMet{} distinct schoolmates over the year against \RandomMet{} under random seating. A six-student coalition captures a table in \NoneIntact/16 rotations with no defenses, is split into pairs (mean cluster \MinFourAvgCluster, \MinFourIntact/16 intact) under the min-4 rule, and is flagged before rotation~1 by the coercion screen with zero honest students affected.
+This report documents the code behind the guaranteed-friend lunch seating demonstration as it is after the September 2026 audit: the synthetic cohort generator, the submission rules, the coercion and demand screens run on every rotation state's effective lists, the feasibility certificate, the four-stage seating solver (pod construction, repair, closure-move annealing, hinted CP-SAT) with its violation-monotonicity invariant, the random baseline and its closed form, the chart-only leakage probe, the statistics, and the validation, determinism and timing facts. Every number here is read from the committed trace files by \code{paper/make\_tables.py}. In the honest scenario every submitter sits with a listed friend in all 16 rotations, \HonestExactlyOne\% of submitters sit with exactly one listed friend on average, and students meet \HonestMet{} distinct schoolmates over the year against \RandomMet{} under simulated random seating (closed-form expectation \RandomMetExpected).
 \end{abstract}
 
 \tableofcontents
 
 \section{Problem setting}
-\label{sec:setting}
+One lunch period seats $N = 257$ students ($n_{11} = 132$ juniors, $n_{12} = 125$ seniors) at 40 tables, 17 seating 7 and 23 seating 6, so every seat is filled. Tables are reassigned every two weeks, 16 rotations a year, alternating a \emph{mixed} state (any table) and a \emph{same-grade} state (juniors with juniors, seniors with seniors). \code{table\_layout(state, n11, n12)} computes the layout for any $N \in [240, 280]$: $n_7 = N - 240$ seven-seat tables come first; in the same-grade state the juniors take the largest feasible number of seven-seat tables with $7x_7 + 6x_6 = n_{11}$ and the seniors the rest (12$\times$7 + 8$\times$6 and 5$\times$7 + 15$\times$6 for the default cohort), ordered junior sevens, senior sevens, junior sixes, senior sixes; impossible sizes raise an error instead of returning a malformed layout.
 
-One lunch period seats grades 11 and 12 together: $N = 257$ students ($n_{11} = 132$ juniors, $n_{12} = 125$ seniors) at 40 tables, 17 of which seat 7 and 23 of which seat 6, so $\sum_t c_t = 119 + 138 = 257 = N$ and every seat is filled. Tables are reassigned every two weeks, giving 16 rotations per school year. The school alternates two seating \emph{states}: in a \emph{mixed} rotation any student may sit at any table; in a \emph{same-grade} rotation juniors sit only with juniors and seniors only with seniors. In same-grade rotations the tables are partitioned by grade so that capacities match exactly: juniors receive 12 seven-seat and 8 six-seat tables ($84 + 48 = 132$), seniors 5 seven-seat and 15 six-seat tables ($35 + 90 = 125$). In the implementation tables $0$--$16$ seat 7 and tables $17$--$39$ seat 6; the junior tables in same-grade rotations are $0$--$11$ and $17$--$24$, the senior tables $12$--$16$ and $25$--$39$ (\code{sim/solver.py:table\_layout}). The committed traces start with a mixed rotation and alternate from there.
+\paragraph{Mechanism.} Each student confidentially submits at least four names or none, with at least two names in their own grade. Write $L_i$ for the submitted list ($|L_i| \le 8$) and $L^{(r)}_i$ for the \emph{effective} list of rotation $r$ ($L_i$ in mixed rotations, same-grade names only in same-grade rotations). Every rotation the solver must seat each submitter with at least one effective listed peer. Among such seatings it prefers exactly one listed peer per student and avoids pairs who have already shared a table.
 
-\paragraph{Mechanism.} Each student confidentially submits a list of at least four names, or no list at all (the \emph{min-4-or-none} rule); at least two of the names must be in the student's own grade so that the guarantee below is satisfiable in same-grade rotations. Write $L_i$ for student $i$'s submitted list ($|L_i| \le 8$ in all scenarios) and call $i$ a \emph{submitter} if $L_i \neq \emptyset$. In every rotation the solver must seat each submitter with at least one listed peer; in same-grade rotations only same-grade listed peers count, since cross-grade peers cannot share a table. Among all such seatings the solver prefers ones in which each student has exactly one listed peer at the table (one familiar face, everyone else new) and in which pairs of students who have already shared a table this year are not seated together again.
-
-\paragraph{Notation.} $x_{i,t} \in \{0,1\}$ indicates that $i$ sits at table $t$. For a seating, $s_i$ is the number of $i$'s (eligible) listed peers at $i$'s table. $m_{ab}$ counts the rotations so far in which $a$ and $b$ shared a table, and $\alpha_{ab}$ counts those rotations for pairs in which at least one of the two listed the other ($\alpha_{ab} = m_{ab}$ for a listed pair and $0$ otherwise). All history is year-to-date and is updated after every rotation.
+\paragraph{Notation.} $x_{i,t}$ indicates that $i$ sits at table $t$; $s_i$ is the number of $i$'s effective listed peers at $i$'s table; $m_{ab}$ counts earlier rotations in which $a$ and $b$ shared a table while neither listed the other; $\alpha_{ab}$ counts earlier rotations in which they shared a table while one listed the other. Both histories are updated after every rotation from the lists in force at the time.
 
 \section{Synthetic cohort}
-\label{sec:cohort}
+Students are \code{S001}--\code{S257}; no real data is used. \code{make\_cohort} in \code{sim/generator.py} draws popularity $\pi_i \sim \mathrm{LogNormal}(0, 0.6^2)$, then $K = 8$ directed friendships per student in a random order over students: each open slot is filled by a distinct $j \ne i$ with probability proportional to $\pi_j$ times 9 within grade and 1 across, and each new arc $i \to j$ is reciprocated with probability $p$ if $j$ has an open slot; $p$ is chosen from a fixed grid so the measured reciprocity is nearest $0.5$ (measured \Reciprocity; within-grade share \WithinGrade). Latent groups ($\mu$, $\omega$, group sizes 6--12, optional cross-grade groups) are available and are off in the committed traces (Section~2.2 of the article). Six mid-popularity juniors are planted as mutual true friends and play the coalition.
 
-No real student data is used anywhere. Students are identified as \code{S001}--\code{S257}; the first 132 are juniors. The generator lives in \code{sim/generator.py} and is deterministic in its seed.
+\paragraph{Submitted lists.} Honest students submit their true friends. \code{apply\_rules} treats a list with fewer than four names, or fewer than two same-grade names, as \emph{no submission} (policy \code{none}); the number of students so excluded is recorded (\RejectedByRules{} in the committed cohort, \NonSubmitters{} non-submitters). A \code{pad} policy that fills such lists with sampled acquaintances exists for modelling students who name acquaintances to qualify and is not used. The coalition's lists per scenario: a one-name cycle (\code{k1}); the 4-of-5 \emph{omission star} (\code{min4}: $c_0$ omits $c_1$, everyone else omits $c_0$); the earlier two-3-cycles wiring (\code{min4-3cycles}, kept for comparison); and the \emph{stratified} attack (five members list the next two around a 5-cycle plus two distinct mid-popularity seniors each, the sixth lists four of the five).
 
-\subsection{Popularity, grade bias and reciprocity}
-Each student receives a popularity weight $\pi_i \sim \mathrm{LogNormal}(0, \sigma^2)$ with $\sigma = 0.6$, drawn from \code{numpy.random.default\_rng(seed)}. Each student has $K = 8$ true friends. Friendships are directed and are sampled in a random order over students: when student $i$ is processed, the number of open slots is $K$ minus the friends $i$ already has, and that many distinct targets $j \neq i$ are drawn without replacement with probability proportional to
-\[
-w_{ij} = \pi_j \cdot \begin{cases} 9 & \text{if } g_j = g_i \\ 1 & \text{otherwise,}\end{cases}
-\]
-which is the 9:1 within-grade bias. Each newly sampled edge $i \to j$ is reciprocated ($j \to i$ is added) with probability $p$ provided $j$ still has an open slot. Because reciprocated edges fill slots that would otherwise have been sampled, every student ends with exactly $K$ friends when $\mu < 1$ (Section~\ref{sec:groups}). The reciprocation probability is calibrated deterministically: the sampler is run for $p \in \{0.25, 0.30, \dots, 0.75\}$ with the same sub-seed and the run whose measured reciprocity (fraction of directed edges whose reverse also exists) is closest to $0.5$ is kept. For the committed traces the measured reciprocity is \Reciprocity{} and the within-grade fraction of friendships is \WithinGrade.
+\section{Screens and feasibility certificate}
+\code{sim/screens.py} runs on the submitted lists before rotation 1, once per rotation state, on that state's effective lists.
 
-\subsection{Latent friend groups}
-\label{sec:groups}
-The function
-\begin{center}\small\code{make\_cohort(seed, mu, omega, group\_size\_dist=(6,12), cross\_grade\_group\_frac=0)}\end{center}
-adds community structure. Students of each grade are shuffled and cut into groups whose sizes are drawn uniformly from $\{6,\dots,12\}$; with probability \code{cross\_grade\_group\_frac} a group is instead assembled from both grades' pools. A remainder smaller than 6 is folded into the last group that already holds students of that grade. With probability $\omega$ a student additionally joins one secondary group chosen uniformly among the other groups. A student's \emph{group pool} is the union of their group(s) minus themselves.
+\paragraph{Definitions.} A set $A$ is \emph{closed} when every submitter in $A$ has a listed peer inside $A$ (non-submitters impose nothing). Candidates are the list-closures of submitters (sets closed under following listed names, hence self-contained) of size at most 64. A candidate with at least two submitters is \emph{coercive} when it admits no partition into two closed parts that both contain a submitter; every feasible seating then puts all its submitters at one table.
 
-When $\mu > 0$, each of the $K$ friendship draws is assigned to the group pool with probability $\mu$ (a Binomial$(K,\mu)$ count per student) and to the background otherwise. Group draws are taken without replacement from the pool with probability proportional to popularity; background draws use $w_{ij}$ above with the student's own group pool excluded, so that the in-group share of friendships is $\mu$ in expectation and $\mu$ is identifiable from the data. If the pool is exhausted the unfilled group draws fall back to the background when $\mu < 1$; at $\mu = 1$ exactly they are dropped, so groups are fully isolated and members of small groups have fewer than 8 friends (never fewer than 5 with these sizes). Reciprocation is applied afterwards exactly as above. Unit tests (\code{tests/test\_generator.py}) check that the measured in-group fraction is within $\pm 0.05$ of $\mu$ for $\mu \in \{0.3, 0.6, 0.8\}$, that the secondary-group frequency is within $\pm 0.05$ of $\omega$, that the within-grade fraction at $\mu = 0$ is unchanged, and that $\mu = 1$ yields isolated cliques. The committed traces use $\mu = 0$, $\omega = 0$, in which case the generator is bit-identical to the plain grade-biased network.
+\paragraph{Coercion test.} Exact: for candidates of size at most 20 by enumerating the $2^{|S|-1}$ subsets containing a fixed submitter with bitmask closedness checks; larger candidates pass immediately when every submitter has at least three listed peers among the candidate's submitters (Thomassen's theorem gives two disjoint cycles that extend to two closed parts), and are otherwise decided exactly by a CP-SAT model with one Boolean side variable per member and one clause per submitter (a 10 s budget; a timeout would be reported as unverified and flagged).
 
-\subsection{The planted friend group}
-Six mid-popularity juniors are planted as mutual true friends: without latent groups they are drawn from the juniors whose popularity rank lies between the 35th and 65th percentile; with latent groups they are the six members closest to median popularity of the junior group whose median popularity is nearest the junior median. Each keeps their $K - 5 = 3$ most preferred outside friends. These six (\Coalition) are the coalition in the gaming scenarios and appear with honest lists in every other scenario.
+\paragraph{Demand test.} For a candidate $C$ with $n_1$ submitters and $n_0$ non-submitters and followers $F(C)$ (submitters outside $C$ whose entire effective list lies in $C$), at most $n_0 + \lfloor n_1/2 \rfloor$ tables can hold members of $C \cup F(C)$; if $|C| + |F(C)|$ exceeds the seats of that many largest admissible tables the instance is infeasible and the core with its followers is flagged.
 
-\subsection{Submitted lists}
-\label{sec:lists}
-Honest students submit their true friends in preference order, filtered by \code{apply\_rules}: duplicates and self are removed; a list with fewer than four names counts as no submission; if fewer than two names are in the student's grade, same-grade acquaintances are added with probability proportional to popularity; if the list is still shorter than four, further names are added from the grade-biased background. With $K = 8$ and the 9:1 bias no honest list in the committed traces needed padding (every student has at least four same-grade friends). A configurable fraction of non-submitters exists in the code (\code{nonsubmit\_frac}) and is $0$ in all committed scenarios.
+\paragraph{Report.} Per state: candidates with verdicts and splits, coercion flags, demand flags, submitters with an empty effective list. Overall: flagged students (submitters of coercive sets, cores of over-demanded sets), returned students (flagged plus followers), minimum-list and same-grade violations. The older insular and boundary detectors remain as diagnostic functions and are not used for flagging: a cluster with outward names is not forced anywhere, and flagging such clusters produced false positives.
 
-The coalition's lists are replaced according to the scenario:
-\begin{itemize}
-\item \textbf{k=1 chain} (no defenses): member $c_k$ lists only $c_{k+1 \bmod 6}$. Every member's single listed peer must be at their table, so any feasible seating places the whole cycle at one table.
-\item \textbf{4-of-5} (min-4 rule): each member lists four of the five others. The omitted names form two 3-cycles, $c_0$ omits $c_1$, $c_1$ omits $c_2$, $c_2$ omits $c_0$ and likewise for $c_3,c_4,c_5$. Restricted to a triple the lists then form a directed 3-cycle, so each triple is \emph{closed} (every member has a listed peer inside it) and a seating that keeps a triple together gives each member exactly one familiar face at no penalty. This is the wiring that leaves the solver the most penalty-free ways of keeping members together.
-\item \textbf{screens on}: the coalition first submits the 4-of-5 wiring; the screen of Section~\ref{sec:screen} returns the group; the returned students resubmit their honest lists (five co-members plus three outsiders, rules applied), and the year is played with those.
-\end{itemize}
-
-\section{Submission screens}
-\label{sec:screen}
-
-The screens run once, before rotation 1, on the submitted lists (\code{sim/screens.py}).
-
-\subsection{Candidate detectors}
-Two cheap detectors produce candidate sets. The \emph{insular detector} computes, for every submitter $i$, the list-closure $\mathrm{cl}(i)$: the set reachable from $i$ by repeatedly following listed names, including $i$. Closures of size $2$ to $12$ are candidates. The \emph{boundary detector} joins two submitters when their lists share at least three names, takes connected components of size at least two, and reports a component $C$ whose \emph{outward} names, $\bigcup_{c \in C} L_c \setminus C$, number at most three. Components larger than 12 are discarded. Both detectors are kept as functions for comparison but neither flags on its own.
-
-\subsection{Exact coercion-capability test}
-\begin{definition}
-A set $A$ is \emph{closed} if every member of $A$ has at least one listed peer inside $A$. A candidate $S$ \emph{admits a closed bipartition} if $S = A \uplus B$ with $|A|, |B| \ge 2$ and both $A$ and $B$ closed.
-\end{definition}
-The flagging rule (stated on Tab~4 of the site) is: $S$ is flagged exactly when it admits no closed bipartition. A closed part is a set of students that can be seated by itself with every member's guarantee met; if no such split exists the hard constraint forces all of $S$ onto one table (capture if $|S| \le 7$, infeasibility otherwise). Because $|S| \le 12$ the test is decided exactly by enumerating the $2^{|S|-1}$ subsets $A$ that contain the smallest member of $S$ (bitmask enumeration, closedness checked on the mask, short-circuit on the first valid split); sets of size at most three are flagged automatically since two parts of size at least two cannot exist.
-
-Students who belong to a flagged set are \emph{flagged}; the set \emph{returned} for diversification additionally includes every member of a candidate set that contains a flagged student, so the whole group is asked to diversify rather than only the coercive core. The screen also reports min-4-or-none violations (lists with one to three names) separately.
-
-\subsection{Properties and outcome}
-The property tests in \code{tests/test\_screens.py} exercise wirings defined inline: complete digraphs of size 4--12 never flag (every split is closed); pure chains (each member lists exactly the next around a cycle) always flag; hub wirings (everyone lists a common hub and the next member of a chain, the hub lists member 1) flag; circulant lists (each member lists the next $k \ge 2$ around a circle) do not flag because an interleaved split exists; a shared-outsider wiring (six members each list the next three co-members and one common outsider) is detected by the boundary detector and passes; a pair listing only each other flags. On the synthetic cohort the honest lists produce no candidates at all, an honest cohort with $\mu = 1$ produces 30 candidate kernels (one per isolated group) none of which flags, and the k=1 chain flags as a single kernel of six.
-
-\begin{proposition}
-Any closed $S$ with $|S| \le 8$ in which every member lists at least four names inside $S$ admits a closed bipartition.
-\end{proposition}
-\begin{proof}
-At least $4|S|$ directed edges lie among $\binom{|S|}{2} \le 28 < 4|S|$ pairs when $|S| \le 8$, so some pair $\{x,y\}$ is mutual; $A = \{x,y\}$ is closed, and every $b \in S \setminus A$ lists at least four names in $S$ of which at most two are in $A$, so $B = S \setminus A$ is closed and $|B| \ge 2$ for $|S| \ge 4$.
-\end{proof}
-Consequently a six-student coalition that complies with the min-4 rule can never form a coercive kernel, which is why the solver is free to scatter it (Section~\ref{sec:results}). For the 4-of-5 wiring the six-set candidate accordingly passes with the split \ScreenSplit. The boundary detector, however, also reports the two omission triples as separate clusters (their pairwise overlaps are three names and their outward names are exactly the other triple), and a triple cannot be bipartitioned into parts of size two; in the committed traces the triple \ScreenFlaggedSet{} is flagged (Table~\ref{tab:screen}), the kernel containing it returns all \ScreenReturned{} members, and no honest student is affected. After resubmission the screen reports nothing.
+\paragraph{Feasibility certificate.} Before each year, \code{feasibility\_certificate} solves the hard constraints alone with CP-SAT for both states (deterministic budget 20) and records \code{OPTIMAL}, \code{INFEASIBLE} or \code{UNKNOWN}; an infeasible instance stops the run with the certificate. Committed traces: \FeasMixed{} / \FeasSame{} in \FeasSeconds{} s together. The $K_5$-plus-ten-followers instance is proved infeasible in a few seconds in both states.
 
 \section{The seating solver}
-\label{sec:solver}
-
-One rotation is solved by \code{solve\_rotation} in \code{sim/solver.py}, given the lists, the state, the year-to-date pair history $m_{ab}$ and the previous rotation's tables. Algorithm~\ref{alg:pipeline} summarises the pipeline; Sections~\ref{sec:stage1}--\ref{sec:stage4} give the exact rules.
+One rotation is solved by \code{solve\_rotation} in \code{sim/solver.py} given lists, state, the two history matrices and the previous rotation's tables (Algorithm~\ref{alg:pipeline}).
 
 \begin{algorithm}[t]
 \caption{One rotation}\label{alg:pipeline}
 \begin{algorithmic}[1]
+\State raise InfeasibleInputError if a submitter has no eligible listed peer
 \State $\sigma \gets$ \textsc{PodGreedy} \Comment{Stage 1}
 \State \textsc{SwapRepair}$(\sigma)$ \Comment{Stage 2}
 \State $\sigma \gets$ \textsc{Anneal}$(\sigma, 300\,000)$ \Comment{Stage 3, full-year history}
@@ -123,129 +76,70 @@ One rotation is solved by \code{solve\_rotation} in \code{sim/solver.py}, given 
 \EndFor
 \State $\sigma' \gets$ \textsc{CPSAT}$(\text{hint} = \sigma)$ \Comment{Stage 4, previous-rotation pairs}
 \If{$\sigma'$ found, has no friendless submitter, and $C(\sigma') \le C(\sigma)$} $\sigma \gets \sigma'$ \EndIf
-\If{a submitter is still friendless} \State $\sigma \gets$ \textsc{CPSAT}$(\text{hint}=\sigma)$ with six times the budget; raise an error if none \EndIf
-\State \Return $\sigma$
+\If{a submitter is still friendless} \State $\sigma' \gets$ \textsc{CPSAT}$(\text{hint}=\sigma)$ with six times the budget; keep only if it satisfies everyone \EndIf
+\State raise RuntimeError if a submitter is still friendless; \Return $\sigma$
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Effective lists and pair weights}
-For the rotation, the \emph{effective} list of $i$ is $L_i$ in a mixed rotation and $\{j \in L_i : g_j = g_i\}$ in a same-grade rotation; $s_i$ counts effective peers at $i$'s table. A pair is \emph{listed} if either lists the other (full lists). The Stage~3 pair weight is
-\[
-W_{ab} = 5\, m_{ab} + 2\, \alpha_{ab}, \qquad \alpha_{ab} = \begin{cases} m_{ab} & \text{listed pair} \\ 0 & \text{otherwise,}\end{cases}
-\]
-so a listed pair that has met $m$ times weighs $7m$ and an incidental pair $5m$. (This follows the stated energy literally; it charges anchor repeats more than incidental ones, which is the opposite of the earlier heuristic ``incidental repeats cost more'', and is a one-line change if $m_{ab}$ was meant to count incidental co-seatings only.) In same-grade rotations a student may only be placed at tables of their grade; in the local-search stages swaps are drawn within a grade so this never has to be checked.
+\subsection{Weights and costs}
+A pair is \emph{listed} if either lists the other. The pair weight is $W_{ab} = 5\, m_{ab} + 2\, \alpha_{ab}$ (scaled by 10 relative to the energy $-\tfrac{1}{10}\sum(5m + 2\alpha)$), so with fixed lists an incidental pair that has met $m$ times weighs $5m$ and a listed pair $2m$, the policy ``incidental repeats cost more than anchor repeats''. If a single history matrix of all co-seatings is supplied, it is split by today's listed relation, which is identical when lists never change. Per-table cost is $\sum_i \mathrm{pen}_i(s_i) + \sum_{\{a,b\}} W_{ab}$ with $\mathrm{pen}_i(0) = 10\,000$ for a submitter and $\mathrm{pen}_i(s) = 10 \max(0, s-1)$ otherwise; total cost $C$ is the negative of the energy up to a constant, in integers. The state caches per table the cost and the number of friendless submitters; every move reports $\Delta C$ and $\Delta\nu$ (change in friendless count) exactly by re-costing the two affected tables.
 
 \subsection{Stage 1: pod greedy}
-\label{sec:stage1}
-Students are processed in increasing order of effective list size (ties broken randomly), so the student with the fewest options is seeded first, $i^\ast = \arg\min_{i \in U} |L_i \cap U|$ over the unmatched set $U$. Each $i$ is paired with an unmatched listed peer $j$, choosing a peer who lists $i$ back first, then the smallest $W_{ij}$, then the smallest list size; a peer $j$ who does not list $i$ back and has strictly fewer options than $i$ is never taken, so a scarce student's only slot is not consumed one-directionally. Everyone left becomes a singleton pod.
-
-Pods are then merged until every submitter has a listed peer inside their own pod. Needy students are processed in increasing order of list size, and a needy $m$ merges their pod with the pod of one of their listed peers provided the merged size does not exceed 6 (the smallest table), choosing the target pod by the key (extra familiar faces the merge creates $\times 1$ plus $\sum W$ across the two pods, then target size, then random). This is what assembles one-directional chains: with the k=1 coalition the three pairs merge into one pod of six before any honest student can claim a seat next to a member.
-
-Finally pods are placed largest first. For each pod every table with enough remaining seats (and the right grade) is scored by $\sum W$ between pod members and current occupants plus 1 per list relation between them, ties broken toward emptier tables and then randomly. A pod that fits nowhere is split into singles placed in any free seat. The result fills every table exactly.
+Students are processed in increasing order of effective list size (ties random). Each is paired with an unmatched listed peer who lists them back if possible, then by smallest history and shortest list; a peer who does not list back and has strictly fewer options is never taken. The rest become singleton pods. Needy students (no listed peer inside their pod) are processed in increasing order of list size and merge their pod with a listed peer's pod when the merged size fits the smallest table, choosing by extra familiar faces created, history and size; this assembles chains before other students take the seats beside chain members. Pods are placed largest first into the admissible table with enough seats that minimises history plus one unit per list relation with occupants, ties toward emptier tables; a pod that fits nowhere is split into singletons.
 
 \subsection{Stage 2: swap repair}
-\label{sec:stage2}
-The local-search state keeps, per table, the members and the cached table cost
-\[
-\mathrm{cost}(t) = \sum_{i \in t} \mathrm{pen}_i(s_i) + \sum_{\{a,b\} \subseteq t} W_{ab}, \qquad
-\mathrm{pen}_i(s) = \begin{cases} 1000 & s = 0 \text{ and } i \text{ submitted} \\ \max(0, s-1) & \text{otherwise,}\end{cases}
-\]
-so that the total cost $C(\sigma) = \sum_t \mathrm{cost}(t)$ is the negative of the Stage~3 energy $E$ up to a constant (Section~\ref{sec:stage3}); in code every term is multiplied by 10 to stay in integers. Any move exchanges a set $G_a$ at table $t_a$ with an equally sized set $G_b$ at $t_b$; its delta is computed exactly by re-costing the two affected tables.
+For up to 20 rounds each friendless submitter $i$ tries the single swap with every non-anchor member of every table holding one of $i$'s listed peers and applies the cheapest swap after which $i$ has an anchor and the set of friendless submitters is a strict subset of what it was (\code{best\_rescue\_swap}); a swap that rescues $i$ by stranding someone else is rejected. Failing that, \code{kick\_and\_repair}$(i, j)$ forces the closure of $i$ onto listed peer $j$'s table, evicts an equally sized set of $j$'s tablemates outside $j$'s closure (longest lists first), re-seats evicted or stranded students with their own rescue swaps, and keeps the compound only if the total cost fell and nobody who was satisfied before is friendless afterwards, otherwise restoring the state in place (callers hold aliases to its lists). Repair can stop short on hard instances; the later stages take over.
 
-For up to 20 rounds, every friendless submitter $i$ (in random order) tries the single swap $i \leftrightarrow x$ for every $x \ne j$ at the table of every listed peer $j$ of $i$, and applies the best one if its delta is below $500$ (half a violation), which means $i$ becomes satisfied without leaving anyone else friendless. If no single swap achieves that, the compound move \textsc{KickAndRepair}$(i, j)$ is tried for $i$'s peers $j$ in random order: the closure of $i$ (Section~\ref{sec:closure}) is forced onto $j$'s table, an equally sized set of $j$'s tablemates outside $j$'s closure is evicted to $i$'s old table (preferring students with the longest lists, who are easiest to re-seat), and every evictee or tablemate left friendless is re-seated by the best single swap toward one of their own listed peers with delta below 500; the whole compound is kept only if the total cost decreased and is otherwise undone in place. In the committed traces repair leaves no friendless submitter in any rotation, so the retry loop of Algorithm~\ref{alg:pipeline} never runs.
+\subsection{Closures}
+The closure of a set $G$ within its table $T$ is grown until stable by two rules: a submitter of $T \setminus G$ all of whose anchors in $T$ lie in $G$ joins $G$; a submitter in $G$ with no listed peer inside $G$ pulls in one of its anchors in $T$ at random. Closures larger than 7 are abandoned. When two closures differ in size the smaller is padded with a random tablemate and \emph{re-closed} (up to four times); if sizes still differ the move is skipped.
 
-\subsection{Group closure}
-\label{sec:closure}
-Single swaps almost always break a guarantee (moving a student away from their only anchor orphans both), so the annealer moves \emph{closed groups}. The closure of student $a$ at table $t$ is grown from $\{a\}$ by two rules until stable: (i) any submitter $x$ at $t$ whose every anchor at $t$ is already in the group joins it (otherwise $x$ would be orphaned when the group leaves); (ii) any submitter in the group with no listed peer inside the group pulls in one of their anchors at $t$ (chosen at random). A closure larger than 7 (a whole table) is abandoned. Moving a closure therefore never leaves anyone at the origin table friendless, and the movers stay anchored among themselves whenever possible.
+\subsection{Stage 3: simulated annealing}
+$300\,000$ iterations of Metropolis acceptance on $C$ with $T$ geometric from $25$ to $0.2$ in scaled units ($2.5 \to 0.02$ in energy units). Move mix: probability $1/4$ raw single swap with a uniform same-grade-class partner; $1/4$ peer-directed single swap (partner drawn from the table of one of $a$'s listed peers); otherwise a closure swap with re-closed padding; while $\nu > 0$ every 8th iteration is a targeted move from a friendless submitter toward one of its peers, every 64th of those a kick-and-repair. \emph{Every} candidate move is rejected if $\Delta\nu > 0$, so once $\nu = 0$ the search never leaves the feasible region (verified by an instrumented test); before that, violations may be transferred, which is how chains get assembled. The best assignment under the lexicographic order (friendless count, cost) is returned. The retry loop of Algorithm~\ref{alg:pipeline} keys on the actual friendless count, not on a cost threshold.
 
-\subsection{Stage 3: group-swap simulated annealing}
-\label{sec:stage3}
-The energy maximised is exactly
-\[
-E(\sigma) = \sum_{i} \Big( 1000\, \ind{s_i \ge 1} - \max(0, s_i - 1) \Big) - \frac{1}{10} \sum_{(a,b)\ \text{co-seated}} \big( 5\, m_{ab} + 2\, \alpha_{ab} \big),
-\]
-where the first sum runs over submitters for the indicator term (non-submitters contribute a constant) and the second over pairs sharing a table in the proposed seating, with full-year history. Acceptance is Metropolis, $P(\text{accept } \Delta E < 0) = e^{\Delta E / T}$, with $T$ geometric from $2.5$ to $0.02$ over $300\,000$ iterations; the code minimises $10\,C$ with $T$ scaled by the same factor, which leaves every acceptance probability unchanged. The best state seen is returned.
+\subsection{Stage 4: CP-SAT}
+The model (\code{\_base\_model}) has $x_{i,t}$ over allowed tables, exactly-one and capacity constraints, and for every submitter $y_{i,t} \le x_{i,t}$, $y_{i,t} \le \sum_{j \in L^{(r)}_i} x_{j,t}$, $\sum_t y_{i,t} \ge 1$; a submitter with an empty effective list raises \code{InfeasibleInputError} rather than being skipped. \code{cpsat\_polish} adds $z_i$ with $\sum_{j} x_{j,t} \le 1 + (\ell_i - 1) z_i + \ell_i(1 - x_{i,t})$ for all $t$, repeat indicators $r_{ab} \lor \lnot x_{a,t} \lor \lnot x_{b,t}$ for previous-rotation pairs with $W_{ab} > 0$, objective $300\sum_i z_i + \sum 100\, W_{ab}\, r_{ab}$, and hints for every variable. Solver: deterministic interleaved search, \Workers{} workers, deterministic-time budget \CpsatTime; with 16 workers on the 8-core development machine repeated solves were not identical, so 8 is used throughout. The polished seating is accepted only if it satisfies everyone and $C(\sigma') \le C(\sigma)$ on the full history. Timing records greedy, repair, anneal, CP-SAT, fallback and total; the fallback solve is inside the total.
 
-Each iteration draws a student $a$ uniformly and a partner $b$ as follows.
-\begin{itemize}
-\item With probability $0.25$: $b$ uniform in $a$'s grade pool (any student in a mixed rotation), and the move is the raw single swap $\{a\} \leftrightarrow \{b\}$.
-\item With probability $0.25$: a listed peer $j$ of $a$ is drawn, $b$ is a uniform tablemate of $j$ other than $j$, and the move is the single swap $\{a\} \leftrightarrow \{b\}$ (peer-directed: students are often proposed next to a friend).
-\item Otherwise: $b$ uniform as in the first case, and the move is the closure swap $G_a \leftrightarrow G_b$ with $G_a = \mathrm{cl}(a)$, $G_b = \mathrm{cl}(b)$; the smaller closure is padded with up to eight random draws of extra tablemates until the sizes match, and the move is skipped if they still differ.
-\item While the current cost still contains a violation, every 8th iteration is a targeted repair instead: $a$ is a uniformly drawn friendless submitter, $j$ one of their listed peers and $b$ a tablemate of $j$; with probability $\tfrac12$ the move is the closure swap and otherwise the single swap. Every 64th such iteration runs \textsc{KickAndRepair}$(a,j)$ instead of a Metropolis move.
-\end{itemize}
-Moves whose two students share a table are skipped. A closure swap recomputes two table costs of at most seven members each, so an iteration costs about $15\,\mu s$ and the stage takes about $4$ s.
+\subsection{Baseline, anchors, history}
+The baseline is a uniformly random seating respecting the state, drawn from a generator seeded independently per rotation. Anchors recorded in the trace are the listed peer at the table with the fewest previous co-seatings. After both seatings, $\alpha_{ab}$ or $m_{ab}$ is incremented for each co-seated pair according to whether the pair is listed; a separate total history serves the baseline and the anchor choice.
 
-\subsection{Stage 4: CP-SAT certify and polish}
-\label{sec:stage4}
-The annealed seating is passed as a complete hint to Google OR-Tools CP-SAT (v9.15). Variables and constraints use a per-student indicator encoding, with no pairwise variables for the friend counts:
-\begin{align*}
-&x_{i,t} \in \{0,1\} \text{ for every table } t \text{ allowed for } i, \qquad \textstyle\sum_t x_{i,t} = 1\ \ \forall i, \qquad \sum_i x_{i,t} = c_t\ \ \forall t; \\
-&y_{i,t} \le x_{i,t}, \qquad y_{i,t} \le \textstyle\sum_{j \in L_i} x_{j,t}, \qquad \sum_t y_{i,t} \ge 1 \quad \text{for every submitter } i; \\
-&\textstyle\sum_{j \in L_i} x_{j,t} \le 1 + (|L_i| - 1)\, z_i + |L_i| (1 - x_{i,t}) \quad \forall t, \text{ for } |L_i| \ge 2,
-\end{align*}
-so $z_i = 1$ whenever $i$ sits with two or more listed peers ($z_i$ plays the role of $\sum_t y^{(2)}_{i,t}$). For every pair $(a,b)$ seated together in the \emph{previous} rotation with $W_{ab} > 0$, a repeat indicator satisfies $r_{ab} \ge x_{a,t} + x_{b,t} - 1$ for every table $t$ (encoded as the clause $r_{ab} \lor \lnot x_{a,t} \lor \lnot x_{b,t}$). The objective is
-\[
-\min\ \ 300 \sum_i z_i + \sum_{(a,b)} w_{ab}\, r_{ab}, \qquad w_{ab} = 100\,(5\, m_{ab} + 2\, \alpha_{ab}).
-\]
-Hints cover every variable: $x$ from the annealed seating, $y_{i,t} = 1$ exactly at $i$'s table when $s_i \ge 1$, $z_i = \ind{s_i \ge 2}$, $r_{ab} = \ind{a,b \text{ share a table}}$. In a mixed rotation the model has about $21\,000$ Boolean variables and $31\,000$ constraints; in a same-grade rotation about half of that. The solver runs with \code{interleave\_search = true}, \Workers{} interleaved workers and a \code{max\_deterministic\_time} of \CpsatTime{} units, which makes its result a deterministic function of the model and hint (Section~\ref{sec:determinism}).
-
-CP-SAT sees only previous-rotation repeats, so an optimum of its model can be worse on the full-year energy. Its seating is therefore accepted only if it leaves no submitter friendless and its full-year cost $C$ is not higher than the annealed seating's; otherwise the annealed seating is kept. Table~\ref{tab:honest} records which stage won each rotation: CP-SAT typically wins early in the year, when there is little history, and the annealer later. If, against expectation, a friendless submitter survived both stages, CP-SAT is rerun with six times the budget and the pipeline raises an error rather than export an invalid rotation; neither path was exercised in the committed traces.
-
-\subsection{Baseline, anchors and history update}
-The status-quo baseline for the same rotation is a uniformly random seating that respects the state: a random permutation of all students over the seat slots in a mixed rotation, and a random permutation within each grade over that grade's tables in a same-grade rotation, drawn from \code{random.Random(f"\{seed\}-random-\{r\}")}. For each submitter the \emph{anchor} recorded in the trace is the listed peer at their table with the fewest previous co-seatings (ties by student index); the baseline's anchors are recorded the same way. After both seatings are fixed, $m_{ab}$ is incremented for every pair sharing a table in the proposed seating and a separate history is kept for the baseline.
-
-\section{Statistics}
-\label{sec:stats}
-For every rotation the trace stores, over submitters, the percentage with $s_i \ge 1$, $s_i = 1$ and $s_i \ge 2$ for both seatings; the mean over all students of the number of distinct schoolmates they have shared a table with so far (\emph{met}); the number of pairs seated together who had met before (\emph{repeat pairs}); the cost breakdown of the final seating; the stage whose seating was kept; and the wall-clock solve time. For coalition scenarios it also stores the clusters of coalition members per table, the largest cluster, the mean cluster size experienced by a member, $\sum_c |c|^2 / 6$ (6.0 when intact, 2.0 when in three pairs, 1.0 when fully scattered), and whether all six shared a table (\emph{intact}). The summary gives year-level aggregates of the same quantities.
+\section{Statistics, leakage and fairness}
+Per rotation: percentages of submitters with $s_i \ge 1$, $= 1$, $\ge 2$ for both seatings; mean distinct schoolmates met so far; repeat pairs (pairs seated together who had met before); cost breakdown; accepted phase; solve and fallback time; coalition clusters, largest cluster, member-weighted mean cluster ($\sum_c |c|^2/6$), pattern and intactness. Per trace: closed-form expectations for the random baseline (\code{sim/baseline.py}: pair co-seating probabilities per state, expected distinct schoolmates for the schedule and for an all-mixed year, expected friend coverage per state from the hypergeometric probability that none of a student's eligible names lands at their table); the leakage report (\code{sim/privacy.py}: for every submitter, the minimum hitting set of their 16 tablemate sets and the names every hitting set of size at most 8 must contain, scored against the true lists: \LeakForced{} forced entries, \LeakCorrect{} correct, \LeakStudents{} students, \LeakFull{} fully determined); the distribution of distinct schoolmates met (min \FairMin, quartiles \FairQOne{} and \FairQThree, max \FairMax) and its means for the lowest and highest in-degree quartiles (\FairLowIn{} vs \FairHighIn); the submission report; library versions and source commit. The summary lists the rotations in which the proposed seating had more repeat pairs than the random one (\RepeatsWorseRotations) and, for coalitions, intact rotations by state and the pattern histogram.
 
 \section{Validation, determinism and cost}
-\label{sec:determinism}
-Before a trace is written, \code{validate\_trace} asserts that every table holds exactly its capacity in both seatings of every rotation, that every student appears exactly once, that states alternate, that no table mixes grades in a same-grade rotation, that every submitter has an eligible listed peer at their table and that the recorded anchor is such a peer, and that the reported $\ge 1$ percentage is $100$. The pytest suite (93 tests) re-checks these on the committed files and adds the scenario-level claims: the baseline seats $5$--$40\%$ of submitters with a friend (\RandomGeOne\% on average), the proposed system seats more than 90\% with exactly one, the undefended coalition is intact and holds a table in all 16 rotations, the min-4 coalition is intact in at most one rotation with mean cluster below 3 and largest cluster at most 3, the screened scenario flags only coalition members and returns all six, and the honest scenario flags nobody. It also enforces the site's copy rules (no em dashes anywhere under \code{docs/}, Tab~4 equations present verbatim and in display mode, fewer than 150 words of prose).
+\code{validate\_trace} asserts exact capacities in both seatings of every rotation, every student exactly once, alternating states, no cross-grade table in same-grade rotations, an eligible listed peer at every submitter's table with the recorded anchor among them, and a reported $\ge 1$ percentage of 100. The pytest suite (unit, screen, attack, baseline/leakage, trace and site tests) re-checks these on the committed files and reproduces the audit's counterexamples: the same-grade capture is flagged only on the effective graph, the $K_5$-plus-followers input is over-demanded and proved infeasible, non-submitter sinks and external anchors are not flagged, odd step-two circulants are flagged, repair never strands a satisfied student, the annealer never leaves the feasible region, padded groups are re-closed, empty effective lists raise, layouts generalise and invalid sizes raise, and the leakage probe's deductions are all correct.
 
-Every random choice is seeded: the cohort from \code{seed} and fixed sub-seeds, the per-rotation local search from \code{seed}$\times 1000 + r$, the baseline as above, and CP-SAT through its deterministic interleaved search. Re-exporting a scenario reproduces the committed file byte for byte apart from the timestamp and timing fields; this was verified for the honest and min-4 scenarios. The full export of four scenarios took \ExportSeconds{} s on an 8-core machine, with a mean of \MeanSolve{} s and a maximum of \MaxSolve{} s per rotation (Stage~3 about 4 s, Stage~4 about 3--7 s including model construction, Stages 1--2 under 0.1 s).
+Determinism: seeded cohort and local search, seeded baseline, CP-SAT in deterministic interleaved mode with 8 workers, fixed iteration counts, pinned versions (\Versions), and version/commit metadata in every trace. Re-exporting a scenario reproduced the committed file byte for byte apart from timestamps and timings. The export of five scenarios took \ExportSeconds{} s of solver time; per rotation \MeanSolve{} s on average, \MaxSolve{} s at most (Stage 3 about 4--5 s, Stage 4 about 3--7 s including model construction).
 
 \section{Results}
-\label{sec:results}
-Table~\ref{tab:summary} gives the headline numbers, Table~\ref{tab:honest} the honest scenario rotation by rotation, Table~\ref{tab:coalition} the coalition's fate under each defense level and Table~\ref{tab:screen} the screen's verdicts. Table~\ref{tab:params} lists every parameter.
+Tables~\ref{tab:summary}--\ref{tab:params} are generated from the committed traces and \code{results/experiments.json}. The honest cohort satisfies every submitter in every rotation; \HonestExactlyOne\% have exactly one listed friend on average; \HonestMet{} distinct schoolmates against \RandomMet{} random (closed form \RandomMetExpected). The one-name cycle is intact \NoneIntact/16; the omission star is intact \StarIntact/16 with mean cluster \StarAvgCluster{} (structural bound \StarBound, the best of all 4-of-5 wirings); the stratified attack is intact in \StratIntactSame{} of 8 same-grade rotations and \StratIntactMixed{} of 8 mixed ones and is flagged by the screen on the same-grade lists (\ScreenFlaggedSets), returning all \ScreenReturned{} colluders and no honest student; the adversarial resubmission yields mean cluster \ScreenedAvgCluster. Across \NSeeds{} independent cohorts exactly-one averages \SeedExactlyOneMean\% and the difference in distinct schoolmates against the paired random baseline ranges from \SeedDiffMin{} to \SeedDiffMax.
 \input{tables}
-
-\paragraph{Honest cohort.} The guarantee holds for every submitter in every rotation. On average \HonestExactlyOne\% of submitters have exactly one listed friend at their table; the worst rotation is late in the year, when avoiding repeats leaves the solver less room. Students meet \HonestMet{} distinct schoolmates over the year against \RandomMet{} under random seating: the repeat penalties make the proposed seating slightly better than random at spreading students, while the baseline seats only \RandomGeOne\% of submitters with a friend in a typical rotation.
-
-\paragraph{Coalition.} With no defenses the k=1 chain is seated together in \NoneIntact/16 rotations (cluster size 6 throughout), as the hard constraint leaves no alternative. Under the min-4 rule, the adversarially wired 4-of-5 lists are split into three pairs in every rotation (mean cluster \MinFourAvgCluster, largest cluster 2, \MinFourIntact/16 intact) while every member still receives exactly one familiar face. With screens on, the coercion screen flags \ScreenFlagged{} members before rotation 1 and returns all \ScreenReturned; their honest resubmission passes, and the year then plays out like everyone else's with the six scattered across four or five tables.
-
-\paragraph{Sensitivity to community structure.} A fast run (reduced budgets) of the honest scenario with $\mu = 0.6$, $\omega = 0.3$ gave 98.3\% exactly-one and 73.5 distinct schoolmates against 72.3, so latent groups in this range do not change the picture materially.
-
-\paragraph{Relation to the proposal's earlier figures.} The proposal quoted about 96\% exactly-one and 67--69 distinct schoolmates against 73--75 under random seating from an earlier prototype and cohort. This pipeline lands at \HonestExactlyOne\% and \HonestMet{} against \RandomMet. Two observations: the random baseline on this cohort is \RandomMet{} rather than 73--75, and the present pipeline avoids repeats at least as well as random seating in every rotation but the last, so it meets marginally more people rather than fewer. Neither a stronger latent-group structure nor the literal Stage~3 weights moved these numbers toward the earlier figures.
-
-\section{Visualisation pipeline}
-\label{sec:viz}
-The site (\code{docs/}) is static HTML, CSS and JavaScript with no build step and reads the trace files directly. Rooms are drawn on \code{<canvas>}: 40 tables in an 8$\times$5 grid, junior tables of the same-grade layout on the left half and senior tables on the right, seats on a ring around each table. On a rotation change every student flies from the old seat to the new one along a slightly bowed path, staggered by origin table, over 1.2 s with cubic easing, and the grade tints fade in or out; the animation runs at 60 frames per second for the 514 dots of the side-by-side view. Colours encode the outcome (exactly one listed friend, two or more, none). Avatars are generated in the browser from the anonymous ids with DiceBear, with an initials fallback when the CDN is unreachable. Tab~1 shows random versus proposed seating with live statistics and a cumulative distinct-schoolmates chart; Tab~2 follows one student (default \Hero, a mid-popularity junior) with the delivered friend highlighted each rotation, a growing wall of people met and the same student's year under random seating; Tab~3 replays the three coalition traces with red rings and the screen banner; Tab~4 typesets the equations of this document with KaTeX. Everything is regenerated by \code{python sim/export\_traces.py} and deployed by pushing to the \code{main} branch, from which GitHub Pages serves the \code{docs/} folder.
-
-\section{Limitations}
-The cohort is synthetic and a single seed is committed; the statistics are point estimates for that seed rather than averages over many cohorts. The CP-SAT stage is accepted in only a minority of rotations because its model ignores older history; a model carrying the full history would need per-student repeat variables and was not attempted within the time budget. The screen enumerates bipartitions exactly only for candidates of size at most 12 and relies on the two detectors to propose candidates. The literal Stage~3 energy weighs anchor repeats above incidental ones, as discussed in Section~\ref{sec:solver}.
 
 \appendix
 \section{Trace file schema}
-Each scenario is one JSON file (\code{docs/data/<scenario>.json}, about 160 KB, no pretty-printing):
 \begin{lstlisting}
-{ "config":  { scenario, seed, n, n11, n12, K, rotations, firstState,
-               tableCapacities[40], sameGradeTableGrade[40], rules, coalitionMode,
-               coalition[], weights, network, solver, screen?, yearSolveSeconds },
+{ "config":  { scenario, seed, n, n11, n12, K, rotations, firstState, tableCapacities[40],
+               sameGradeTableGrade[40], rules, coalitionMode, coalition[], weights, network,
+               submission, solver, feasibility{mixed,same}, baseline, versions, screen?, yearSolveSeconds },
   "students": [ {"id": "S001", "grade": 11}, ... ],
-  "listed":   [ ["S014", ...], ... ],        // submitted lists actually solved
-  "listedInitial": [...],                    // screened scenario: the flagged submission
+  "listed":   [ ["S014", ...], ... ],           // submitted lists actually solved
+  "listedInitial": [...],                       // screens-on scenario: the flagged submission
   "hero": "S123",
-  "rotations": [ { "idx", "state", "tables", "tablesRandom",
-                   "anchors", "anchorsRandom", "stats", "coalition"?, "coalitionRandom"? }, ... ],
-  "summary":  { pctGe1Min, pctExactly1Mean, pctGe1RandomMean, meanDistinctMetFinal,
-                meanDistinctMetFinalRandom, coalitionIntactRotations?, coalitionAvgCluster? } }
+  "rotations": [ { idx, state, tables, tablesRandom, anchors, anchorsRandom, stats,
+                   coalition?, coalitionRandom? }, ... ],
+  "fairness": { distinctMet{min,q1,median,q3,max,mean}, lowestInDegreeQuartile, highestInDegreeQuartile },
+  "leakage":  { kMax, rotationsObserved, forcedEdges, forcedEdgesCorrect, studentsWithForcedEdge,
+                fullyDeterminedStudents, submittedEdges, fractionOfEdgesForced },
+  "summary":  { pctGe1Min, pctExactly1Mean, pctExactly1Min, pctGe1RandomMean, meanDistinctMetFinal,
+                meanDistinctMetFinalRandom, repeatsWorseThanRandomRotations, phases, maxSolveSeconds,
+                coalitionIntactRotations?, coalitionIntactByState?, coalitionAvgCluster?, coalitionPatterns? } }
 \end{lstlisting}
 
 \section{Reproduction}
 \begin{lstlisting}
 python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
-python sim/export_traces.py            # all four scenarios, ~10 min, deterministic
-pytest                                 # 93 tests
+python sim/export_traces.py            # five scenarios, ~15 min, deterministic
+python sim/experiments.py --seeds 10   # robustness runs
+pytest
 python paper/make_tables.py && cd paper && latexmk -pdf methodology.tex
 \end{lstlisting}
 

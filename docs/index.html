@@ -138,7 +138,8 @@
       <div class="segmented" role="group" aria-label="Defenses">
         <button class="seg is-active" data-mode="coalition_none">1 · No defenses</button>
         <button class="seg" data-mode="coalition_min4">2 · Min-4 rule</button>
-        <button class="seg" data-mode="coalition_screened">3 · Screens on</button>
+        <button class="seg" data-mode="coalition_stratified">3 · Same-grade attack</button>
+        <button class="seg" data-mode="coalition_screened">4 · Screens on</button>
       </div>
       <p class="explainer" id="mode-explainer"></p>
     </div>
@@ -157,7 +158,7 @@
         <div class="stat-col">
           <div class="stat"><div class="stat-label">Co-members at each member's table</div><div class="stat-value" id="g-avg">–</div><div class="stat-sub">average cluster size, incl. self · this rotation</div></div>
           <div class="stat"><div class="stat-label">Largest cluster</div><div class="stat-value" id="g-max">–</div><div class="stat-sub">of 6 members</div></div>
-          <div class="stat"><div class="stat-label">Rotations fully intact</div><div class="stat-value" id="g-intact">–</div><div class="stat-sub">all six at one table</div></div>
+          <div class="stat"><div class="stat-label">Rotations fully intact</div><div class="stat-value" id="g-intact">–</div><div class="stat-sub" id="g-intact-sub">all six at one table</div></div>
           <div class="stat"><div class="stat-label">Members with ≥1 listed friend</div><div class="stat-value good" id="g-ge1">–</div><div class="stat-sub">the guarantee still holds for them</div></div>
         </div>
       </aside>
@@ -167,7 +168,7 @@
   <!-- ============ TAB 4 ============ -->
   <section id="tab-math" class="panel math" role="tabpanel" hidden>
     <div class="math-col">
-      <p class="math-setup">Setup: students \(i \in \{1,\dots,N\}\), tables \(t \in \{1,\dots,40\}\), capacities \(c_t \in \{6,7\}\), \(\sum_t c_t = N\); listed peers \(L_i\) with \(|L_i| \le 8\); \(s_i\) = listed peers at \(i\)'s table; year history \(m_{ab}\) = co-seatings of pair \((a,b)\), \(\alpha_{ab}\) = those where one listed the other.</p>
+      <p class="math-setup">Setup: students \(i \in \{1,\dots,N\}\), tables \(t \in \{1,\dots,40\}\), capacities \(c_t \in \{6,7\}\), \(\sum_t c_t = N\); listed peers \(L_i\) with \(|L_i| \le 8\) ; \(s_i\) = listed peers at \(i\)'s table; year history \(m_{ab}\) = co-seatings of pair \((a,b)\) while neither listed the other, \(\alpha_{ab}\) = co-seatings while one listed the other.</p>
 
       <div class="eq-block">
         <p class="lead">Feasibility:</p>
@@ -201,9 +202,9 @@
       </div>
 
       <div class="eq-block">
-        <p class="lead"><span class="stage">Defenses</span> submissions require at least 4 names or none, with at least 2 same-grade; a submitted cluster \(S\) is flagged exactly when</p>
+        <p class="lead"><span class="stage">Defenses</span> submissions require at least 4 names or none, with at least 2 same-grade; per rotation state, a closed set \(S\) (its names stay inside) is flagged exactly when</p>
         <div class="eq">\[ \nexists\ S = A \uplus B:\ |A|, |B| \ge 2,\ A, B\ \text{both closed} \]</div>
-        <p class="lead after">where a part is closed when every member keeps a listed peer inside it.</p>
+        <p class="lead after">where a part is closed when every submitter in it keeps a listed peer inside; a core whose followers exceed the seats of \(\lfloor |S|/2 \rfloor\) tables is flagged too.</p>
       </div>
 
       <p class="pipeline">Pipeline: pods \(\to\) repair \(\to\) anneal \(\to\) CP-SAT certify and polish.</p>

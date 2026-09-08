@@ -6,7 +6,7 @@ import { createTab3 } from './tab3.js';
 import { createTab4 } from './tab4.js';
 
 const $ = id => document.getElementById(id);
-const SCENARIOS = ['honest', 'coalition_none', 'coalition_min4', 'coalition_screened'];
+const SCENARIOS = ['honest', 'coalition_none', 'coalition_min4', 'coalition_stratified', 'coalition_screened'];
 const N_ROT = 16;
 const PLAY_MS = 2400;
 

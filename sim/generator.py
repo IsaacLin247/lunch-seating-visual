@@ -47,6 +47,11 @@ class Network:
     clique: list[int] = field(default_factory=list)  # the 6 who may collude
     mu: float = 0.0
     omega: float = 0.0
+    K: int = K_DEFAULT
+    sigma: float = 0.6
+    within_bias: float = 9.0
+    target_reciprocity: float = 0.5
+    p_recip: float = 0.0                                             # calibrated reciprocation probability
     groups: list[list[int]] = field(default_factory=list)          # latent groups (member lists)
     primary: list[int] = field(default_factory=list)               # primary group index per student
     secondary: list[int | None] = field(default_factory=list)      # secondary group index or None
@@ -234,7 +239,9 @@ def make_cohort(seed: int = 7, n11: int = N11_DEFAULT, n12: int = N12_DEFAULT,
         ordered.append(lst)
     return Network(n11=n11, n12=n12, grade=grade, popularity=pop, friends=ordered,
                    seed=seed, reciprocity=_measure_reciprocity([set(f) for f in ordered]),
-                   clique=clique, mu=mu, omega=omega, groups=groups, primary=primary, secondary=secondary)
+                   clique=clique, mu=mu, omega=omega, K=K, sigma=sigma, within_bias=within_bias,
+                   target_reciprocity=target_reciprocity, p_recip=p,
+                   groups=groups, primary=primary, secondary=secondary)
 
 
 def generate_network(*args, **kwargs) -> Network:
@@ -242,19 +249,29 @@ def generate_network(*args, **kwargs) -> Network:
     return make_cohort(*args, **kwargs)
 
 
-def apply_rules(lst: list[int], me: int, net: Network, rng, enforce_min4: bool = True) -> list[int]:
-    """Filter / pad a submitted list so it obeys the submission rules.
+def apply_rules(lst: list[int], me: int, net: Network, rng=None, enforce_min4: bool = True,
+                short_list_policy: str = "none") -> list[int]:
+    """Apply the submission rules to a list of names.
 
-    * min-4-or-none: fewer than 4 names -> treated as no submission (empty list)
-    * >= 2 same-grade names: pad with same-grade acquaintances (popularity
-      weighted) so the guarantee is satisfiable during same-grade rotations.
+    * min-4-or-none: a list with fewer than 4 names is not a valid submission.
+      With short_list_policy="none" (default) it becomes an empty submission:
+      the student keeps no guarantee, and that cost is recorded rather than
+      hidden.  With "pad" the list is padded with sampled acquaintances
+      (popularity-weighted, same grade first); this models a student who names
+      marginal acquaintances to qualify and is not used for the committed traces.
+    * >= 2 same-grade names: needed so the guarantee is satisfiable in
+      same-grade rotations.  A list failing it is treated the same way.
     """
     lst = [j for j in dict.fromkeys(lst) if j != me]
-    if not enforce_min4:
+    if not enforce_min4 or not lst:
         return lst
-    if not lst:
-        return []
     same = [j for j in lst if net.grade[j] == net.grade[me]]
+    if len(lst) >= MIN_LIST and len(same) >= MIN_SAME_GRADE:
+        return lst
+    if short_list_policy != "pad":
+        return []
+    if rng is None:
+        rng = np.random.default_rng([net.seed, 5, me])
     if len(same) < MIN_SAME_GRADE:
         pool = [j for j in range(net.n) if net.grade[j] == net.grade[me] and j != me and j not in lst]
         w = net.popularity[pool]
@@ -270,27 +287,53 @@ def apply_rules(lst: list[int], me: int, net: Network, rng, enforce_min4: bool =
     return lst
 
 
-def honest_lists(net: Network, seed: int = 0, nonsubmit_frac: float = 0.0) -> list[list[int]]:
-    """Every student submits their true friends (padded/filtered per the rules)."""
+def submission_report(net: Network, lists: list[list[int]]) -> dict:
+    """What the rules cost honest students: true-friend degrees before the rules,
+    how many submissions are empty, and how many were rejected by the rules."""
+    deg = [len(f) for f in net.friends]
+    same = [sum(1 for j in f if net.grade[j] == net.grade[i]) for i, f in enumerate(net.friends)]
+    hist = {}
+    for d in deg:
+        hist[str(d)] = hist.get(str(d), 0) + 1
+    rejected = [i for i, l in enumerate(lists) if not l and net.friends[i]
+                and (len(net.friends[i]) < MIN_LIST or same[i] < MIN_SAME_GRADE)]
+    return {"nSubmitters": sum(1 for l in lists if l), "nNonSubmitters": sum(1 for l in lists if not l),
+            "rejectedByRules": rejected, "preRuleDegreeHistogram": hist,
+            "minSameGradeFriends": min(same), "meanListLength": (sum(len(l) for l in lists) / max(1, sum(1 for l in lists if l)))}
+
+
+def honest_lists(net: Network, seed: int = 0, nonsubmit_frac: float = 0.0,
+                 short_list_policy: str = "none") -> list[list[int]]:
+    """Every student submits their true friends, subject to the rules."""
     rng = np.random.default_rng([net.seed, 3, seed])
     out = []
     for i in range(net.n):
         if nonsubmit_frac > 0 and rng.random() < nonsubmit_frac:
             out.append([])
             continue
-        out.append(apply_rules(list(net.friends[i]), i, net, rng))
+        out.append(apply_rules(list(net.friends[i]), i, net, rng, short_list_policy=short_list_policy))
     return out
 
 
 def coalition_lists(net: Network, mode: str, base: list[list[int]] | None = None) -> list[list[int]]:
     """Replace the clique's submissions with an adversarial wiring.
 
-    mode = 'k1'   : each member lists ONLY the next member (a 6-cycle).  Every
-                    member's single listed peer must be at their table, so the
-                    hard guarantee drags the whole cycle onto one table.
-    mode = 'min4' : each member lists 4 of the 5 co-members.  The omitted names
-                    form two 3-cycles, the wiring that leaves the most
-                    penalty-free triples for the solver to (maybe) keep together.
+    'k1'            each member lists ONLY the next member (a 6-cycle).  Every
+                    member's single listed peer must be at their table, so any
+                    feasible seating keeps the whole cycle at one table.
+    'min4'          the strongest 4-of-5 wiring found (omission star): member
+                    c0 omits c1 and every other member omits c0, so nobody lists
+                    c0.  c0 can never sit in a coalition pair, so every feasible
+                    seating gives a member-weighted mean cluster of at least 3
+                    (two triples); it passes the screen (the six-set splits 3|3).
+    'min4-3cycles'  the earlier wiring (omitted names form two 3-cycles); it can
+                    be split into three mutual pairs.
+    'stratified'    the same-grade capture attack: five members list the next two
+                    around a 5-cycle plus two distinct seniors each, the sixth
+                    lists four of the five.  In mixed rotations the seniors are
+                    valid anchors; in same-grade rotations they vanish from the
+                    effective lists, the five form C5(1,2), which admits no
+                    closed split, and all six are forced onto one table.
     """
     base = [list(l) for l in (base if base is not None else honest_lists(net))]
     c = net.clique
@@ -299,12 +342,26 @@ def coalition_lists(net: Network, mode: str, base: list[list[int]] | None = None
         for k, a in enumerate(c):
             base[a] = [c[(k + 1) % m]]
     elif mode == "min4":
+        for k, a in enumerate(c):
+            omitted = c[1] if k == 0 else c[0]
+            base[a] = [b for b in c if b != a and b != omitted]
+    elif mode == "min4-3cycles":
         half = m // 2
         for k, a in enumerate(c):
             grp = k // half
             pos = k % half
             omitted = c[grp * half + (pos + 1) % half]
             base[a] = [b for b in c if b != a and b != omitted]
+    elif mode == "stratified":
+        cycle = c[:5]
+        actor = c[5]
+        other = [i for i in range(net.n) if net.grade[i] != net.grade[cycle[0]]]
+        # ten distinct outsiders from the other grade, mid-popularity, deterministic
+        med = float(np.median(net.popularity[other]))
+        fill = sorted(other, key=lambda i: (abs(float(net.popularity[i]) - med), i))[:10]
+        for k, a in enumerate(cycle):
+            base[a] = [cycle[(k + 1) % 5], cycle[(k + 2) % 5], fill[2 * k], fill[2 * k + 1]]
+        base[actor] = cycle[:4]
     else:
         raise ValueError(mode)
     return base

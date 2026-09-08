@@ -98,28 +98,71 @@ def test_coalition_captures_table_without_defenses(traces):
     assert t["summary"]["coalitionIntactRotations"] == 16
 
 
-def test_min4_rule_scatters_coalition(traces):
+def test_min4_star_is_never_intact_but_forces_triples(traces):
     t = traces["coalition_min4"]
-    intact = sum(1 for r in t["rotations"] if r["coalition"]["intact"])
-    assert intact <= 1
-    assert t["summary"]["coalitionAvgCluster"] < 3.0
+    assert t["summary"]["coalitionIntactRotations"] == 0
     for rot in t["rotations"]:
-        assert rot["coalition"]["maxCluster"] <= 3
+        c = rot["coalition"]
+        assert c["avgCluster"] >= 3.0           # structural lower bound of the omission star
+        assert c["maxCluster"] <= 4
+    assert t["summary"]["coalitionAvgCluster"] >= 3.0
 
 
-def test_screens_flag_coalition_not_honest_students(traces):
+def test_stratified_attack_captures_same_grade_rotations_only(traces):
+    t = traces["coalition_stratified"]
+    by_state = t["summary"]["coalitionIntactByState"]
+    assert by_state["same"] == 8 and by_state["mixed"] == 0
+    for rot in t["rotations"]:
+        assert rot["coalition"]["intact"] == (rot["state"] == "same")
+
+
+def test_screen_flags_the_stratified_attack_on_the_effective_graph(traces):
     t = traces["coalition_screened"]
     scr = t["config"]["screen"]
-    assert scr["rule"] == "coercion"
-    assert scr["coalitionFlagged"] is True
-    assert scr["honestFlagged"] == []
-    assert scr["flags"] and all(f["screen"] == "coercion" for f in scr["flags"])
-    assert set(scr["flaggedStudents"]) <= set(t["config"]["coalition"])
+    assert scr["rule"].startswith("coercion+demand")
+    assert scr["coalitionFlagged"] is True and scr["honestFlagged"] == []
+    assert scr["perState"]["mixed"]["flags"] == []
+    assert scr["perState"]["same"]["flags"]
     assert set(scr["returnedStudents"]) == set(t["config"]["coalition"])
-    assert scr["afterResubmission"]["nFlagged"] == 0 and scr["afterResubmission"]["nReturned"] == 0
+    assert scr["min4Violations"] == [] and scr["sameGradeViolations"] == []
+    assert scr["resubmission"].startswith("adversarial")
+    after = scr["afterResubmission"]
+    assert after["nFlagged"] == 0 and after["nReturned"] == 0
     assert "listedInitial" in t
+    assert t["summary"]["coalitionIntactRotations"] == 0
     h = traces["honest"]["config"]["screen"]
     assert h["nFlagged"] == 0 and h["nReturned"] == 0
+
+
+def test_feasibility_certified_before_each_year(trace):
+    feas = trace["config"]["feasibility"]
+    assert set(feas) == {"mixed", "same"}
+    assert all(v["status"] in ("OPTIMAL", "FEASIBLE") for v in feas.values())
+
+
+def test_leakage_probe_is_recorded_and_correct(trace):
+    lk = trace["leakage"]
+    assert lk["forcedEdges"] == lk["forcedEdgesCorrect"] > 0
+    assert lk["kMax"] == 8 and lk["rotationsObserved"] == 16
+
+
+def test_random_baseline_matches_closed_form(traces):
+    t = traces["honest"]
+    b = t["config"]["baseline"]
+    assert abs(b["expectedDistinctRandom"] - 72.289) < 0.01
+    assert abs(t["summary"]["meanDistinctMetFinalRandom"] - b["expectedDistinctRandom"]) < 1.5
+    assert abs(t["summary"]["pctGe1RandomMean"] - b["expectedFriendCoverageSchedule"]) < 3.0
+
+
+def test_metadata_and_fairness_recorded(trace):
+    cfg = trace["config"]
+    assert cfg["versions"]["ortools"] and cfg["versions"]["numpy"] and cfg["versions"]["python"]
+    assert cfg["network"]["K"] == cfg["K"] == 8
+    assert cfg["submission"]["nSubmitters"] + cfg["submission"]["nNonSubmitters"] == cfg["n"]
+    f = trace["fairness"]["distinctMet"]
+    assert f["min"] <= f["median"] <= f["max"]
+    assert trace["summary"]["maxSolveSeconds"] <= 15.0
+    assert isinstance(trace["summary"]["repeatsWorseThanRandomRotations"], list)
 
 
 def test_index_lists_all_scenarios():
