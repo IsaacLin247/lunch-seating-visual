@@ -109,11 +109,2973 @@
     71.55
    ],
    "wallSeconds": 141.9
+  },
+  {
+   "seed": 1,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.517,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 579,
+   "leakageStudents": 239,
+   "fairness": {
+    "distinctMet": {
+     "min": 53,
+     "q1": 72.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 83,
+     "mean": 74.53
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.12,
+     "meanDistinctMet": 75.78
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.5,
+     "meanDistinctMet": 72.34
+    }
+   },
+   "yearSolveSeconds": 147.7,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.2,
+   "pctExactly1Min": 97.28,
+   "pctGe1RandomMean": 21.18,
+   "meanDistinctMetFinal": 74.53,
+   "meanDistinctMetFinalRandom": 71.55,
+   "repeatsWorseThanRandomRotations": [
+    5
+   ],
+   "totalSolveSeconds": 147.5,
+   "maxSolveSeconds": 9.68,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.0,
+   "coalitionMaxClusterMean": 3.0,
+   "coalitionPatterns": {
+    "3+3": 16
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.83,
+    98.83,
+    98.44,
+    98.44,
+    98.05,
+    98.44,
+    98.44,
+    98.44,
+    97.28,
+    98.05,
+    97.28,
+    98.05,
+    97.67,
+    98.05,
+    98.05
+   ],
+   "metByRotation": [
+    5.46,
+    10.9,
+    16.16,
+    21.26,
+    26.23,
+    31.12,
+    35.97,
+    40.57,
+    45.19,
+    49.49,
+    53.94,
+    58.15,
+    62.56,
+    66.54,
+    70.8,
+    74.53
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.0,
+    21.0,
+    26.02,
+    30.65,
+    35.41,
+    39.67,
+    44.19,
+    48.33,
+    52.69,
+    56.37,
+    60.47,
+    64.12,
+    68.33,
+    71.55
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 151.7
+  },
+  {
+   "seed": 2,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.513,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 622,
+   "leakageStudents": 247,
+   "fairness": {
+    "distinctMet": {
+     "min": 64,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 82,
+     "mean": 74.7
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.48,
+     "meanDistinctMet": 75.62
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.72,
+     "meanDistinctMet": 73.06
+    }
+   },
+   "yearSolveSeconds": 141.8,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.59,
+   "pctExactly1Min": 97.67,
+   "pctGe1RandomMean": 21.16,
+   "meanDistinctMetFinal": 74.7,
+   "meanDistinctMetFinalRandom": 72.25,
+   "repeatsWorseThanRandomRotations": [
+    5,
+    7
+   ],
+   "totalSolveSeconds": 141.6,
+   "maxSolveSeconds": 9.35,
+   "phases": {
+    "anneal": 13,
+    "cpsat": 3
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    98.83,
+    99.61,
+    99.61,
+    98.83,
+    98.83,
+    100.0,
+    97.67
+   ],
+   "metByRotation": [
+    5.46,
+    10.89,
+    16.16,
+    21.27,
+    26.25,
+    31.14,
+    35.98,
+    40.57,
+    45.27,
+    49.69,
+    54.26,
+    58.41,
+    62.78,
+    66.63,
+    70.9,
+    74.7
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.86,
+    16.02,
+    21.0,
+    26.05,
+    30.92,
+    35.8,
+    40.18,
+    44.73,
+    48.85,
+    53.25,
+    57.07,
+    61.39,
+    64.89,
+    68.87,
+    72.25
+   ],
+   "wallSeconds": 146.0
+  },
+  {
+   "seed": 2,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.513,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 625,
+   "leakageStudents": 239,
+   "fairness": {
+    "distinctMet": {
+     "min": 58,
+     "q1": 72.0,
+     "median": 74.0,
+     "q3": 77.0,
+     "max": 83,
+     "mean": 73.99
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.42,
+     "meanDistinctMet": 75.48
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.52,
+     "meanDistinctMet": 71.58
+    }
+   },
+   "yearSolveSeconds": 143.5,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.22,
+   "pctExactly1Min": 96.5,
+   "pctGe1RandomMean": 20.99,
+   "meanDistinctMetFinal": 73.99,
+   "meanDistinctMetFinalRandom": 72.25,
+   "repeatsWorseThanRandomRotations": [
+    5,
+    6,
+    7
+   ],
+   "totalSolveSeconds": 143.3,
+   "maxSolveSeconds": 9.66,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.02,
+   "coalitionMaxClusterMean": 3.06,
+   "coalitionPatterns": {
+    "3+3": 15,
+    "4+2": 1
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.83,
+    98.05,
+    98.05,
+    98.83,
+    98.44,
+    98.44,
+    98.44,
+    98.05,
+    98.05,
+    98.44,
+    98.05,
+    98.05,
+    98.44,
+    98.05,
+    96.5
+   ],
+   "metByRotation": [
+    5.46,
+    10.88,
+    16.14,
+    21.25,
+    26.13,
+    30.92,
+    35.7,
+    40.26,
+    44.88,
+    49.21,
+    53.77,
+    57.91,
+    62.28,
+    66.25,
+    70.39,
+    73.99
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.86,
+    16.02,
+    21.0,
+    26.05,
+    30.92,
+    35.8,
+    40.18,
+    44.73,
+    48.85,
+    53.25,
+    57.07,
+    61.39,
+    64.89,
+    68.87,
+    72.25
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "4+2",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 147.2
+  },
+  {
+   "seed": 3,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.522,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 611,
+   "leakageStudents": 256,
+   "fairness": {
+    "distinctMet": {
+     "min": 66,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 84,
+     "mean": 75.04
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.27,
+     "meanDistinctMet": 76.5
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.95,
+     "meanDistinctMet": 73.78
+    }
+   },
+   "yearSolveSeconds": 131.2,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.61,
+   "pctExactly1Min": 98.44,
+   "pctGe1RandomMean": 21.35,
+   "meanDistinctMetFinal": 75.04,
+   "meanDistinctMetFinalRandom": 71.95,
+   "repeatsWorseThanRandomRotations": [
+    3,
+    7
+   ],
+   "totalSolveSeconds": 131.0,
+   "maxSolveSeconds": 9.39,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    100.0,
+    100.0,
+    99.61,
+    99.61,
+    99.61,
+    100.0,
+    98.44,
+    99.22,
+    98.44,
+    99.61,
+    99.61
+   ],
+   "metByRotation": [
+    5.46,
+    10.89,
+    16.12,
+    21.25,
+    26.27,
+    31.18,
+    35.96,
+    40.72,
+    45.48,
+    49.81,
+    54.28,
+    58.49,
+    62.84,
+    66.78,
+    71.11,
+    75.04
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.76,
+    16.05,
+    21.06,
+    26.02,
+    30.68,
+    35.53,
+    39.93,
+    44.37,
+    48.46,
+    52.84,
+    56.59,
+    60.85,
+    64.58,
+    68.64,
+    71.95
+   ],
+   "wallSeconds": 134.8
+  },
+  {
+   "seed": 3,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.522,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 587,
+   "leakageStudents": 242,
+   "fairness": {
+    "distinctMet": {
+     "min": 57,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 81,
+     "mean": 74.45
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.23,
+     "meanDistinctMet": 75.56
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.89,
+     "meanDistinctMet": 72.22
+    }
+   },
+   "yearSolveSeconds": 135.3,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.25,
+   "pctExactly1Min": 96.89,
+   "pctGe1RandomMean": 21.04,
+   "meanDistinctMetFinal": 74.45,
+   "meanDistinctMetFinalRandom": 71.95,
+   "repeatsWorseThanRandomRotations": [
+    3,
+    7
+   ],
+   "totalSolveSeconds": 135.1,
+   "maxSolveSeconds": 8.86,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.0,
+   "coalitionMaxClusterMean": 3.0,
+   "coalitionPatterns": {
+    "3+3": 16
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.83,
+    98.83,
+    98.44,
+    98.83,
+    98.05,
+    98.05,
+    98.44,
+    98.05,
+    96.89,
+    98.44,
+    98.05,
+    96.89,
+    98.83,
+    98.05,
+    98.44
+   ],
+   "metByRotation": [
+    5.46,
+    10.89,
+    16.09,
+    21.21,
+    26.17,
+    31.0,
+    35.84,
+    40.42,
+    45.08,
+    49.47,
+    53.98,
+    58.12,
+    62.42,
+    66.33,
+    70.65,
+    74.45
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.76,
+    16.05,
+    21.06,
+    26.02,
+    30.68,
+    35.53,
+    39.93,
+    44.37,
+    48.46,
+    52.84,
+    56.59,
+    60.85,
+    64.58,
+    68.64,
+    71.95
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 140.6
+  },
+  {
+   "seed": 4,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.488,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 625,
+   "leakageStudents": 246,
+   "fairness": {
+    "distinctMet": {
+     "min": 65,
+     "q1": 72.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 83,
+     "mean": 74.7
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.06,
+     "meanDistinctMet": 75.94
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 14.27,
+     "meanDistinctMet": 73.25
+    }
+   },
+   "yearSolveSeconds": 132.7,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.44,
+   "pctExactly1Min": 97.28,
+   "pctGe1RandomMean": 20.26,
+   "meanDistinctMetFinal": 74.7,
+   "meanDistinctMetFinalRandom": 72.33,
+   "repeatsWorseThanRandomRotations": [
+    5,
+    15
+   ],
+   "totalSolveSeconds": 132.5,
+   "maxSolveSeconds": 8.94,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    98.44,
+    99.61,
+    98.83,
+    99.61,
+    97.28,
+    100.0,
+    98.83,
+    98.83,
+    99.61
+   ],
+   "metByRotation": [
+    5.46,
+    10.89,
+    16.12,
+    21.24,
+    26.23,
+    31.04,
+    35.91,
+    40.54,
+    45.26,
+    49.68,
+    54.21,
+    58.39,
+    62.74,
+    66.73,
+    70.99,
+    74.7
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.02,
+    20.92,
+    25.97,
+    30.7,
+    35.43,
+    39.79,
+    44.34,
+    48.49,
+    52.98,
+    56.82,
+    60.89,
+    64.65,
+    68.93,
+    72.33
+   ],
+   "wallSeconds": 138.1
+  },
+  {
+   "seed": 4,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.488,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 560,
+   "leakageStudents": 235,
+   "fairness": {
+    "distinctMet": {
+     "min": 59,
+     "q1": 72.0,
+     "median": 74.0,
+     "q3": 76.0,
+     "max": 82,
+     "mean": 73.69
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 2.97,
+     "meanDistinctMet": 75.53
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 14.12,
+     "meanDistinctMet": 71.92
+    }
+   },
+   "yearSolveSeconds": 135.8,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.34,
+   "pctExactly1Min": 97.67,
+   "pctGe1RandomMean": 20.06,
+   "meanDistinctMetFinal": 73.69,
+   "meanDistinctMetFinalRandom": 72.33,
+   "repeatsWorseThanRandomRotations": [
+    5,
+    11,
+    15
+   ],
+   "totalSolveSeconds": 135.7,
+   "maxSolveSeconds": 9.3,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.02,
+   "coalitionMaxClusterMean": 3.06,
+   "coalitionPatterns": {
+    "3+3": 15,
+    "4+2": 1
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.83,
+    98.83,
+    98.83,
+    98.44,
+    98.44,
+    98.44,
+    98.44,
+    98.44,
+    97.67,
+    98.05,
+    98.05,
+    98.05,
+    98.44,
+    98.05,
+    97.67
+   ],
+   "metByRotation": [
+    5.46,
+    10.88,
+    16.13,
+    21.14,
+    26.19,
+    30.97,
+    35.73,
+    40.27,
+    44.89,
+    49.17,
+    53.55,
+    57.65,
+    61.96,
+    65.84,
+    70.09,
+    73.69
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.02,
+    20.92,
+    25.97,
+    30.7,
+    35.43,
+    39.79,
+    44.34,
+    48.49,
+    52.98,
+    56.82,
+    60.89,
+    64.65,
+    68.93,
+    72.33
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "4+2",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 141.0
+  },
+  {
+   "seed": 5,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.522,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 637,
+   "leakageStudents": 249,
+   "fairness": {
+    "distinctMet": {
+     "min": 66,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 83,
+     "mean": 74.75
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.36,
+     "meanDistinctMet": 76.0
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.72,
+     "meanDistinctMet": 73.06
+    }
+   },
+   "yearSolveSeconds": 131.1,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.68,
+   "pctExactly1Min": 98.83,
+   "pctGe1RandomMean": 21.45,
+   "meanDistinctMetFinal": 74.75,
+   "meanDistinctMetFinalRandom": 72.58,
+   "repeatsWorseThanRandomRotations": [
+    5
+   ],
+   "totalSolveSeconds": 131.0,
+   "maxSolveSeconds": 8.99,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    100.0,
+    99.61,
+    99.61,
+    100.0,
+    100.0,
+    99.22,
+    99.22,
+    100.0,
+    99.61,
+    98.83,
+    99.61,
+    99.61
+   ],
+   "metByRotation": [
+    5.46,
+    10.92,
+    16.18,
+    21.25,
+    26.3,
+    31.13,
+    35.91,
+    40.54,
+    45.23,
+    49.53,
+    54.1,
+    58.34,
+    62.75,
+    66.68,
+    71.0,
+    74.75
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.82,
+    16.01,
+    21.07,
+    26.13,
+    30.78,
+    35.55,
+    40.05,
+    44.64,
+    48.91,
+    53.36,
+    57.15,
+    61.38,
+    64.99,
+    69.05,
+    72.58
+   ],
+   "wallSeconds": 136.5
+  },
+  {
+   "seed": 5,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.522,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 575,
+   "leakageStudents": 232,
+   "fairness": {
+    "distinctMet": {
+     "min": 57,
+     "q1": 72.0,
+     "median": 74.0,
+     "q3": 77.0,
+     "max": 86,
+     "mean": 74.16
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.33,
+     "meanDistinctMet": 75.67
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.61,
+     "meanDistinctMet": 72.05
+    }
+   },
+   "yearSolveSeconds": 138.1,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.3,
+   "pctExactly1Min": 96.89,
+   "pctGe1RandomMean": 21.21,
+   "meanDistinctMetFinal": 74.16,
+   "meanDistinctMetFinalRandom": 72.58,
+   "repeatsWorseThanRandomRotations": [
+    5,
+    7,
+    9,
+    11
+   ],
+   "totalSolveSeconds": 137.9,
+   "maxSolveSeconds": 10.42,
+   "phases": {
+    "anneal": 13,
+    "cpsat": 3
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.0,
+   "coalitionMaxClusterMean": 3.0,
+   "coalitionPatterns": {
+    "3+3": 16
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.83,
+    98.83,
+    98.44,
+    98.83,
+    98.44,
+    98.83,
+    98.05,
+    98.44,
+    98.44,
+    98.05,
+    97.67,
+    98.44,
+    97.67,
+    98.05,
+    96.89
+   ],
+   "metByRotation": [
+    5.46,
+    10.88,
+    16.15,
+    21.25,
+    26.23,
+    31.06,
+    35.78,
+    40.39,
+    44.96,
+    49.34,
+    53.74,
+    57.88,
+    62.23,
+    66.15,
+    70.38,
+    74.16
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.82,
+    16.01,
+    21.07,
+    26.13,
+    30.78,
+    35.55,
+    40.05,
+    44.64,
+    48.91,
+    53.36,
+    57.15,
+    61.38,
+    64.99,
+    69.05,
+    72.58
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 143.6
+  },
+  {
+   "seed": 6,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.496,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 625,
+   "leakageStudents": 243,
+   "fairness": {
+    "distinctMet": {
+     "min": 67,
+     "q1": 72.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 82,
+     "mean": 74.63
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.33,
+     "meanDistinctMet": 76.61
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.61,
+     "meanDistinctMet": 73.56
+    }
+   },
+   "yearSolveSeconds": 136.3,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.73,
+   "pctExactly1Min": 98.83,
+   "pctGe1RandomMean": 23.64,
+   "meanDistinctMetFinal": 74.63,
+   "meanDistinctMetFinalRandom": 72.39,
+   "repeatsWorseThanRandomRotations": [
+    7,
+    9
+   ],
+   "totalSolveSeconds": 136.2,
+   "maxSolveSeconds": 9.12,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    100.0,
+    99.61,
+    100.0,
+    100.0,
+    99.22,
+    100.0,
+    99.61,
+    99.61,
+    99.61,
+    99.61,
+    98.83
+   ],
+   "metByRotation": [
+    5.46,
+    10.9,
+    16.18,
+    21.29,
+    26.35,
+    31.27,
+    36.03,
+    40.64,
+    45.3,
+    49.64,
+    54.12,
+    58.26,
+    62.63,
+    66.49,
+    70.86,
+    74.63
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.85,
+    16.02,
+    20.93,
+    25.98,
+    30.79,
+    35.59,
+    40.02,
+    44.72,
+    48.97,
+    53.39,
+    57.09,
+    61.35,
+    64.9,
+    69.0,
+    72.39
+   ],
+   "wallSeconds": 140.5
+  },
+  {
+   "seed": 6,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.496,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 592,
+   "leakageStudents": 239,
+   "fairness": {
+    "distinctMet": {
+     "min": 60,
+     "q1": 72.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 84,
+     "mean": 74.35
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.27,
+     "meanDistinctMet": 75.62
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.5,
+     "meanDistinctMet": 72.42
+    }
+   },
+   "yearSolveSeconds": 141.8,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.32,
+   "pctExactly1Min": 97.67,
+   "pctGe1RandomMean": 23.3,
+   "meanDistinctMetFinal": 74.35,
+   "meanDistinctMetFinalRandom": 72.39,
+   "repeatsWorseThanRandomRotations": [
+    5,
+    7,
+    9
+   ],
+   "totalSolveSeconds": 141.7,
+   "maxSolveSeconds": 9.58,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.0,
+   "coalitionMaxClusterMean": 3.0,
+   "coalitionPatterns": {
+    "3+3": 16
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.83,
+    98.83,
+    98.83,
+    98.05,
+    98.44,
+    98.44,
+    98.05,
+    98.44,
+    98.05,
+    98.05,
+    97.67,
+    98.44,
+    97.67,
+    98.44,
+    98.05
+   ],
+   "metByRotation": [
+    5.46,
+    10.9,
+    16.11,
+    21.15,
+    26.14,
+    30.99,
+    35.71,
+    40.29,
+    44.92,
+    49.32,
+    53.84,
+    57.97,
+    62.38,
+    66.23,
+    70.55,
+    74.35
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.85,
+    16.02,
+    20.93,
+    25.98,
+    30.79,
+    35.59,
+    40.02,
+    44.72,
+    48.97,
+    53.39,
+    57.09,
+    61.35,
+    64.9,
+    69.0,
+    72.39
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 147.4
+  },
+  {
+   "seed": 7,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.49,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 613,
+   "leakageStudents": 243,
+   "fairness": {
+    "distinctMet": {
+     "min": 64,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 82,
+     "mean": 74.44
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.09,
+     "meanDistinctMet": 75.78
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.95,
+     "meanDistinctMet": 72.48
+    }
+   },
+   "yearSolveSeconds": 161.8,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.68,
+   "pctExactly1Min": 98.44,
+   "pctGe1RandomMean": 21.23,
+   "meanDistinctMetFinal": 74.44,
+   "meanDistinctMetFinalRandom": 72.31,
+   "repeatsWorseThanRandomRotations": [
+    3,
+    5,
+    7
+   ],
+   "totalSolveSeconds": 161.6,
+   "maxSolveSeconds": 12.16,
+   "phases": {
+    "anneal": 13,
+    "cpsat": 3
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.22,
+    100.0,
+    100.0,
+    99.61,
+    98.44,
+    100.0,
+    98.44,
+    100.0,
+    99.22
+   ],
+   "metByRotation": [
+    5.46,
+    10.89,
+    16.15,
+    21.18,
+    26.18,
+    31.09,
+    35.88,
+    40.47,
+    45.14,
+    49.56,
+    54.05,
+    58.16,
+    62.44,
+    66.33,
+    70.67,
+    74.44
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.1,
+    21.05,
+    26.15,
+    30.84,
+    35.64,
+    40.05,
+    44.68,
+    48.75,
+    53.14,
+    56.9,
+    60.99,
+    64.79,
+    68.85,
+    72.31
+   ],
+   "wallSeconds": 167.4
+  },
+  {
+   "seed": 7,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.49,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 583,
+   "leakageStudents": 233,
+   "fairness": {
+    "distinctMet": {
+     "min": 56,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 76.0,
+     "max": 82,
+     "mean": 74.0
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.02,
+     "meanDistinctMet": 75.73
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.8,
+     "meanDistinctMet": 71.92
+    }
+   },
+   "yearSolveSeconds": 152.1,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.3,
+   "pctExactly1Min": 97.28,
+   "pctGe1RandomMean": 20.91,
+   "meanDistinctMetFinal": 74.0,
+   "meanDistinctMetFinalRandom": 72.31,
+   "repeatsWorseThanRandomRotations": [
+    3,
+    5,
+    7
+   ],
+   "totalSolveSeconds": 151.9,
+   "maxSolveSeconds": 11.63,
+   "phases": {
+    "anneal": 13,
+    "cpsat": 3
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.02,
+   "coalitionMaxClusterMean": 3.06,
+   "coalitionPatterns": {
+    "3+3": 15,
+    "4+2": 1
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.83,
+    98.83,
+    98.83,
+    98.44,
+    98.44,
+    98.44,
+    98.44,
+    98.44,
+    97.67,
+    98.83,
+    98.05,
+    97.28,
+    97.67,
+    98.05,
+    97.67
+   ],
+   "metByRotation": [
+    5.46,
+    10.86,
+    16.08,
+    21.12,
+    26.01,
+    30.79,
+    35.56,
+    40.17,
+    44.79,
+    49.18,
+    53.71,
+    57.75,
+    62.08,
+    66.0,
+    70.26,
+    74.0
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.1,
+    21.05,
+    26.15,
+    30.84,
+    35.64,
+    40.05,
+    44.68,
+    48.75,
+    53.14,
+    56.9,
+    60.99,
+    64.79,
+    68.85,
+    72.31
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "4+2",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 159.1
+  },
+  {
+   "seed": 8,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.496,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 629,
+   "leakageStudents": 244,
+   "fairness": {
+    "distinctMet": {
+     "min": 64,
+     "q1": 72.0,
+     "median": 74.0,
+     "q3": 77.0,
+     "max": 82,
+     "mean": 74.23
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.25,
+     "meanDistinctMet": 75.7
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.92,
+     "meanDistinctMet": 72.91
+    }
+   },
+   "yearSolveSeconds": 139.8,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.71,
+   "pctExactly1Min": 98.83,
+   "pctGe1RandomMean": 22.93,
+   "meanDistinctMetFinal": 74.23,
+   "meanDistinctMetFinalRandom": 72.04,
+   "repeatsWorseThanRandomRotations": [
+    3,
+    7,
+    9
+   ],
+   "totalSolveSeconds": 139.7,
+   "maxSolveSeconds": 9.43,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    99.61,
+    100.0,
+    99.61,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    100.0,
+    99.22,
+    99.61,
+    99.22,
+    99.61,
+    98.83
+   ],
+   "metByRotation": [
+    5.46,
+    10.88,
+    16.05,
+    21.21,
+    26.33,
+    31.14,
+    35.96,
+    40.63,
+    45.3,
+    49.62,
+    54.16,
+    58.23,
+    62.57,
+    66.32,
+    70.55,
+    74.23
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.82,
+    16.06,
+    21.04,
+    26.0,
+    30.64,
+    35.53,
+    40.03,
+    44.75,
+    48.89,
+    53.2,
+    57.04,
+    61.12,
+    64.66,
+    68.72,
+    72.04
+   ],
+   "wallSeconds": 146.1
+  },
+  {
+   "seed": 8,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.496,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 606,
+   "leakageStudents": 243,
+   "fairness": {
+    "distinctMet": {
+     "min": 57,
+     "q1": 72.0,
+     "median": 75.0,
+     "q3": 76.0,
+     "max": 83,
+     "mean": 74.14
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.23,
+     "meanDistinctMet": 76.09
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.67,
+     "meanDistinctMet": 71.36
+    }
+   },
+   "yearSolveSeconds": 140.7,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.05,
+   "pctExactly1Min": 96.89,
+   "pctGe1RandomMean": 22.71,
+   "meanDistinctMetFinal": 74.14,
+   "meanDistinctMetFinalRandom": 72.04,
+   "repeatsWorseThanRandomRotations": [
+    3,
+    7,
+    9
+   ],
+   "totalSolveSeconds": 140.6,
+   "maxSolveSeconds": 9.71,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.04,
+   "coalitionMaxClusterMean": 3.12,
+   "coalitionPatterns": {
+    "3+3": 14,
+    "4+2": 2
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.44,
+    98.83,
+    98.44,
+    98.44,
+    98.05,
+    98.44,
+    98.05,
+    98.05,
+    97.28,
+    98.05,
+    98.05,
+    97.67,
+    97.67,
+    97.67,
+    96.89
+   ],
+   "metByRotation": [
+    5.46,
+    10.87,
+    16.05,
+    21.11,
+    26.14,
+    30.94,
+    35.74,
+    40.33,
+    44.86,
+    49.2,
+    53.65,
+    57.82,
+    62.23,
+    66.24,
+    70.49,
+    74.14
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.82,
+    16.06,
+    21.04,
+    26.0,
+    30.64,
+    35.53,
+    40.03,
+    44.75,
+    48.89,
+    53.2,
+    57.04,
+    61.12,
+    64.66,
+    68.72,
+    72.04
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "4+2",
+    "3+3",
+    "3+3",
+    "3+3",
+    "4+2",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 146.6
+  },
+  {
+   "seed": 9,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.503,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 580,
+   "leakageStudents": 248,
+   "fairness": {
+    "distinctMet": {
+     "min": 64,
+     "q1": 72.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 81,
+     "mean": 74.39
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.52,
+     "meanDistinctMet": 75.83
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.44,
+     "meanDistinctMet": 72.61
+    }
+   },
+   "yearSolveSeconds": 144.1,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.68,
+   "pctExactly1Min": 98.44,
+   "pctGe1RandomMean": 21.69,
+   "meanDistinctMetFinal": 74.39,
+   "meanDistinctMetFinalRandom": 72.08,
+   "repeatsWorseThanRandomRotations": [
+    4,
+    5,
+    9
+   ],
+   "totalSolveSeconds": 144.0,
+   "maxSolveSeconds": 9.93,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    99.22,
+    100.0,
+    98.44,
+    100.0,
+    99.61,
+    100.0,
+    99.61,
+    99.61,
+    98.83
+   ],
+   "metByRotation": [
+    5.46,
+    10.88,
+    16.16,
+    21.16,
+    26.12,
+    30.97,
+    35.81,
+    40.44,
+    45.11,
+    49.37,
+    53.9,
+    58.05,
+    62.49,
+    66.3,
+    70.65,
+    74.39
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.8,
+    15.99,
+    21.06,
+    26.07,
+    30.72,
+    35.5,
+    39.82,
+    44.52,
+    48.7,
+    53.14,
+    56.93,
+    61.19,
+    64.52,
+    68.54,
+    72.08
+   ],
+   "wallSeconds": 150.0
+  },
+  {
+   "seed": 9,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.503,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 579,
+   "leakageStudents": 231,
+   "fairness": {
+    "distinctMet": {
+     "min": 57,
+     "q1": 72.0,
+     "median": 74.0,
+     "q3": 76.0,
+     "max": 83,
+     "mean": 73.67
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.45,
+     "meanDistinctMet": 75.73
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.33,
+     "meanDistinctMet": 71.64
+    }
+   },
+   "yearSolveSeconds": 135.8,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.12,
+   "pctExactly1Min": 96.5,
+   "pctGe1RandomMean": 21.43,
+   "meanDistinctMetFinal": 73.67,
+   "meanDistinctMetFinalRandom": 72.08,
+   "repeatsWorseThanRandomRotations": [
+    5,
+    9
+   ],
+   "totalSolveSeconds": 135.7,
+   "maxSolveSeconds": 9.62,
+   "phases": {
+    "anneal": 13,
+    "cpsat": 3
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.0,
+   "coalitionMaxClusterMean": 3.0,
+   "coalitionPatterns": {
+    "3+3": 16
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.44,
+    98.05,
+    98.83,
+    98.83,
+    98.05,
+    98.44,
+    98.05,
+    98.44,
+    98.44,
+    98.05,
+    97.67,
+    98.05,
+    97.28,
+    98.05,
+    96.5
+   ],
+   "metByRotation": [
+    5.46,
+    10.89,
+    16.09,
+    21.19,
+    26.18,
+    30.96,
+    35.76,
+    40.38,
+    45.0,
+    49.27,
+    53.74,
+    57.74,
+    62.04,
+    65.84,
+    70.09,
+    73.67
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.8,
+    15.99,
+    21.06,
+    26.07,
+    30.72,
+    35.5,
+    39.82,
+    44.52,
+    48.7,
+    53.14,
+    56.93,
+    61.19,
+    64.52,
+    68.54,
+    72.08
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 141.5
+  },
+  {
+   "seed": 10,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.499,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 598,
+   "leakageStudents": 247,
+   "fairness": {
+    "distinctMet": {
+     "min": 64,
+     "q1": 73.0,
+     "median": 74.0,
+     "q3": 77.0,
+     "max": 82,
+     "mean": 74.58
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.52,
+     "meanDistinctMet": 75.48
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.73,
+     "meanDistinctMet": 73.17
+    }
+   },
+   "yearSolveSeconds": 136.4,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.68,
+   "pctExactly1Min": 98.44,
+   "pctGe1RandomMean": 21.6,
+   "meanDistinctMetFinal": 74.58,
+   "meanDistinctMetFinalRandom": 72.09,
+   "repeatsWorseThanRandomRotations": [
+    5,
+    13
+   ],
+   "totalSolveSeconds": 136.3,
+   "maxSolveSeconds": 9.3,
+   "phases": {
+    "anneal": 13,
+    "cpsat": 3
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    99.61,
+    100.0,
+    99.22,
+    100.0,
+    99.61,
+    99.61,
+    100.0,
+    98.44,
+    98.83
+   ],
+   "metByRotation": [
+    5.46,
+    10.91,
+    16.16,
+    21.27,
+    26.23,
+    31.0,
+    35.79,
+    40.41,
+    45.04,
+    49.43,
+    53.96,
+    58.19,
+    62.51,
+    66.49,
+    70.82,
+    74.58
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.8,
+    16.04,
+    21.1,
+    26.13,
+    30.88,
+    35.63,
+    39.97,
+    44.49,
+    48.52,
+    52.8,
+    56.64,
+    61.02,
+    64.51,
+    68.64,
+    72.09
+   ],
+   "wallSeconds": 140.3
+  },
+  {
+   "seed": 10,
+   "scenario": "coalition_min4",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.499,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 586,
+   "leakageStudents": 238,
+   "fairness": {
+    "distinctMet": {
+     "min": 53,
+     "q1": 72.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 82,
+     "mean": 74.28
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.45,
+     "meanDistinctMet": 75.72
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.59,
+     "meanDistinctMet": 72.05
+    }
+   },
+   "yearSolveSeconds": 135.6,
+   "screenReturned": null,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 98.08,
+   "pctExactly1Min": 96.5,
+   "pctGe1RandomMean": 21.47,
+   "meanDistinctMetFinal": 74.28,
+   "meanDistinctMetFinalRandom": 72.09,
+   "repeatsWorseThanRandomRotations": [
+    4,
+    5
+   ],
+   "totalSolveSeconds": 135.4,
+   "maxSolveSeconds": 9.07,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "coalitionIntactRotations": 0,
+   "coalitionIntactByState": {
+    "mixed": 0,
+    "same": 0
+   },
+   "coalitionAvgCluster": 3.0,
+   "coalitionMaxClusterMean": 3.0,
+   "coalitionPatterns": {
+    "3+3": 16
+   },
+   "pctExactly1ByRotation": [
+    98.83,
+    98.05,
+    98.83,
+    98.44,
+    98.83,
+    98.44,
+    98.44,
+    97.67,
+    98.44,
+    97.28,
+    98.05,
+    96.5,
+    98.83,
+    97.67,
+    97.67,
+    97.28
+   ],
+   "metByRotation": [
+    5.46,
+    10.82,
+    16.07,
+    21.07,
+    25.98,
+    30.85,
+    35.6,
+    40.2,
+    44.86,
+    49.23,
+    53.71,
+    57.89,
+    62.34,
+    66.23,
+    70.44,
+    74.28
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.8,
+    16.04,
+    21.1,
+    26.13,
+    30.88,
+    35.63,
+    39.97,
+    44.49,
+    48.52,
+    52.8,
+    56.64,
+    61.02,
+    64.51,
+    68.64,
+    72.09
+   ],
+   "coalitionPatternsByRotation": [
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3",
+    "3+3"
+   ],
+   "wallSeconds": 138.6
   }
  ],
- "budgets": [],
- "communities": [],
+ "budgets": [
+  {
+   "seed": 7,
+   "scenario": "honest",
+   "annealIters": 100000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.49,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 554,
+   "leakageStudents": 236,
+   "fairness": {
+    "distinctMet": {
+     "min": 66,
+     "q1": 72.0,
+     "median": 74.0,
+     "q3": 76.0,
+     "max": 84,
+     "mean": 73.82
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.09,
+     "meanDistinctMet": 75.5
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.95,
+     "meanDistinctMet": 72.19
+    }
+   },
+   "yearSolveSeconds": 87.3,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.15,
+   "pctExactly1Min": 98.05,
+   "pctGe1RandomMean": 21.23,
+   "meanDistinctMetFinal": 73.82,
+   "meanDistinctMetFinalRandom": 72.31,
+   "repeatsWorseThanRandomRotations": [
+    3,
+    5,
+    9
+   ],
+   "totalSolveSeconds": 87.1,
+   "maxSolveSeconds": 6.2,
+   "phases": {
+    "anneal": 13,
+    "cpsat": 3
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    99.61,
+    99.61,
+    99.61,
+    100.0,
+    99.22,
+    99.22,
+    99.22,
+    98.83,
+    98.05,
+    98.05,
+    99.61,
+    98.05,
+    99.22,
+    98.05
+   ],
+   "metByRotation": [
+    5.46,
+    10.88,
+    16.07,
+    21.16,
+    26.19,
+    30.94,
+    35.74,
+    40.26,
+    44.79,
+    49.17,
+    53.67,
+    57.72,
+    62.09,
+    65.95,
+    70.17,
+    73.82
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.1,
+    21.05,
+    26.15,
+    30.84,
+    35.64,
+    40.05,
+    44.68,
+    48.75,
+    53.14,
+    56.9,
+    60.99,
+    64.79,
+    68.85,
+    72.31
+   ],
+   "wallSeconds": 92.5
+  },
+  {
+   "seed": 7,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.49,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 613,
+   "leakageStudents": 243,
+   "fairness": {
+    "distinctMet": {
+     "min": 64,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 82,
+     "mean": 74.44
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.09,
+     "meanDistinctMet": 75.78
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.95,
+     "meanDistinctMet": 72.48
+    }
+   },
+   "yearSolveSeconds": 133.0,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.68,
+   "pctExactly1Min": 98.44,
+   "pctGe1RandomMean": 21.23,
+   "meanDistinctMetFinal": 74.44,
+   "meanDistinctMetFinalRandom": 72.31,
+   "repeatsWorseThanRandomRotations": [
+    3,
+    5,
+    7
+   ],
+   "totalSolveSeconds": 132.8,
+   "maxSolveSeconds": 9.0,
+   "phases": {
+    "anneal": 13,
+    "cpsat": 3
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.22,
+    100.0,
+    100.0,
+    99.61,
+    98.44,
+    100.0,
+    98.44,
+    100.0,
+    99.22
+   ],
+   "metByRotation": [
+    5.46,
+    10.89,
+    16.15,
+    21.18,
+    26.18,
+    31.09,
+    35.88,
+    40.47,
+    45.14,
+    49.56,
+    54.05,
+    58.16,
+    62.44,
+    66.33,
+    70.67,
+    74.44
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.1,
+    21.05,
+    26.15,
+    30.84,
+    35.64,
+    40.05,
+    44.68,
+    48.75,
+    53.14,
+    56.9,
+    60.99,
+    64.79,
+    68.85,
+    72.31
+   ],
+   "wallSeconds": 138.6
+  },
+  {
+   "seed": 7,
+   "scenario": "honest",
+   "annealIters": 900000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.0,
+   "omega": 0.0,
+   "reciprocity": 0.49,
+   "inGroupFrac": 0.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 688,
+   "leakageStudents": 249,
+   "fairness": {
+    "distinctMet": {
+     "min": 64,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 78.0,
+     "max": 83,
+     "mean": 75.13
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 3.09,
+     "meanDistinctMet": 76.81
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 13.95,
+     "meanDistinctMet": 73.45
+    }
+   },
+   "yearSolveSeconds": 281.6,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.9,
+   "pctExactly1Min": 99.61,
+   "pctGe1RandomMean": 21.23,
+   "meanDistinctMetFinal": 75.13,
+   "meanDistinctMetFinalRandom": 72.31,
+   "repeatsWorseThanRandomRotations": [
+    5,
+    7
+   ],
+   "totalSolveSeconds": 281.5,
+   "maxSolveSeconds": 18.5,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    100.0,
+    99.61,
+    100.0,
+    99.61,
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    100.0,
+    100.0
+   ],
+   "metByRotation": [
+    5.46,
+    10.9,
+    16.24,
+    21.41,
+    26.49,
+    31.39,
+    36.17,
+    40.75,
+    45.47,
+    49.9,
+    54.49,
+    58.72,
+    63.12,
+    67.16,
+    71.42,
+    75.13
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.1,
+    21.05,
+    26.15,
+    30.84,
+    35.64,
+    40.05,
+    44.68,
+    48.75,
+    53.14,
+    56.9,
+    60.99,
+    64.79,
+    68.85,
+    72.31
+   ],
+   "wallSeconds": 286.9
+  }
+ ],
+ "communities": [
+  {
+   "seed": 7,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 0.6,
+   "omega": 0.3,
+   "reciprocity": 0.523,
+   "inGroupFrac": 0.575,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 544,
+   "leakageStudents": 242,
+   "fairness": {
+    "distinctMet": {
+     "min": 65,
+     "q1": 73.0,
+     "median": 75.0,
+     "q3": 77.0,
+     "max": 82,
+     "mean": 75.03
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 4.11,
+     "meanDistinctMet": 75.48
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 12.73,
+     "meanDistinctMet": 73.27
+    }
+   },
+   "yearSolveSeconds": 130.5,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 99.76,
+   "pctExactly1Min": 99.22,
+   "pctGe1RandomMean": 21.69,
+   "meanDistinctMetFinal": 75.03,
+   "meanDistinctMetFinalRandom": 72.31,
+   "repeatsWorseThanRandomRotations": [
+    3,
+    5,
+    9
+   ],
+   "totalSolveSeconds": 130.3,
+   "maxSolveSeconds": 8.85,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    99.61,
+    100.0,
+    99.61,
+    100.0,
+    100.0,
+    99.22,
+    99.61,
+    99.61,
+    100.0,
+    99.22,
+    99.22
+   ],
+   "metByRotation": [
+    5.46,
+    10.91,
+    16.09,
+    21.21,
+    26.16,
+    30.99,
+    35.84,
+    40.52,
+    45.12,
+    49.49,
+    54.06,
+    58.35,
+    62.68,
+    66.83,
+    71.16,
+    75.03
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.1,
+    21.05,
+    26.15,
+    30.84,
+    35.64,
+    40.05,
+    44.68,
+    48.75,
+    53.14,
+    56.9,
+    60.99,
+    64.79,
+    68.85,
+    72.31
+   ],
+   "wallSeconds": 134.4
+  },
+  {
+   "seed": 7,
+   "scenario": "honest",
+   "annealIters": 300000,
+   "cpsatTime": 3.5,
+   "workers": 8,
+   "mu": 1.0,
+   "omega": 0.0,
+   "reciprocity": 0.889,
+   "inGroupFrac": 1.0,
+   "feasibility": {
+    "mixed": "OPTIMAL",
+    "same": "OPTIMAL"
+   },
+   "expectedDistinctRandom": 72.289,
+   "leakageForcedEdges": 491,
+   "leakageStudents": 153,
+   "fairness": {
+    "distinctMet": {
+     "min": 68,
+     "q1": 74.0,
+     "median": 76.0,
+     "q3": 77.0,
+     "max": 82,
+     "mean": 75.62
+    },
+    "lowestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 4.77,
+     "meanDistinctMet": 75.0
+    },
+    "highestInDegreeQuartile": {
+     "n": 64,
+     "meanInDegree": 9.44,
+     "meanDistinctMet": 76.86
+    }
+   },
+   "yearSolveSeconds": 122.5,
+   "screenReturned": 0,
+   "pctGe1Min": 100.0,
+   "pctExactly1Mean": 89.88,
+   "pctExactly1Min": 85.6,
+   "pctGe1RandomMean": 21.06,
+   "meanDistinctMetFinal": 75.62,
+   "meanDistinctMetFinalRandom": 72.31,
+   "repeatsWorseThanRandomRotations": [
+    7,
+    9
+   ],
+   "totalSolveSeconds": 122.3,
+   "maxSolveSeconds": 8.79,
+   "phases": {
+    "anneal": 14,
+    "cpsat": 2
+   },
+   "pctExactly1ByRotation": [
+    92.61,
+    90.66,
+    93.39,
+    89.11,
+    94.16,
+    89.11,
+    92.22,
+    88.72,
+    88.72,
+    88.33,
+    89.49,
+    87.55,
+    92.22,
+    87.94,
+    88.33,
+    85.6
+   ],
+   "metByRotation": [
+    5.46,
+    10.89,
+    16.27,
+    21.6,
+    26.8,
+    31.73,
+    36.52,
+    41.08,
+    45.58,
+    49.93,
+    54.32,
+    58.57,
+    62.89,
+    67.12,
+    71.42,
+    75.62
+   ],
+   "metRandomByRotation": [
+    5.46,
+    10.79,
+    16.1,
+    21.05,
+    26.15,
+    30.84,
+    35.64,
+    40.05,
+    44.68,
+    48.75,
+    53.14,
+    56.9,
+    60.99,
+    64.79,
+    68.85,
+    72.31
+   ],
+   "wallSeconds": 128.2
+  }
+ ],
  "meta": {
-  "started": "2026-09-07T19:29:06"
+  "started": "2026-09-07T19:29:06",
+  "finished": "2026-09-08T09:22:22"
  }
 }

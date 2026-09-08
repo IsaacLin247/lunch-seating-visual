@@ -231,25 +231,25 @@ def main():
         w(r"\begin{table}[t]\centering\small")
         w(r"\caption{Independent population seeds at the default budget. Honest scenario: guarantee, exactly-one mean, distinct schoolmates met (proposed / simulated random / closed-form expectation), forced list entries recoverable from the charts. Star coalition: intact rotations and mean cluster.}")
         w(r"\label{tab:seeds}")
-        w(r"\begin{tabular}{@{}rrrrrrrrr@{}}\toprule")
+        w(r"\resizebox{\textwidth}{!}{\begin{tabular}{@{}rrrrrrrrr@{}}\toprule")
         w(r"seed & $\ge 1$ (min) & exactly one & met & met, rnd & expected & leaked & star intact & star cluster \\ \midrule")
         for r in hon:
             s = star.get(r["seed"])
             w(f"{r['seed']} & {r['pctGe1Min']:.0f} & {r['pctExactly1Mean']:.2f} & {r['meanDistinctMetFinal']:.2f} & {r['meanDistinctMetFinalRandom']:.2f} & {r['expectedDistinctRandom']:.2f} & {r['leakageForcedEdges']} & "
               + (f"{s['coalitionIntactRotations']}/16 & {s['coalitionAvgCluster']:.2f}" if s else "-- & --") + r" \\")
-        w(r"\bottomrule\end{tabular}\end{table}")
+        w(r"\bottomrule\end{tabular}}\end{table}")
         w("")
     if exp and (exp["budgets"] or exp["communities"]):
         w(r"\begin{table}[t]\centering\small")
         w(r"\caption{Sensitivity on seed 7 (honest scenario): annealing budget and latent-group regime.}")
         w(r"\label{tab:sensitivity}")
-        w(r"\begin{tabular}{@{}lrrrrr@{}}\toprule")
+        w(r"\resizebox{\textwidth}{!}{\begin{tabular}{@{}lrrrrr@{}}\toprule")
         w(r"setting & exactly one & exactly one (min) & met & met, rnd & max solve (s) \\ \midrule")
         for r in sorted(exp["budgets"], key=lambda r: r["annealIters"]):
             w(f"anneal {r['annealIters']:,} iterations & {r['pctExactly1Mean']:.2f} & {r['pctExactly1Min']:.1f} & {r['meanDistinctMetFinal']:.2f} & {r['meanDistinctMetFinalRandom']:.2f} & {r['maxSolveSeconds']:.1f} \\\\".replace(",", r"\,"))
         for r in exp["communities"]:
             w(f"latent groups $\\mu={r['mu']}$, $\\omega={r['omega']}$ (in-group {r['inGroupFrac']:.2f}) & {r['pctExactly1Mean']:.2f} & {r['pctExactly1Min']:.1f} & {r['meanDistinctMetFinal']:.2f} & {r['meanDistinctMetFinalRandom']:.2f} & {r['maxSolveSeconds']:.1f} \\\\")
-        w(r"\bottomrule\end{tabular}\end{table}")
+        w(r"\bottomrule\end{tabular}}\end{table}")
         w("")
 
     # ---- parameters ------------------------------------------------------------------------
