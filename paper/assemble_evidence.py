@@ -23,11 +23,13 @@ from pathlib import Path
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-CATEGORIES = ('seeds', 'budgets', 'communities', 'horizons')
+CATEGORIES = ('seeds', 'budgets', 'communities', 'horizons', 'evaluation')
 REFERENCES = ('honest', 'coalition_none', 'coalition_min4', 'coalition_stratified',
               'coalition_shared_anchor', 'coalition_screened')
 DEFAULT_INPUTS = [ROOT / 'results' / name for name in
-                  ('verified_core_a.json', 'verified_core_b.json', 'verified_sensitivity.json')]
+                  ('revised_core_a.json', 'revised_core_b.json', 'revised_sensitivity.json')]
+HISTORICAL_INPUTS = [ROOT / 'results' / name for name in
+                     ('verified_core_a.json', 'verified_core_b.json', 'verified_sensitivity.json')]
 
 
 def canonical(value):
@@ -111,8 +113,11 @@ def verify_attempt(attempt, input_path, *, retained_source=False):
     ensure(run == {**config['run'], 'scenario': config['scenario'], 'seed': config['solverSeed']},
            f"trace/attempt run configuration mismatch: {path}")
     generator = prov['effectiveInputs']['generatorConfig']
-    ensure(generator == {**config['generator'], 'short_list_policy': config['submission']['shortListPolicy']},
-           f"trace/attempt generator configuration mismatch: {path}")
+    submission = config['submission']
+    expected_generator = {**config['generator'], 'short_list_policy': submission['shortListPolicy']}
+    if 'nonsubmitFrac' in submission:      # revised configuration schema (September 2026)
+        expected_generator.update(nonsubmit_frac=submission['nonsubmitFrac'], list_cap=submission.get('listCap'))
+    ensure(generator == expected_generator, f"trace/attempt generator configuration mismatch: {path}")
     ids = [s['id'] for s in trace['students']]
     ensure([[ids[j] for j in row] for row in prov['effectiveInputs']['submittedLists']] == trace['listed'],
            f"trace/input submission mismatch: {path}")
@@ -219,8 +224,11 @@ def export_references(manifest, manifest_path, site_dir, *, seed=7):
                 and run['rotations'] == 16 and run['first_state'] == 'mixed'
                 and run['anneal_iters'] == 300_000 and run['cpsat_time'] == 3.5
                 and run['workers'] == 8 and run['deterministic'] and run['feasibility_time'] == 20.0
+                and run.get('method', 'hybrid') == 'hybrid' and run.get('extra_weight', 1.0) == 1.0
+                and run.get('absence_rate', 0.0) == 0.0 and run.get('cpsat_pairs', 'all') == 'all'
                 and gen['mu'] == 0.0 and gen['omega'] == 0.0 and gen['cross_grade_group_frac'] == 0.0
-                and cfg['submission']['shortListPolicy'] == 'none'):
+                and cfg['submission']['shortListPolicy'] in ('review', 'none')
+                and cfg['submission'].get('nonsubmitFrac', 0.0) == 0.0 and cfg['submission'].get('listCap') is None):
             selected[cfg['scenario']] = attempt
     missing = [name for name in REFERENCES if name not in selected]
     if missing:
@@ -254,7 +262,7 @@ def export_references(manifest, manifest_path, site_dir, *, seed=7):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--inputs', nargs='+', type=Path, default=DEFAULT_INPUTS)
-    ap.add_argument('--out', type=Path, default=ROOT / 'results' / 'verified_experiments.json')
+    ap.add_argument('--out', type=Path, default=ROOT / 'results' / 'revised_experiments.json')
     ap.add_argument('--partial', action='store_true')
     ap.add_argument('--retained-source', action='store_true',
                     help='verify source bytes in results/source_snapshots/HASH, allowing later working-tree repairs')

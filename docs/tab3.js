@@ -1,7 +1,7 @@
 // Coalition playback: graph annotations are structural; all outcomes are trace data.
-import { RoomView } from './room.js';
-import { avatarUri } from './avatars.js';
-import { coalitionModes, EXPLANATIONS, observation } from './scenarios.js';
+import { RoomView } from './room.js?v=20260914-minimal-4';
+import { avatarUri } from './avatars.js?v=20260914-minimal-4';
+import { coalitionModes, EXPLANATIONS, observation } from './scenarios.js?v=20260914-minimal-4';
 
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 
@@ -10,6 +10,7 @@ export function createTab3(ctx) {
   const modes = coalitionModes(ctx.traces);
   let [mode, trace] = modes[0];
   let lastRot = -1, lastMode = null;
+  let portraits = new Map();
   const room = new RoomView($('room-game'), trace, { key: 'tables', coalition: new Set(trace.config.coalition), onHover: ctx.showTooltip });
   const container = $('scenario-modes');
   for (const [name, data] of modes) {
@@ -58,7 +59,7 @@ export function createTab3(ctx) {
     for (const [id, p] of positions) {
       const member = mset.has(id), clip = `avatar-${suffix}-${id}`;
       nodes += `<clipPath id="${clip}"><circle cx="${p.x}" cy="${p.y}" r="15"/></clipPath>` +
-        `<image href="${avatarUri(id)}" x="${p.x - 15}" y="${p.y - 15}" width="30" height="30" clip-path="url(#${clip})"/>` +
+        `<image href="${esc(avatarUri(id))}" x="${p.x - 15}" y="${p.y - 15}" width="30" height="30" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>` +
         `<circle cx="${p.x}" cy="${p.y}" r="16" fill="none" stroke="${member ? '#c53d45' : '#217a55'}" stroke-width="2"/>` +
         `<text x="${member ? p.x : p.x + 23}" y="${member ? p.y + 29 : p.y + 4}" text-anchor="${member ? 'middle' : 'start'}" font-size="10" fill="#605a52">${esc(id)}${member ? '' : ` · G${grade.get(id)}`}</text>`;
     }
@@ -94,6 +95,9 @@ export function createTab3(ctx) {
     const honest = report.honestFlagged?.length ?? 0;
     const after = report.afterResubmission;
     const unresolvedChecks = report.unresolvedChecks?.length || 0;
+    const fullModel = report.fullModelScreen;
+    const forced = fullModel?.forcedGroups?.length || 0;
+    const examined = fullModel ? Object.values(fullModel.perState || {}).reduce((n, st) => n + (st.coverage?.candidatesExamined || 0), 0) : null;
     banner.replaceChildren();
     const title = document.createElement('div');
     title.textContent = diagnostic ? 'Diagnostic only: screening is disabled in this seating experiment.' : 'Submission screening before the first rotation';
@@ -101,7 +105,8 @@ export function createTab3(ctx) {
     detail.textContent = `${statements.join('. ')}. ${returned} students ${diagnostic ? 'would be' : 'were'} returned; ${honest} outside the designated coalition. ` +
       (after ? `A specified adversarial omission-star resubmission was used. After resubmission: ${after.nReturned ?? after.returnedStudents?.length ?? 0} returns. ` : '') +
       (unresolvedChecks ? `${unresolvedChecks} additional checks are unresolved and require review. ` : '') +
-      'These are results for the checked candidates; a pass is not a complete safety guarantee.';
+      (examined !== null ? `Full-model separation tests examined ${examined} high-risk candidate group${examined === 1 ? '' : 's'} and certified ${forced} as forced under the complete constraints. ` : '') +
+      'These are results for the checked candidates; a pass is not a complete safety guarantee, and a forced group is not evidence of intent.';
     banner.append(title, detail);
   }
 
@@ -135,6 +140,15 @@ export function createTab3(ctx) {
       lastRot = rot; lastMode = mode;
     },
     resize() { room.resize(); },
+    setPortraits(map) {
+      portraits = new Map(map || []);
+      room.setOpts({ portraitProvider: portraits.size ? id => portraits.get(id) || null : null, showAvatars: true });
+      // Keep the chosen experiment and rotation while rebuilding SVG avatars,
+      // including when this tab is currently hidden.
+      api.render(Math.max(lastRot, 0), false, true);
+      room.draw();
+    },
+    clearPortraits() { api.setPortraits(new Map()); },
   };
   return api;
 }

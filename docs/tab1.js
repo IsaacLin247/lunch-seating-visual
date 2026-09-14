@@ -1,6 +1,6 @@
 // Tab 1, The Whole Room: random status quo vs. proposed system, side by side.
-import { RoomView, COLORS } from './room.js';
-import { renderSparkline } from './sparkline.js';
+import { RoomView, COLORS } from './room.js?v=20260914-minimal-4';
+import { renderSparkline } from './sparkline.js?v=20260914-minimal-4';
 
 export function createTab1(ctx) {
   const trace = ctx.traces.honest;
@@ -11,6 +11,33 @@ export function createTab1(ctx) {
   const metR = trace.rotations.map(r => r.stats.meanDistinctMetRandom);
   const yMax = Math.max(...met, ...metR) * 1.08;
   let lastRot = -1;
+  let portraits = new Map();
+
+  function inspect(info) {
+    if (!portraits.size) return;
+    if (info?.key === 'tablesRandom') roomProposed.clearSelection();
+    if (info?.key === 'tables') roomRandom.clearSelection();
+    ctx.onPortraitTable?.(info);
+  }
+
+  function setPortraits(map) {
+    // The caller owns the object URLs and may revoke them after this returns.
+    // Clone the mapping so replacing or clearing an import cannot mutate an
+    // image provider that is still being used by a previous animation frame.
+    portraits = new Map(map || []);
+    const enabled = portraits.size > 0;
+    const opts = {
+      portraitProvider: enabled ? id => portraits.get(id) || null : null,
+      showAvatars: enabled,
+      onSelectTable: enabled ? inspect : null,
+      onHover: enabled ? null : ctx.showTooltip,
+      showHoverFriends: !enabled,
+    };
+    ctx.showTooltip(null);
+    roomRandom.setOpts(opts);
+    roomProposed.setOpts(opts);
+    ctx.onPortraitTable?.(null);
+  }
 
   function stats(rot) {
     const s = trace.rotations[rot].stats;
@@ -21,7 +48,8 @@ export function createTab1(ctx) {
     $('s-prop-ex1').textContent = pct(s.pctExactly1);
     $('s-prop-met').textContent = num(s.meanDistinctMet);
     const r = trace.rotations[rot];
-    $('solver-status').textContent = `Saved rotation ${r.idx}: ${s.cost?.violations ?? 0} guarantee violations · accepted stage: ${s.acceptedPhase} · CP-SAT status: ${s.cpsatStatus} · ${s.solveTime}s solving time. Random baseline follows the same grade schedule.`;
+    const release = s.status ? ` · release: ${s.status}${s.optimalityProven ? ' (CP-SAT optimality proof)' : ''}` : '';
+    $('solver-status').textContent = `Saved rotation ${r.idx}: ${s.cost?.violations ?? 0} guarantee violations · accepted stage: ${s.acceptedPhase}${release} · CP-SAT status: ${s.cpsatStatus} · ${s.solveTime}s solving time. Random baseline follows the same grade schedule.`;
     renderSparkline($('spark-met'), [
       { name: 'Proposed', values: met, color: COLORS.two },
       { name: 'Random', values: metR, color: '#9a948a' },
@@ -31,12 +59,27 @@ export function createTab1(ctx) {
   return {
     render(rot, animate) {
       const anim = animate && lastRot >= 0 && rot !== lastRot;
+      if (portraits.size && rot !== lastRot) {
+        roomRandom.clearSelection(); roomProposed.clearSelection();
+        ctx.onPortraitTable?.(null);
+      }
       roomRandom.goTo(rot, anim);
       roomProposed.goTo(rot, anim);
       stats(rot);
       lastRot = rot;
     },
     resize() { roomRandom.resize(); roomProposed.resize(); },
+    setPortraits,
+    clearPortraits() { setPortraits(new Map()); },
+    selectTable(table, key = 'tables') {
+      if (!portraits.size || !['tables', 'tablesRandom'].includes(key)) return false;
+      return (key === 'tablesRandom' ? roomRandom : roomProposed).selectTable(table);
+    },
+    destroy() {
+      roomRandom.destroy(); roomProposed.destroy();
+      portraits.clear();
+      ctx.onPortraitTable?.(null);
+    },
   };
 }
 

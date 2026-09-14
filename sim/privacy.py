@@ -17,12 +17,20 @@ from __future__ import annotations
 from functools import lru_cache
 
 
-def tablemate_sets(rotations, ids, key="tables"):
+def tablemate_sets(rotations, ids, key="tables", *, guaranteed_only=False):
+    """Observed peers, optionally restricted to active guarantee observations.
+
+    A waived rotation supplies no hitting-set constraint for that participant.
+    Exposure statistics still use all observed co-seating, including waivers.
+    """
     peers = {i: [] for i in ids}
     for r in rotations:
+        waived = r.get("waivedObligations") or {}
         for tbl in r[key]:
             s = set(tbl)
             for i in tbl:
+                if guaranteed_only and i in waived:
+                    continue
                 peers[i].append(s - {i})
     return peers
 
@@ -95,7 +103,7 @@ def leakage_report(trace, k_max=None, key="tables", public_list_lengths=None):
     for i, length in public_list_lengths.items():
         if i not in truth or not isinstance(length, int) or not 0 <= length <= min(k_max, len(ids) - 1):
             raise ValueError("public exact lengths must name existing students and obey the public cap")
-    peers = tablemate_sets(trace["rotations"], ids, key)
+    peers = tablemate_sets(trace["rotations"], ids, key, guaranteed_only=True)
     forced_edges, students_hit, correct, fully, recovered, inconsistent = 0, 0, 0, [], [], []
     per_student = {}
     for i in ids:
@@ -126,7 +134,83 @@ def leakage_report(trace, k_max=None, key="tables", public_list_lengths=None):
             "inconsistentObservationStudents": inconsistent,
             "publicExactLengths": dict(public_list_lengths),
             "inferenceAssumptions": {"knownSubmitterIdentities": True, "staticLists": True,
-                                     "knownUpperCap": True, "usesPrivateLengthsForInference": False},
+                                     "knownUpperCap": True, "usesPrivateLengthsForInference": False,
+                                     "knownWaivedObligations": True},
             "submittedEdges": n_edges,
             "fractionOfEdgesForced": round(forced_edges / n_edges, 4) if n_edges else 0.0,
             "perStudent": per_student}
+
+
+# ------------------------------------------------------------------ re-evaluation
+def windowed_leakage(trace, window, k_max=None, key="tables"):
+    """Forced entries when an observer keeps only the last ``window`` charts.
+
+    Models a distribution policy that publishes one current chart at a time and
+    retains at most ``window`` of them.  ``window=1`` is the current-only policy.
+    Forced entries are computed for every prefix position so the worst
+    retained window over the year is reported, not only the last one.
+    """
+    if isinstance(window, bool) or not isinstance(window, int) or window < 1:
+        raise ValueError("the retained-chart window must be a positive integer")
+    rotations = trace["rotations"]
+    worst = {"forcedEdges": 0, "studentsWithForcedEdge": 0, "endingAt": None}
+    per_end = []
+    for end in range(1, len(rotations) + 1):
+        start = max(0, end - window)
+        rep = leakage_report({**trace, "rotations": rotations[start:end]}, k_max=k_max, key=key)
+        per_end.append({"endingAt": end, "forcedEdges": rep["forcedEdges"],
+                        "studentsWithForcedEdge": rep["studentsWithForcedEdge"]})
+        if rep["forcedEdges"] > worst["forcedEdges"]:
+            worst = {"forcedEdges": rep["forcedEdges"], "studentsWithForcedEdge": rep["studentsWithForcedEdge"],
+                     "endingAt": end}
+    return {"window": window, "worstRetainedWindow": worst, "perEnd": per_end,
+            "note": "Logical forcing under the stated observer model only; an observer who archives charts "
+                    "privately is not bound by the retention policy."}
+
+
+def coseating_exposure(trace, key="tables", top=3):
+    """Statistical exposure using recurrence counts from observed charts.
+
+    For every obligated student, count how often each tablemate recurs across
+    the observed charts.  Without a public cap no individual name is logically
+    forced (any tablemate set of size >= 2 admits a hitting set that avoids a
+    given name), yet a recurring tablemate is a strong statistical signal.  The
+    report scores how often the most frequent tablemates are listed peers, for
+    the proposed charts and the matched random charts alike. Ties are broken
+    by ascending participant ID. Counts can be maintained as charts arrive,
+    without storing past full charts; historical observations are still needed.
+    """
+    if isinstance(top, bool) or not isinstance(top, int) or top < 1:
+        raise ValueError("the number of ranked tablemates must be a positive integer")
+    ids = [s["id"] for s in trace["students"]]
+    truth = dict(zip(ids, (set(l) for l in trace["listed"])))
+    peers = tablemate_sets(trace["rotations"], ids, key)
+    results = {"top1ListedRate": None, "topKListedRate": None, "meanTop1Frequency": None, "students": 0}
+    top1_hits, topk_hits, topk_total, top1_freq = 0, 0, 0, []
+    for i in ids:
+        if not truth[i] or not peers[i]:
+            continue
+        counts = {}
+        for peer_set in peers[i]:
+            for j in peer_set:
+                counts[j] = counts.get(j, 0) + 1
+        ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+        if not ranked:
+            continue
+        results["students"] += 1
+        top1_hits += ranked[0][0] in truth[i]
+        top1_freq.append(ranked[0][1] / len(peers[i]))
+        chosen = ranked[:top]
+        topk_hits += sum(j in truth[i] for j, _ in chosen)
+        topk_total += len(chosen)
+    if results["students"]:
+        results["top1ListedRate"] = round(top1_hits / results["students"], 4)
+        results["topKListedRate"] = round(topk_hits / topk_total, 4) if topk_total else None
+        results["meanTop1Frequency"] = round(sum(top1_freq) / len(top1_freq), 4)
+    results["top"] = top
+    results["tieBreak"] = "ascending participant ID"
+    results["rotationsObserved"] = len(trace["rotations"])
+    results["note"] = ("Fraction of obligated students whose most frequent tablemate is a listed peer. "
+                       "Recurrence counts can be updated from past observations without a public cap or a stored "
+                       "full-chart archive; this statistic is not a proof of any entry.")
+    return results

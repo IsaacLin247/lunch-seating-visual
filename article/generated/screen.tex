@@ -1,11 +1,13 @@
 \begin{table}[tb]\centering\small
-\caption{Reference diagnostic screening by eligibility state, before any modeled resubmission. Certificates may overlap; they are not counts of distinct students. Target coverage is examined/discovered bounded cores, not recall against all possible attacks. All screens also record closure and capacity checks.}\label{tab:screen}
-\begin{tabular}{@{}llrrr@{}}\toprule
-Submission & State & Certificates & Unresolved & Target cores \\ \midrule
-Honest & mixed & 0 & 0 & 0/0 \\
-Honest & same & 0 & 0 & 0/0 \\
-Shared-anchor attack & mixed & 0 & 0 & 0/0 \\
-Shared-anchor attack & same & 1 & 0 & 1/1 \\
-Initial screened attack & mixed & 0 & 0 & 0/0 \\
-Initial screened attack & same & 2 & 0 & 0/6 \\
+\caption{Reference screening by eligibility state. The initial screened attack and its replacement lists are separate rows: retained full-model tests use the replacement lists. Certificates may overlap and do not count distinct students. Target cores show examined/discovered bounded candidates. Full model shows examined/discovered tests, followed by forced/separable/unresolved counts. These are checks on the archived full-attendance states, not recall against all possible attacks.}\label{tab:screen}
+\begin{tabular}{@{}llrrrl@{}}\toprule
+Submission & State & Certificates & Unresolved & Target cores & Full model \\ \midrule
+Honest & mixed & 0 & 0 & 0/0 & 0/0; 0/0/0 \\
+Honest & same & 0 & 0 & 0/0 & 0/0; 0/0/0 \\
+Shared-anchor attack & mixed & 0 & 0 & 0/0 & -- \\
+Shared-anchor attack & same & 1 & 0 & 1/1 & -- \\
+Initial screened attack & mixed & 0 & 0 & 0/0 & -- \\
+Initial screened attack & same & 2 & 0 & 0/6 & -- \\
+After resubmission & mixed & 0 & 0 & 5/6 & 5/5; 0/5/0 \\
+After resubmission & same & 0 & 0 & 5/6 & 5/5; 0/5/0 \\
 \bottomrule\end{tabular}\end{table}

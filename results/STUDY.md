@@ -46,3 +46,42 @@ The chart verifier independently recomputes capacities, eligibility, support, an
 Final outcome:34 recorded attempts,32 successes,2 preserved interruptions, and517 validated proposed rotations with matched random charts and2,068 recorded stage endpoints. The study generated no rule-based exclusions.
 
 After all attempts terminated, final hardening added strict returned-configuration checks, withdrawal of summaries whose evidence no longer verifies, the public exact-length peer-universe case, and feasibility priority for a CP candidate over an invalid incumbent. The archived executable study source is unchanged. `verification/cp_priority_compatibility.json` checks all517 rotation records and shows that the last guard change alters no recorded decision. Final hardening regressions cover the newly protected cases separately.
+
+# Revised study, 11 September 2026
+
+The implementation changed after the 8 September study (exact CP-SAT objective, validated fallbacks, explicit submission states, attendance, staff constraints, full-model screening). The 8 September manifests (`verified_*.json`, source `4282fb65...`) are retained unchanged as historical evidence of the previous implementation. Every number presented as a result of the revised implementation comes from the manifests below, produced by the revised source archived under `source_snapshots/e1a4d21af6c3e2c42dc8ad8d448005a79abe393a0927d466e591b24f7f9561bb/`.
+
+The commands, run concurrently in the pinned `.venv` on the same eight-CPU machine (timings include contention):
+
+```bash
+.venv/bin/python -u sim/experiments.py \
+  --seed-values 1,3,5,7,9 --scenarios honest,coalition_min4 \
+  --skip-budgets --skip-communities --out results/revised_core_a.json
+
+.venv/bin/python -u sim/experiments.py \
+  --seed-values 2,4,6,8,10 --scenarios honest,coalition_min4 \
+  --skip-budgets --skip-communities --out results/revised_core_b.json
+
+.venv/bin/python -u sim/experiments.py \
+  --seed-values 7 \
+  --scenarios coalition_none,coalition_stratified,coalition_shared_anchor,coalition_screened \
+  --anneal-budgets 100000,900000 --cpsat-budgets 0.1,1.0 \
+  --horizons 5,32 --communities 0.6:0.3,1.0:0.0 \
+  --out results/revised_sensitivity.json
+
+.venv/bin/python -u sim/evaluate_methods.py --seed-values 1,2 --out results/revised_evaluation_a.json
+.venv/bin/python -u sim/evaluate_methods.py --seed-values 3 --out results/revised_evaluation_b.json
+```
+
+Defaults are unchanged (16 rotations, 300,000 annealing iterations, CP budget 3.5 deterministic-time units, preliminary feasibility 20 units per state, eight workers, `review` short-list policy, no absences). The evaluation grid uses 100,000 iterations and CP budget 1.0 with feasibility budget 10, except where a condition sets its own budget; its conditions are listed in `sim/evaluate_methods.py`.
+
+After all attempts terminate:
+
+```bash
+.venv/bin/python paper/assemble_evidence.py --retained-source
+.venv/bin/python results/verification/verify_traces.py results/revised_experiments.json --out results/verification/revised_charts.json
+.venv/bin/python results/verification/verify_privacy.py results/revised_experiments.json --out results/verification/revised_privacy.json
+.venv/bin/python paper/make_tables.py
+.venv/bin/python paper/make_evaluation.py --manifest results/revised_evaluation.json --retained-source
+.venv/bin/python paper/make_figures.py --retained-source
+```

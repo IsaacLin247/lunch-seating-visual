@@ -21,7 +21,7 @@ const assert = require('node:assert/strict');
     await page.goto(base, { waitUntil: 'networkidle' });
     await page.waitForFunction(() => document.getElementById('loading').hidden, { timeout: 20000 });
     await page.screenshot({ path: path.join(output, 'room-desktop.png'), fullPage: true });
-    await page.getByRole('tab', { name: /Trying to Game It/ }).click();
+    await page.locator('#nav-game').click();
     assert.equal(await page.locator('#scenario-modes button').count(), 5);
     for (const button of await page.locator('#scenario-modes button').all()) {
       await button.click();
@@ -35,7 +35,7 @@ const assert = require('node:assert/strict');
       scenarios.push({ button: await button.textContent(), proof });
     }
     await page.screenshot({ path: path.join(output, 'game-desktop.png'), fullPage: true });
-    await page.getByRole('tab', { name: /The Algorithm/ }).click();
+    await page.locator('#nav-math').click();
     assert.equal(await page.locator('#stage-controls button').count(), 4);
     for (const rotation of [0, 1, 15]) {
       await page.locator('#scrub').evaluate((el, value) => { el.value = String(value); el.dispatchEvent(new Event('input', { bubbles: true })); }, rotation + 1);
@@ -52,16 +52,16 @@ const assert = require('node:assert/strict');
     await page.waitForTimeout(6200);
     assert.equal(await page.locator('[data-stage="final"]').getAttribute('aria-pressed'), 'true');
     await page.screenshot({ path: path.join(output, 'algorithm-desktop.png'), fullPage: true });
-    await page.getByRole('tab', { name: /One Student/ }).click();
+    await page.locator('#nav-student').click();
     await page.locator('#hero-select').selectOption({ index: 0 });
     await page.locator('#btn-last').click();
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const name of [/One Student/, /Trying to Game It/, /The Algorithm/, /The Whole Room/]) {
-      await page.getByRole('tab', { name }).click();
+    for (const tabId of ['nav-student', 'nav-game', 'nav-math', 'nav-room']) {
+      await page.locator(`#${tabId}`).click();
       await page.waitForTimeout(350);
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `mobile overflow: ${name}`);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `mobile overflow: ${tabId}`);
     }
-    await page.getByRole('tab', { name: /The Algorithm/ }).click();
+    await page.locator('#nav-math').click();
     await page.screenshot({ path: path.join(output, 'algorithm-mobile.png'), fullPage: true });
     let pdfAvailable = null;
     if (!process.argv.includes('--ui-only')) {

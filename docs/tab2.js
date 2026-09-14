@@ -1,6 +1,6 @@
 // Tab 2, One Student's Year: follow one student through all 16 rotations.
-import { RoomView } from './room.js';
-import { avatarImg } from './avatars.js';
+import { RoomView } from './room.js?v=20260914-minimal-4';
+import { avatarImg } from './avatars.js?v=20260914-minimal-4';
 
 export function createTab2(ctx) {
   const trace = ctx.traces.honest;
@@ -10,6 +10,7 @@ export function createTab2(ctx) {
   const listedOf = new Map(trace.students.map((s, i) => [s.id, trace.listed[i]]));
   let hero = trace.hero;
   let lastRot = -1, lastHero = null;
+  let portraits = new Map();
 
   // picker
   const sel = $('hero-select');
@@ -132,6 +133,16 @@ export function createTab2(ctx) {
       lastRot = rot; lastHero = hero;
     },
     resize() { room.resize(); },
+    setPortraits(map) {
+      portraits = new Map(map || []);
+      room.setOpts({ portraitProvider: portraits.size ? id => portraits.get(id) || null : null, showAvatars: true });
+      // The shared avatar service is updated first by the app. Rebuild even
+      // hidden DOM and bypass the render cache without changing the hero.
+      buildStatic();
+      api.render(Math.max(lastRot, 0), false, true);
+      room.draw();
+    },
+    clearPortraits() { api.setPortraits(new Map()); },
   };
   buildStatic();
   return api;

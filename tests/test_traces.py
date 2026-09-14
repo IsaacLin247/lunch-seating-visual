@@ -208,3 +208,39 @@ def test_shared_anchor_full_table_and_targeted_diagnostic(traces):
     screen=t["config"]["diagnosticScreen"]
     assert set(screen["returnedStudents"])==core
     assert screen["nUnresolved"]==0
+
+
+def test_release_statuses_and_validation_are_recorded(trace):
+    """Revised traces: every rotation carries an independent validation and an explicit release status."""
+    for rot in trace["rotations"]:
+        release = rot["release"]
+        assert release["validation"]["valid"] is True
+        assert release["status"] in ("optimized", "incumbent", "fallback")
+        assert rot["stats"]["status"] == release["status"]
+        if release["optimalityProven"]:
+            assert release["accepted"] == "cpsat" and rot["stats"]["cpsatStatus"] == "OPTIMAL" and rot["stats"]["cpsatExact"]
+        assert sum(rot["targets"]) == len(trace["students"]) - len(rot["absent"])
+    assert trace["config"]["schedulingStatus"] == "scheduled"
+    assert set(trace["summary"]["releaseStatuses"]) <= {"optimized", "incumbent", "fallback"}
+
+
+def test_outcomes_participation_and_exposure_are_recorded(trace):
+    outcomes = trace["outcomes"]
+    cov = outcomes["proposed"]["coverageAmongObligated"]
+    assert cov["atLeastOnePct"] == 100.0
+    assert outcomes["participation"]["obligatedStudents"] == trace["config"]["submissions"]["obligated"]
+    assert outcomes["participation"]["pendingReview"] == []
+    assert set(outcomes["proposed"]["distinctPeers"]) >= {"min", "p5", "p10", "median", "mean", "max"}
+    exposure = trace["leakage"]["coseatingExposure"]
+    assert exposure["proposed"]["top1ListedRate"] > exposure["random"]["top1ListedRate"]
+    assert trace["leakage"]["currentOnlyDistribution"]["forcedEdges"] == 0
+    assert trace["config"]["objective"]["cpsatObjective"] == "10 * extras + sum(5 m_ab + 2 alpha_ab)"
+    assert trace["config"]["solver"]["cpsatPairs"] == "all" and trace["config"]["solver"]["cpsatExtras"] == "count"
+
+
+def test_recurring_group_diagnostics_are_descriptive(trace):
+    for key in ("proposed", "random"):
+        report = trace["recurringGroups"][key]
+        assert "not evidence of intent" in report["note"]
+        for group in report["groups"]:
+            assert group["count"] >= report["threshold"] and len(group["members"]) == group["size"]

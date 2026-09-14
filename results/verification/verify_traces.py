@@ -40,6 +40,9 @@ def check_trace(trace):
         check(provenance['solverSeed'], inputs['runConfig']['seed'], 'solver seed provenance')
     histories = {'tables': Counter(), 'tablesRandom': Counter()}
     sym_listed = {tuple(sorted((a, b))) for a in ids for b in lists[a]}
+    staff = cfg.get('staff') or {}
+    prohibited = [tuple(sorted(pair)) for pair in staff.get('prohibitedPairs', [])]
+    allowed = {k: set(v) for k, v in staff.get('allowedTables', {}).items()}
     per_rotation = []
     coalition = set(cfg.get('coalition', []))
     for idx, rot in enumerate(trace['rotations']):
@@ -48,24 +51,47 @@ def check_trace(trace):
         first = cfg.get('firstState', 'mixed')
         expected_state = first if idx % 2 == 0 else {'mixed': 'same', 'same': 'mixed'}[first]
         check(rot['state'], expected_state, label + ' schedule')
-        eligible = {i: {j for j in lists[i] if rot['state'] == 'mixed' or grades[j] == grades[i]} for i in ids}
+        absent = set(rot.get('absent', []))
+        waived = set((rot.get('waivedObligations') or {}).keys())
+        present = [i for i in ids if i not in absent]
+        targets = rot.get('targets', caps)
+        check(all(0 <= x <= c for x, c in zip(targets, caps)) and len(targets) == len(caps), True, label + ' targets within capacities')
+        check(sum(targets), len(present), label + ' targets seat the present roster')
+        eligible = {i: {j for j in lists[i] if (rot['state'] == 'mixed' or grades[j] == grades[i]) and j not in absent}
+                    for i in ids}
+        release = rot.get('release')
+        if release is not None:
+            check(release['validation']['valid'], True, label + ' release validated')
+            check(release['status'] in ('optimized', 'incumbent', 'fallback'), True, label + ' release status')
+            if release.get('optimalityProven'):
+                check(release['accepted'], 'cpsat', label + ' optimality proof requires the exact CP stage')
+                check(rot['stats'].get('cpsatStatus'), 'OPTIMAL', label + ' optimality proof requires OPTIMAL')
+                check(rot['stats'].get('cpsatExact'), True, label + ' optimality proof requires the exact objective')
         stats = {}
         for key in ('tables', 'tablesRandom'):
             tables = rot[key]
             check(len(tables), len(caps), label + ' ' + key + ' table count')
             flat = [i for t in tables for i in t]
-            check(sorted(flat), sorted(ids), label + ' ' + key + ' unique placement')
+            check(sorted(flat), sorted(present), label + ' ' + key + ' unique placement of the present roster')
             counts = {}
             mates = {}
             for t, members in enumerate(tables):
-                check(len(members), caps[t], label + f' {key} table {t} capacity')
+                check(len(members), targets[t], label + f' {key} table {t} occupancy target')
                 if rot['state'] == 'same':
                     check(all(grades[i] == table_grade[t] for i in members), True,
                           label + f' {key} table {t} grade')
                 for i in members:
                     mates[i] = set(members) - {i}
-                    if lists[i]:
+                    if lists[i] and i not in waived:
                         counts[i] = len(mates[i] & eligible[i])
+            if key == 'tables':
+                where = {i: t for t, members in enumerate(tables) for i in members}
+                for a, b in prohibited:
+                    if a in where and b in where:
+                        check(where[a] != where[b], True, label + f' prohibited pair {a},{b} apart')
+                for i, tables_ok in allowed.items():
+                    if i in where:
+                        check(where[i] in tables_ok, True, label + f' placement restriction {i}')
             if key == 'tables':
                 check([i for i, count in counts.items() if count == 0], [], label + ' guarantee')
             anchors = rot['anchors' if key == 'tables' else 'anchorsRandom']
@@ -85,27 +111,43 @@ def check_trace(trace):
                       f'repeatPairs{suffix}': repeat_count}
             if key == 'tables':
                 stage_records = rot.get('pipeline', [])
+                weight = cfg['weights']['anneal']
+                scale = weight.get('scale', 10)
                 for stage in stage_records:
                     stage_label = label + ' pipeline ' + stage['name']
                     stage_tables = stage['tables']
-                    check(sorted(i for t in stage_tables for i in t), sorted(ids), stage_label + ' unique placement')
-                    check([len(t) for t in stage_tables], caps, stage_label + ' capacities')
+                    check(sorted(i for t in stage_tables for i in t), sorted(present), stage_label + ' unique placement')
+                    check([len(t) for t in stage_tables], targets, stage_label + ' occupancy targets')
                     if rot['state'] == 'same':
                         check(all(grades[i] == table_grade[t] for t, members in enumerate(stage_tables) for i in members),
                               True, stage_label + ' grades')
-                    stage_counts = [len((set(t) - {i}) & eligible[i]) for t in stage_tables for i in t if lists[i]]
+                    stage_counts = [len((set(t) - {i}) & eligible[i]) for t in stage_tables for i in t
+                                    if lists[i] and i not in waived]
                     viol = sum(c == 0 for c in stage_counts)
                     extras = sum(max(0, c - 1) for c in stage_counts)
                     stage_pairs = {tuple(sorted(p)) for t in stage_tables for p in combinations(t, 2)}
-                    weight = cfg['weights']['anneal']
                     repeat_energy = sum(history[p] * (weight['repeatListedPerMeeting'] if p in sym_listed else
                                                      weight['repeatIncidentalPerMeeting']) for p in stage_pairs)
-                    repeat_scaled = round(10 * repeat_energy)
+                    repeat_scaled = round(scale * repeat_energy)
+                    stage_where = {i: t for t, members in enumerate(stage_tables) for i in members}
+                    prohibited_here = sum(1 for a, b in prohibited if a in stage_where and b in stage_where
+                                          and stage_where[a] == stage_where[b])
+                    misplaced = sum(1 for i, ok in allowed.items() if i in stage_where and stage_where[i] not in ok)
+                    hard = viol + prohibited_here + misplaced
                     cost = {'violations': viol, 'twoPlus': sum(c >= 2 for c in stage_counts),
                             'extraPeers': extras, 'repeat': repeat_scaled,
-                            'total': round(10 * (weight['satisfied'] * viol + weight['extraPeer'] * extras)) + repeat_scaled}
+                            'total': round(scale * (weight['satisfied'] * hard + weight['extraPeer'] * extras)) + repeat_scaled}
+                    if 'hard' in stage['cost']:
+                        cost.update(hard=hard, prohibited=prohibited_here, misplaced=misplaced,
+                                    objective=round((round(scale * weight['extraPeer'] * extras) + repeat_scaled) / scale, 10))
                     for k, v in cost.items():
-                        check(stage['cost'][k], v, stage_label + ' cost.' + k)
+                        actual = stage['cost'][k]
+                        if k == 'objective':
+                            check(abs(actual - v) < 1e-6, True, stage_label + ' cost.objective')
+                        else:
+                            check(actual, v, stage_label + ' cost.' + k)
+                    if stage['name'] == 'final':
+                        check(hard, 0, stage_label + ' released chart has no hard violation')
                 if stage_records:
                     check(stage_records[-1]['tables'], tables, label + ' final-stage chart')
                     check(stage_records[-1]['cost'], rot['stats']['cost'], label + ' final-stage cost')
@@ -122,6 +164,11 @@ def check_trace(trace):
                 for k, v in values.items():
                     check(record[k], v, label + ' ' + key + ' coalition.' + k)
         per_rotation.append(stats)
+    summary_extra = {}
+    if any('release' in r for r in trace['rotations']):
+        summary_extra['fallbackRotations'] = [r['idx'] for r in trace['rotations'] if r['release']['status'] == 'fallback']
+        summary_extra['incumbentRotations'] = [r['idx'] for r in trace['rotations'] if r['release']['status'] == 'incumbent']
+        summary_extra['optimalityProvenRotations'] = [r['idx'] for r in trace['rotations'] if r['release'].get('optimalityProven')]
     distinct = {i: sum(i in p for p in histories['tables']) for i in ids}
     ordered_values = sorted(distinct.values())
     quantiles = {'min': min(ordered_values), 'max': max(ordered_values),
@@ -149,6 +196,7 @@ def check_trace(trace):
         result.update(coalitionIntactRotations=sum(r['coalition']['intact'] for r in rots),
                       coalitionAvgCluster=round(sum(r['coalition']['avgCluster'] for r in rots) / len(rots), 2),
                       coalitionPatterns=dict(Counter(r['coalition']['pattern'] for r in rots)))
+    result.update(summary_extra)
     for k, v in result.items():
         check(trace['summary'][k], v, 'summary ' + k)
     return {'errors': errors, 'rotationsChecked': len(per_rotation),

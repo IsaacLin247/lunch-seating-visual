@@ -11,16 +11,16 @@
  "rotations": 16,
  "playback": "precomputed validated solver traces",
  "effectiveSourceHashes": [
-  "4282fb6588006917a0fdd94339113c4799d1f26cd5bb37f0e67a3282bc764ed8"
+  "e1a4d21af6c3e2c42dc8ad8d448005a79abe393a0927d466e591b24f7f9561bb"
  ],
  "evidenceStatus": "verified_attempt_ledger",
- "evidenceManifestSha256": "18fa11f92db61a4396d3a6b60f3bc6384e175b60cee7fad38500ff60cc3f489b",
+ "evidenceManifestSha256": "6f0abc9b95c0e6b98b9d0d0cd0f0ef4bc01c2a73ef367e911a27768e5f64bbcc",
  "attemptIds": {
-  "honest": "fdc2d6783e824da6ba4dba8b711d0536",
-  "coalition_none": "60123fff4ea544158061bf5234dadb2d",
-  "coalition_min4": "c4e49cf0a29b4774877449917c8826ca",
-  "coalition_stratified": "69a83babd7574bd5adfa69fff8de57ad",
-  "coalition_shared_anchor": "6b3f72b796b3427bbd9e9b457ea36893",
-  "coalition_screened": "34f97559eb0b4321bdf67bdd6e355075"
+  "honest": "c779e0ec6b6342e189a024b037c12d8c",
+  "coalition_none": "8c92c892b1114ce6b6e0c83933bf9a50",
+  "coalition_min4": "9275c872e13842879d34bf02eb35c455",
+  "coalition_stratified": "b9bad4c44b394ce4a2823c5389a5dd4a",
+  "coalition_shared_anchor": "41ff05e5c65d493e8d0854faa226beeb",
+  "coalition_screened": "58ed44fdb7994225b186b0b961597017"
  }
 }

@@ -1,11 +1,21 @@
-// Tab 4, The Algorithm: static explainer typeset with KaTeX (auto-render, loaded from the CDN).
-import { RoomView } from './room.js';
+// Tab 4, The Algorithm: recorded stages and explanations typeset with local KaTeX.
+import { RoomView } from './room.js?v=20260914-minimal-4';
 
 export function createTab4(ctx) {
   const trace = ctx.traces.honest;
   const leakage = trace.leakage;
   if (leakage) {
     document.getElementById('leakage-summary').textContent = `Across ${leakage.rotationsObserved} honest-trace charts, the exact inference probe forces ${leakage.forcedEdges} directed list entries affecting ${leakage.studentsWithForcedEdge} students, under a public cap of ${leakage.kMax} names. Confidential collection does not prevent inference from outputs.`;
+  }
+  const exposure = leakage?.coseatingExposure;
+  if (exposure) {
+    const current = leakage.currentOnlyDistribution;
+    document.getElementById('exposure-summary').textContent = `Distributing one chart at a time forces ${current ? current.forcedEdges : 0} entries logically, but the most frequent tablemate of an obligated student is a listed peer for ${(100 * exposure.proposed.top1ListedRate).toFixed(0)}% of students under the proposed charts (${(100 * exposure.random.top1ListedRate).toFixed(0)}% under random seating). Counting co-seatings needs no list cap and no complete archive.`;
+  }
+  const statuses = trace.summary?.releaseStatuses;
+  if (statuses) {
+    const proven = trace.summary.optimalityProvenRotations?.length ?? 0;
+    document.getElementById('trace-statuses').textContent = `Release statuses in this honest year: ${Object.entries(statuses).map(([k, v]) => `${k} ${v}`).join(', ')}. Rotations with a CP-SAT optimality proof under the exact objective: ${proven}. Scheduling outcome: ${trace.config.schedulingStatus || 'scheduled'}.`;
   }
   const config = trace.config, versions = config.versions || {}, source = config.provenance || versions;
   const identity = source.effectiveSourceHash || source.sourceHash || source.sourceFingerprint || source.sourceTreeHash || source.sourceSha256;
@@ -20,6 +30,11 @@ export function createTab4(ctx) {
   };
   let activeRotation = 0, activeStage = 0, stageTimer = null;
   let stageRoom = null;
+  let portraits = new Map();
+  const portraitOptions = () => ({
+    portraitProvider: portraits.size ? id => portraits.get(id) || null : null,
+    showAvatars: portraits.size > 0,
+  });
   function stopStages() { if (stageTimer) clearTimeout(stageTimer); stageTimer = null; $('stage-replay').textContent = 'Replay stages'; }
   function renderStage(animate = false) {
     const rotation = trace.rotations[activeRotation], stages = rotation.pipeline;
@@ -31,7 +46,7 @@ export function createTab4(ctx) {
     activeStage = Math.min(activeStage, stages.length - 1);
     const snapshot = stages[activeStage];
     const stageTrace = { ...trace, rotations: stages.map(stage => ({ ...rotation, tables: stage.tables })) };
-    if (!stageRoom) stageRoom = new RoomView($('room-stage'), stageTrace, { showAvatars: false, onHover: ctx.showTooltip });
+    if (!stageRoom) stageRoom = new RoomView($('room-stage'), stageTrace, { ...portraitOptions(), onHover: ctx.showTooltip });
     if (stageRoom.originalRotation !== activeRotation) {
       stageRoom.setTrace(stageTrace, false); stageRoom.originalRotation = activeRotation; stageRoom.snapTo(activeStage); stageRoom.resize();
     } else stageRoom.goTo(activeStage, animate);
@@ -78,9 +93,19 @@ export function createTab4(ctx) {
   // KaTeX scripts are deferred; typeset once they are in, or on first view.
   if (document.readyState === 'complete') typeset();
   else window.addEventListener('load', typeset, { once: true });
-  return {
+  const api = {
     render(rotation) { typeset(); if (rotation !== activeRotation) { stopStages(); activeRotation = rotation; } renderStage(false); },
     resize() { stageRoom?.resize(); },
     pause() { stopStages(); },
+    setPortraits(map) {
+      portraits = new Map(map || []);
+      stageRoom?.setOpts(portraitOptions());
+      // A photo import is a display change. Preserve the inspected stage,
+      // rotation, and saved numerical evidence while refreshing its canvas.
+      renderStage(false);
+      stageRoom?.draw();
+    },
+    clearPortraits() { api.setPortraits(new Map()); },
   };
+  return api;
 }

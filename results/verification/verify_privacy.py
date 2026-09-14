@@ -41,8 +41,11 @@ def check(trace):
     cap = trace['leakage']['kMax']
     peer_sets = {i: [] for i in ids}
     for rotation in trace['rotations']:
+        waived = rotation.get('waivedObligations') or {}
         for table in rotation['tables']:
             for i in table:
+                if i in waived:
+                    continue
                 peer_sets[i].append(set(table) - {i})
     forced = {}
     proofs, unresolved = [], []

@@ -35,15 +35,15 @@ def test_no_em_dashes_in_site_text_assets():
     assert not offenders, f"em dashes found: {offenders}"
 
 
-def test_guarantee_and_playback_scope_are_explicit():
+def test_algorithm_details_preserve_solver_limits_and_evidence_links():
     html = (DOCS / "index.html").read_text()
-    assert "at least one eligible listed peer" in html
-    assert "browser does not run optimization" in html
     assert "Exactly one and new acquaintances are optimization preferences" in html
     assert "UNKNOWN proves neither feasibility nor impossibility" in html
+    assert "kept as a fallback" in html and "called optimal only when CP-SAT proved it" in html
+    assert "full-model separation test" in html and "not evidence of intent" in html
+    assert "chart-only export" in html and 'href="policy/data_handling_policy.md"' in html
     assert "every already-satisfied submitter" in html
-    assert "stage-controls" in html and "Early stages can violate the friend guarantee" in html
-    assert "intervening search moves are not recorded" in html
+    assert "stage-controls" in html and "stage-validity" in html
     assert "docs/article.pdf" not in html and 'href="article.pdf"' in html
 
 
@@ -54,8 +54,8 @@ def test_algorithm_equations_have_eligible_edges_and_stage_specific_objectives()
     assert r"C=1000|V|" in html
     assert r"\max(0,s_i-1)" in html
     assert r"e^{-\Delta C/T}" in html
-    assert r"\min\ 300\sum_i z_i" in html
-    assert r"\in P_{q-1}" in html
+    assert r"\min\ 10\sum_i e_i" in html
+    assert r"\in H}" in html and "300" not in html.split("Bounded CP-SAT")[1].split("</div>")[2]
     assert html.count(r"\[") == html.count(r"\]") == 6
     assert "katex.min.js" in html and "katex.min.css" in html and "auto-render.min.js" in html
 

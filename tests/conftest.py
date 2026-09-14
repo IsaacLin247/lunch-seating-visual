@@ -7,8 +7,8 @@ import pytest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 DATA = os.environ.get("LSV_DATA_DIR", os.path.join(ROOT, "docs", "data"))
-from sim.scenarios import SCENARIOS as SCENARIO_DEFINITIONS
-SCENARIOS = list(SCENARIO_DEFINITIONS)
+from sim.scenarios import WEBSITE_SCENARIOS
+SCENARIOS = list(WEBSITE_SCENARIOS)
 
 
 def load(name):

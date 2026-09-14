@@ -1,0 +1,882 @@
+[
+ {
+  "rotation": 1,
+  "state": "mixed",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 1,
+   "extraPeers": 1,
+   "repeat": 0,
+   "total": 10,
+   "objective": 1.0
+  },
+  "historyPairs": 0,
+  "prevPairs": 0,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 3.0,
+    "status": "OPTIMAL",
+    "vars": 20817,
+    "constraints": 31394,
+    "pairVars": 0,
+    "objective": 0.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 0,
+     "extraPeers": 0,
+     "repeat": 0,
+     "total": 0,
+     "objective": 0.0
+    },
+    "improvedTotal": 10,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 3.05,
+    "status": "OPTIMAL",
+    "vars": 20817,
+    "constraints": 31394,
+    "pairVars": 0,
+    "objective": 0.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 0,
+     "extraPeers": 0,
+     "repeat": 0,
+     "total": 0,
+     "objective": 0.0
+    },
+    "improvedTotal": 10,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 3.61,
+    "status": "OPTIMAL",
+    "vars": 20817,
+    "constraints": 31394,
+    "pairVars": 0,
+    "objective": 0.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 0,
+     "extraPeers": 0,
+     "repeat": 0,
+     "total": 0,
+     "objective": 0.0
+    },
+    "improvedTotal": 10,
+    "feasible": true
+   }
+  }
+ },
+ {
+  "rotation": 2,
+  "state": "same",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 1,
+   "extraPeers": 1,
+   "repeat": 30,
+   "total": 40,
+   "objective": 4.0
+  },
+  "historyPairs": 702,
+  "prevPairs": 702,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 4.33,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 24074,
+    "pairVars": 702,
+    "objective": 18.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 0,
+     "extraPeers": 0,
+     "repeat": 18,
+     "total": 18,
+     "objective": 1.8
+    },
+    "improvedTotal": 22,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 4.17,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 24074,
+    "pairVars": 702,
+    "objective": 18.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 0,
+     "extraPeers": 0,
+     "repeat": 18,
+     "total": 18,
+     "objective": 1.8
+    },
+    "improvedTotal": 22,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 3.3,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 24074,
+    "pairVars": 702,
+    "objective": 1500.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 12,
+     "total": 22,
+     "objective": 2.2
+    },
+    "improvedTotal": 18,
+    "feasible": true
+   }
+  }
+ },
+ {
+  "rotation": 3,
+  "state": "mixed",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 2,
+   "extraPeers": 2,
+   "repeat": 84,
+   "total": 104,
+   "objective": 10.4
+  },
+  "historyPairs": 1389,
+  "prevPairs": 702,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 4.32,
+    "status": "FEASIBLE",
+    "vars": 22206,
+    "constraints": 86954,
+    "pairVars": 1389,
+    "objective": 74.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 50,
+     "total": 60,
+     "objective": 6.0
+    },
+    "improvedTotal": 44,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 3.62,
+    "status": "FEASIBLE",
+    "vars": 21519,
+    "constraints": 59474,
+    "pairVars": 702,
+    "objective": 32.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 96,
+     "total": 106,
+     "objective": 10.6
+    },
+    "improvedTotal": -2,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 3.83,
+    "status": "FEASIBLE",
+    "vars": 21519,
+    "constraints": 59474,
+    "pairVars": 702,
+    "objective": 2800.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 2,
+     "extraPeers": 2,
+     "repeat": 66,
+     "total": 86,
+     "objective": 8.6
+    },
+    "improvedTotal": 18,
+    "feasible": true
+   }
+  }
+ },
+ {
+  "rotation": 4,
+  "state": "same",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 2,
+   "extraPeers": 2,
+   "repeat": 130,
+   "total": 150,
+   "objective": 15.0
+  },
+  "historyPairs": 2051,
+  "prevPairs": 702,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 5.33,
+    "status": "FEASIBLE",
+    "vars": 12588,
+    "constraints": 44414,
+    "pairVars": 2051,
+    "objective": 137.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 125,
+     "total": 135,
+     "objective": 13.5
+    },
+    "improvedTotal": 15,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 3.74,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 23334,
+    "pairVars": 702,
+    "objective": 43.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 204,
+     "total": 214,
+     "objective": 21.4
+    },
+    "improvedTotal": -64,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 3.75,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 23334,
+    "pairVars": 702,
+    "objective": 3600.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 188,
+     "total": 198,
+     "objective": 19.8
+    },
+    "improvedTotal": -48,
+    "feasible": true
+   }
+  }
+ },
+ {
+  "rotation": 5,
+  "state": "mixed",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 0,
+   "extraPeers": 0,
+   "repeat": 163,
+   "total": 163,
+   "objective": 16.3
+  },
+  "historyPairs": 2703,
+  "prevPairs": 702,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 4.72,
+    "status": "FEASIBLE",
+    "vars": 23520,
+    "constraints": 139514,
+    "pairVars": 2703,
+    "objective": 150.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 0,
+     "extraPeers": 0,
+     "repeat": 148,
+     "total": 148,
+     "objective": 14.8
+    },
+    "improvedTotal": 15,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 3.36,
+    "status": "FEASIBLE",
+    "vars": 21519,
+    "constraints": 59474,
+    "pairVars": 702,
+    "objective": 42.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 0,
+     "extraPeers": 0,
+     "repeat": 216,
+     "total": 216,
+     "objective": 21.6
+    },
+    "improvedTotal": -53,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 3.54,
+    "status": "FEASIBLE",
+    "vars": 21519,
+    "constraints": 59474,
+    "pairVars": 702,
+    "objective": 4800.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 2,
+     "extraPeers": 2,
+     "repeat": 214,
+     "total": 234,
+     "objective": 23.4
+    },
+    "improvedTotal": -71,
+    "feasible": true
+   }
+  }
+ },
+ {
+  "rotation": 6,
+  "state": "same",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 5,
+   "extraPeers": 5,
+   "repeat": 221,
+   "total": 271,
+   "objective": 27.1
+  },
+  "historyPairs": 3343,
+  "prevPairs": 702,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 4.78,
+    "status": "FEASIBLE",
+    "vars": 13880,
+    "constraints": 63794,
+    "pairVars": 3343,
+    "objective": 261.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 4,
+     "extraPeers": 4,
+     "repeat": 212,
+     "total": 252,
+     "objective": 25.2
+    },
+    "improvedTotal": 19,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 3.92,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 23434,
+    "pairVars": 702,
+    "objective": 38.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 2,
+     "extraPeers": 2,
+     "repeat": 361,
+     "total": 381,
+     "objective": 38.1
+    },
+    "improvedTotal": -110,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 3.44,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 23434,
+    "pairVars": 702,
+    "objective": 2400.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 2,
+     "extraPeers": 2,
+     "repeat": 359,
+     "total": 379,
+     "objective": 37.9
+    },
+    "improvedTotal": -108,
+    "feasible": true
+   }
+  }
+ },
+ {
+  "rotation": 7,
+  "state": "mixed",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 3,
+   "extraPeers": 3,
+   "repeat": 289,
+   "total": 319,
+   "objective": 31.9
+  },
+  "historyPairs": 3959,
+  "prevPairs": 702,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 5.86,
+    "status": "FEASIBLE",
+    "vars": 24776,
+    "constraints": 189754,
+    "pairVars": 3959,
+    "objective": 310.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 3,
+     "extraPeers": 3,
+     "repeat": 280,
+     "total": 310,
+     "objective": 31.0
+    },
+    "improvedTotal": 9,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 3.6,
+    "status": "FEASIBLE",
+    "vars": 21519,
+    "constraints": 59474,
+    "pairVars": 702,
+    "objective": 68.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 2,
+     "extraPeers": 2,
+     "repeat": 379,
+     "total": 399,
+     "objective": 39.9
+    },
+    "improvedTotal": -80,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 4.02,
+    "status": "FEASIBLE",
+    "vars": 21519,
+    "constraints": 59474,
+    "pairVars": 702,
+    "objective": 5700.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 2,
+     "extraPeers": 2,
+     "repeat": 306,
+     "total": 326,
+     "objective": 32.6
+    },
+    "improvedTotal": -7,
+    "feasible": true
+   }
+  }
+ },
+ {
+  "rotation": 8,
+  "state": "same",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 2,
+   "extraPeers": 2,
+   "repeat": 345,
+   "total": 365,
+   "objective": 36.5
+  },
+  "historyPairs": 4572,
+  "prevPairs": 702,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 5.01,
+    "status": "FEASIBLE",
+    "vars": 15109,
+    "constraints": 81634,
+    "pairVars": 4572,
+    "objective": 365.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 2,
+     "extraPeers": 2,
+     "repeat": 345,
+     "total": 365,
+     "objective": 36.5
+    },
+    "improvedTotal": 0,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 3.81,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 23154,
+    "pairVars": 702,
+    "objective": 32.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 494,
+     "total": 504,
+     "objective": 50.4
+    },
+    "improvedTotal": -139,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 3.41,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 23154,
+    "pairVars": 702,
+    "objective": 2700.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 478,
+     "total": 488,
+     "objective": 48.8
+    },
+    "improvedTotal": -123,
+    "feasible": true
+   }
+  }
+ },
+ {
+  "rotation": 9,
+  "state": "mixed",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 1,
+   "extraPeers": 1,
+   "repeat": 372,
+   "total": 382,
+   "objective": 38.2
+  },
+  "historyPairs": 5166,
+  "prevPairs": 702,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 7.31,
+    "status": "FEASIBLE",
+    "vars": 25983,
+    "constraints": 238034,
+    "pairVars": 5166,
+    "objective": 377.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 367,
+     "total": 377,
+     "objective": 37.7
+    },
+    "improvedTotal": 5,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 3.73,
+    "status": "FEASIBLE",
+    "vars": 21519,
+    "constraints": 59474,
+    "pairVars": 702,
+    "objective": 58.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 0,
+     "extraPeers": 0,
+     "repeat": 432,
+     "total": 432,
+     "objective": 43.2
+    },
+    "improvedTotal": -50,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 3.53,
+    "status": "FEASIBLE",
+    "vars": 21519,
+    "constraints": 59474,
+    "pairVars": 702,
+    "objective": 4200.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 3,
+     "extraPeers": 4,
+     "repeat": 483,
+     "total": 523,
+     "objective": 52.3
+    },
+    "improvedTotal": -141,
+    "feasible": true
+   }
+  }
+ },
+ {
+  "rotation": 10,
+  "state": "same",
+  "incumbent": {
+   "violations": 0,
+   "prohibited": 0,
+   "misplaced": 0,
+   "hard": 0,
+   "twoPlus": 3,
+   "extraPeers": 3,
+   "repeat": 496,
+   "total": 526,
+   "objective": 52.6
+  },
+  "historyPairs": 5758,
+  "prevPairs": 702,
+  "formulations": {
+   "exact@3.5": {
+    "budget": 3.5,
+    "wall": 5.23,
+    "status": "FEASIBLE",
+    "vars": 16295,
+    "constraints": 98774,
+    "pairVars": 5758,
+    "objective": 524.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 3,
+     "extraPeers": 3,
+     "repeat": 494,
+     "total": 524,
+     "objective": 52.4
+    },
+    "improvedTotal": 2,
+    "feasible": true
+   },
+   "previous-count@3.5": {
+    "budget": 3.5,
+    "wall": 4.19,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 23234,
+    "pairVars": 702,
+    "objective": 53.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 724,
+     "total": 734,
+     "objective": 73.4
+    },
+    "improvedTotal": -208,
+    "feasible": true
+   },
+   "legacy@3.5": {
+    "budget": 3.5,
+    "wall": 3.76,
+    "status": "FEASIBLE",
+    "vars": 11239,
+    "constraints": 23234,
+    "pairVars": 702,
+    "objective": 4600.0,
+    "bound": 0.0,
+    "recomputed": {
+     "violations": 0,
+     "prohibited": 0,
+     "misplaced": 0,
+     "hard": 0,
+     "twoPlus": 1,
+     "extraPeers": 1,
+     "repeat": 687,
+     "total": 697,
+     "objective": 69.7
+    },
+    "improvedTotal": -171,
+    "feasible": true
+   }
+  }
+ }
+]

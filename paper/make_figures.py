@@ -160,8 +160,11 @@ class Evidence:
                  provenance["solverSeed"] == cfg["solverSeed"], f"{path}: attempt seed mismatch")
             need(inputs["runConfig"] == {**cfg["run"], "scenario": cfg["scenario"], "seed": cfg["solverSeed"]},
                  f"{path}: requested run and returned trace differ")
-            need(inputs["generatorConfig"] == {**cfg["generator"],
-                 "short_list_policy": cfg["submission"]["shortListPolicy"]},
+            expected_generator = {**cfg["generator"], "short_list_policy": cfg["submission"]["shortListPolicy"]}
+            if "nonsubmitFrac" in cfg["submission"]:
+                expected_generator.update(nonsubmit_frac=cfg["submission"]["nonsubmitFrac"],
+                                          list_cap=cfg["submission"].get("listCap"))
+            need(inputs["generatorConfig"] == expected_generator,
                  f"{path}: requested generator and returned trace differ")
             self.records.append((attempt, trace))
         need(self.records, "No current successful trace evidence is available")
@@ -514,7 +517,7 @@ def leakage_fairness(evidence, out_dir):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--manifest", type=Path, default=ROOT / "results/verified_experiments.json")
+    parser.add_argument("--manifest", type=Path, default=ROOT / "results/revised_experiments.json")
     parser.add_argument("--trace-dir", type=Path, default=ROOT / "docs/data")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "article/figures")
     parser.add_argument("--retained-source", action="store_true",

@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from sim.experiments import experiment_configuration, load_manifest, run_experiments
+from sim.experiments import (experiment_configuration, expected_generator_config, expected_run_config,
+                             load_manifest, run_experiments)
 from sim.provenance import fingerprint, resume_fingerprint, source_provenance
 
 
@@ -18,7 +19,9 @@ def sample_trace(seed=7, source=None, **kwargs):
     source = copy.deepcopy(SOURCE if source is None else source)
     config_keys = {k: v for k, v in kwargs.items() if k in (
         "solver_seed", "anneal_iters", "cpsat_time", "workers", "deterministic", "feasibility_time",
-        "rotations", "first_state", "mu", "omega", "cross_grade_group_frac", "short_list_policy")}
+        "rotations", "first_state", "mu", "omega", "cross_grade_group_frac", "short_list_policy",
+        "nonsubmit_frac", "list_cap", "method", "extra_weight", "cpsat_pairs", "cpsat_extras",
+        "absence_rate", "conflict_policy")}
     config = experiment_configuration(seed=seed, scenario=kwargs.get("scenarios", ["honest"])[0], **config_keys)
     if "generator_config" in kwargs:
         config["generator"] = kwargs["generator_config"]
@@ -34,8 +37,8 @@ def sample_trace(seed=7, source=None, **kwargs):
     index = {i: j for j, i in enumerate(ids)}
     inputs = {"network": {"seed": seed, "n11": gen["n11"], "n12": gen["n12"], "grade": grade},
               "submittedLists": [[index[j] for j in row] for row in lists],
-              "runConfig": {**run, "seed": config["solverSeed"], "scenario": config["scenario"]},
-              "generatorConfig": {**gen, "short_list_policy": config["submission"]["shortListPolicy"]}}
+              "runConfig": expected_run_config(config),
+              "generatorConfig": expected_generator_config(config)}
     provenance = {**source, "populationSeed": seed, "solverSeed": config["solverSeed"],
                   "effectiveInputs": inputs, "inputHash": fingerprint(inputs)}
     return {"config": {"seed": config["solverSeed"], "populationSeed": seed, "scenario": config["scenario"],

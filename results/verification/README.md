@@ -1,5 +1,22 @@
 # Independent verification of the publication evidence
 
+## Revised study (11 September 2026)
+
+The revised implementation's evidence is `../revised_experiments.json` (assembled
+from `revised_core_a.json`, `revised_core_b.json`, `revised_sensitivity.json`)
+and `../revised_evaluation.json` (assembled from `revised_evaluation_a.json`
+and `revised_evaluation_b.json`), all produced by the source archived under
+`../source_snapshots/e1a4d21af6c3e2c42dc8ad8d448005a79abe393a0927d466e591b24f7f9561bb/`.
+Their reports are `revised_charts.json`, `revised_privacy.json` and
+`revised_evaluation_charts.json`. The checker now also recomputes occupancy
+targets for present rosters, waived obligations, staff constraints, the hard
+violation count, the unscaled objective, release statuses and optimality
+claims (a proof requires the exact CP stage to have returned OPTIMAL). The
+counts recorded in each report define its scope.
+
+## Historical study (8 September 2026)
+
+
 The final combined study has **34 attempts: 32 successful traces and two recorded
 process interruptions**, covering **517 rotations**. The authoritative manifest
 is `../verified_experiments.json`, SHA-256

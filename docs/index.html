@@ -3,39 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Guaranteed-Friend Lunch Seating: Simulation</title>
+<title>Lunch seating</title>
 <meta name="description" content="Animated simulation of a guaranteed-friend lunch seating system, played back from real solver traces on synthetic data.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%23e8c9a3'/%3E%3Ccircle cx='50' cy='50' r='26' fill='%23fff7ea'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="styles.css?v=20260914-minimal-4">
+<script src="vendor/d3.min.js"></script>
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<script defer src="vendor/katex/katex.min.js"></script>
+<script defer src="vendor/katex/auto-render.min.js"></script>
 </head>
 <body>
 <header class="site-header">
-  <div class="wrap">
+  <div class="wrap header-row">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true"></span>
-      <h1>Guaranteed-Friend Lunch Seating</h1>
+      <h1>Lunch seating</h1>
     </div>
-    <p class="lede">
-      Every submitted list promises <strong>at least one eligible listed peer at each lunch</strong> when a valid chart is found.
-      The solver then reduces extra listed peers and repeat meetings. Explore its saved results on a synthetic school,
-      including attacks that expose the limits of submission screening.
-    </p>
-    <div class="research-strip"><span class="research-tag">Research demonstrator</span><span id="trace-scale">Loading dataset</span>
-      <a href="article.pdf">Read the paper (PDF)</a><a href="data/honest.json">Download honest trace</a></div>
-    <p class="playback-note">Playback of validated Python solver output. Movement between saved charts is illustrative;
-      the browser does not run optimization or show intermediate solver moves.</p>
+    <span class="demo-label">Simulation</span>
   </div>
 </header>
 
 <nav class="tabs wrap" role="tablist" aria-label="Simulations">
-  <button class="tab is-active" role="tab" id="nav-room" aria-controls="tab-room" data-tab="room" aria-selected="true" tabindex="0"><span class="tab-num">1</span> The Whole Room</button>
-  <button class="tab" role="tab" id="nav-student" aria-controls="tab-student" data-tab="student" aria-selected="false" tabindex="-1"><span class="tab-num">2</span> One Student's Year</button>
-  <button class="tab" role="tab" id="nav-game" aria-controls="tab-game" data-tab="game" aria-selected="false" tabindex="-1"><span class="tab-num">3</span> Trying to Game It</button>
-  <button class="tab" role="tab" id="nav-math" aria-controls="tab-math" data-tab="math" aria-selected="false" tabindex="-1"><span class="tab-num">4</span> The Algorithm</button>
+  <button class="tab is-active" role="tab" id="nav-room" aria-controls="tab-room" data-tab="room" aria-selected="true" tabindex="0">Room</button>
+  <button class="tab" role="tab" id="nav-student" aria-controls="tab-student" data-tab="student" aria-selected="false" tabindex="-1">Students</button>
+  <button class="tab" role="tab" id="nav-game" aria-controls="tab-game" data-tab="game" aria-selected="false" tabindex="-1">Coalitions</button>
+  <button class="tab" role="tab" id="nav-math" aria-controls="tab-math" data-tab="math" aria-selected="false" tabindex="-1">Algorithm</button>
 </nav>
 
 <section class="timeline wrap" aria-label="Rotation timeline">
@@ -58,10 +50,26 @@
 </section>
 
 <main class="wrap">
-  <div id="loading" class="loading">Loading solver traces…</div>
+  <div id="loading" class="loading">Loading…</div>
+
+  <section id="portrait-controls" class="portrait-controls" aria-label="Directory photos">
+    <div class="portrait-actions">
+      <button type="button" id="portrait-load" class="portrait-button" title="Choose the student_directory folder with grade HTML files and saved images" disabled>Load directory</button>
+      <button type="button" id="portrait-clear" class="portrait-button secondary" hidden>Remove photos</button>
+      <label id="portrait-zoom-control" class="portrait-zoom-control" hidden><span class="portrait-sr-only">Room zoom</span><select id="portrait-zoom"><option value="1">Fit room</option><option value="1.5">150%</option><option value="2">200%</option><option value="3">300%</option></select></label>
+      <input type="file" id="portrait-folder" webkitdirectory multiple hidden aria-label="Choose the saved student directory folder">
+    </div>
+    <p id="portrait-status" class="portrait-status" role="status" aria-live="polite"></p>
+    <details id="portrait-warnings" class="portrait-warnings" hidden><summary>Import notes</summary><ul id="portrait-warning-list"></ul></details>
+  </section>
 
   <!-- ============ TAB 1 ============ -->
   <section id="tab-room" class="panel is-active" role="tabpanel" aria-labelledby="nav-room">
+    <div id="portrait-tools" class="portrait-tools" hidden>
+      <label><span class="portrait-sr-only">Seating plan</span><select id="portrait-source"><option value="tables">Proposed solver</option><option value="tablesRandom">Random baseline</option></select></label>
+      <label><span class="portrait-sr-only">Choose a table</span><select id="portrait-table"><option value="">Choose a table</option></select></label>
+    </div>
+    <section id="portrait-inspection" class="portrait-inspection" aria-labelledby="portrait-table-heading" hidden><div class="portrait-inspection-header"><div><h3 id="portrait-table-heading"></h3><p id="portrait-table-description"></p></div><button type="button" id="portrait-inspection-close" class="portrait-button secondary">Close</button></div><div id="portrait-seats" class="portrait-seats"></div></section>
     <div class="two-rooms">
       <div class="room-col">
         <h2 class="room-title"><span class="dot muted"></span> Random baseline</h2>
@@ -82,19 +90,19 @@
         </div>
       </div>
     </div>
-    <p class="trace-status" id="solver-status" role="status"></p>
     <div class="legend-row">
       <div class="legend">
-        <span><i class="sw" style="background:var(--one)"></i> exactly one listed friend at the table</span>
-        <span><i class="sw" style="background:var(--two)"></i> two or more</span>
-        <span><i class="sw" style="background:var(--none)"></i> none (including opt-outs)</span>
-        <span class="legend-hint">hover a student for synthetic lists; use the student tab for keyboard access</span>
+        <span><i class="sw" style="background:var(--one)"></i> One listed peer</span>
+        <span><i class="sw" style="background:var(--two)"></i> Two or more</span>
+        <span><i class="sw" style="background:var(--none)"></i> None</span>
+        <span class="legend-hint" id="room-legend-hint">Hover to explore</span>
       </div>
       <figure class="spark-card">
-        <figcaption>Distinct schoolmates met, average per student, cumulative over the year</figcaption>
+        <figcaption>Schoolmates met over the year</figcaption>
         <div id="spark-met" class="spark"></div>
       </figure>
     </div>
+    <details class="view-details"><summary>Rotation details</summary><p class="trace-status" id="solver-status" role="status"></p></details>
   </section>
 
   <!-- ============ TAB 2 ============ -->
@@ -140,9 +148,7 @@
   <section id="tab-game" class="panel" role="tabpanel" aria-labelledby="nav-game" hidden>
     <div class="mode-row">
       <div id="scenario-modes" class="segmented" role="group" aria-label="Coalition scenarios"></div>
-      <p class="explainer" id="mode-explainer"></p>
     </div>
-    <div class="banner warn" id="screen-banner" hidden></div>
     <div class="game-layout">
       <div class="game-main">
         <div class="room-frame tall"><canvas id="room-game" class="room-canvas" role="img" aria-label="Coalition seating chart; cluster sizes appear in the adjacent statistics"></canvas></div>
@@ -154,7 +160,6 @@
         </div>
       </div>
       <aside class="game-side">
-        <div class="evidence-card"><h3>Structural result</h3><p id="game-proof"></p><h3>Observed in this trace</h3><p id="game-observed"></p></div>
         <div class="banner-intact" id="intact-banner">group intact 0/0</div>
         <div class="stat-col">
           <div class="stat"><div class="stat-label">Co-members at each member's table</div><div class="stat-value" id="g-avg">–</div><div class="stat-sub">average cluster size, incl. self · this rotation</div></div>
@@ -164,34 +169,37 @@
         </div>
       </aside>
     </div>
+    <details class="view-details"><summary>Scenario details</summary><p class="explainer" id="mode-explainer"></p><div class="banner warn" id="screen-banner" hidden></div><div class="evidence-card"><h3>Structural result</h3><p id="game-proof"></p><h3>Observed in this trace</h3><p id="game-observed"></p></div></details>
   </section>
 
   <!-- ============ TAB 4 ============ -->
   <section id="tab-math" class="panel math" role="tabpanel" aria-labelledby="nav-math" hidden>
     <div class="math-col">
-      <div class="algorithm-intro"><p class="eyebrow">Constraints first, then better seating</p><h2>A validated heuristic, with explicit limits</h2>
-        <p>A listed peer is a directed submission, not proof of mutual friendship. Let \(L_i^{(q)}\) contain all listed names in mixed rounds and only same-grade names in same-grade rounds; \(s_i\) counts these eligible names at the table. Empty submissions receive seats but owe no friend constraint.</p></div>
-      <ol class="pipeline-visual" aria-label="Actual solver pipeline">
-        <li><b>Check submissions</b><span>Rules, eligible graphs, bounded coercion tests, grade-specific demand</span></li>
-        <li><b>Check feasibility</b><span>Hard CP-SAT model; distinguish a witness, infeasibility, and unknown</span></li>
-        <li><b>Build and repair</b><span>Greedy pods, compatible tables, guarded rescue swaps</span></li>
-        <li><b>Improve</b><span>Annealing, then hinted CP-SAT polishing within a fixed budget</span></li>
-        <li><b>Validate and record</b><span>Export only a valid chart; update pair histories for the next round</span></li>
-      </ol>
       <section class="stage-playback" aria-labelledby="stage-title">
-        <div class="stage-heading"><div><p class="eyebrow">Actual recorded solver states</p><h3 id="stage-title">Inside the selected rotation</h3></div><button id="stage-replay" class="small-btn">Replay stages</button></div>
-        <p class="playback-note">These are four snapshots recorded during the honest run. Early stages can violate the friend guarantee. Animated transitions connect recorded assignments; intervening search moves are not recorded.</p>
+        <div class="stage-heading"><h3 id="stage-title">Solver stages</h3><button id="stage-replay" class="small-btn">Replay stages</button></div>
+
         <div id="stage-controls" class="segmented" role="group" aria-label="Recorded algorithm stages"></div>
         <div class="stage-layout"><div class="room-frame"><canvas id="room-stage" class="room-canvas" role="img" aria-label="Recorded solver-stage assignment; validity and objective appear alongside"></canvas></div>
           <div class="stage-metrics" role="status"><p id="stage-description"></p><dl><div><dt>Friendless submitters</dt><dd id="stage-violations">–</dd></div><div><dt>Extra listed peers</dt><dd id="stage-extra">–</dd></div><div><dt>Full-history energy</dt><dd id="stage-energy">–</dd></div><div><dt>Recorded stage time</dt><dd id="stage-seconds">–</dd></div></dl><p id="stage-validity"></p></div>
         </div>
         <div class="legend stage-legend"><span><i class="sw" style="background:var(--one)"></i> one listed peer</span><span><i class="sw" style="background:var(--two)"></i> two or more</span><span><i class="sw" style="background:var(--none)"></i> none (including opt-outs)</span></div>
       </section>
+      <details class="view-details algorithm-details"><summary>How it works</summary>
+      <div class="algorithm-intro"><p class="eyebrow">Constraints first, then better seating</p><h2>A validated heuristic, with explicit limits</h2>
+        <p>A listed peer is a directed submission, not proof of mutual friendship. Let \(L_i^{(q)}\) contain all listed names in mixed rounds and only same-grade names in same-grade rounds; \(s_i\) counts these eligible names at the table. Empty submissions receive seats but owe no friend constraint.</p></div>
+      <ol class="pipeline-visual" aria-label="Actual solver pipeline">
+        <li><b>Classify and screen</b><span>Submission states, eligible graphs, bounded coercion tests, full-model separation tests, grade-specific demand</span></li>
+        <li><b>Certify and cache</b><span>Hard CP-SAT model per set of constraints; a validated witness becomes a fallback; infeasibility and unknown stay distinct</span></li>
+        <li><b>Build and repair</b><span>Greedy pods, compatible tables, guarded rescue swaps</span></li>
+        <li><b>Improve</b><span>Annealing, then hinted CP-SAT on the exact objective within a fixed budget</span></li>
+        <li><b>Validate and release</b><span>Release only a validated chart, optimized or fallback; update pair histories for the next round</span></li>
+      </ol>
+        <p class="playback-note">These are four snapshots recorded during the honest run. Early stages can violate the friend guarantee. Animated transitions connect recorded assignments; intervening search moves are not recorded.</p>
       <div class="eq-block"><h3>1. Hard requirements</h3>
         <p>Binary \(x_{i,t}\) assigns every student once, fills every table, and forbids incompatible grades. For each submitter, binary \(y_{i,t}\) can certify an eligible tablemate.</p>
         <div class="eq">\[ \sum_t x_{i,t}=1,\qquad \sum_i x_{i,t}=c_t,\qquad x_{i,t}=0\ \text{if the grade is incompatible} \]</div>
         <div class="eq">\[ y_{i,t}\le x_{i,t},\qquad y_{i,t}\le\sum_{j\in L_i^{(q)}}x_{j,t},\qquad \sum_t y_{i,t}\ge1 \]</div>
-        <p>A feasible chart proves that these constraints can be satisfied. A solver status of UNKNOWN proves neither feasibility nor impossibility.</p>
+        <p>A feasible chart proves that these constraints can be satisfied. A solver status of UNKNOWN proves neither feasibility nor impossibility. A witness found here is validated independently and kept as a fallback for every rotation with the same hard constraints: roster, obligations, eligibility, occupancy targets, and staff constraints. Meeting history changes scores, not validity.</p>
       </div>
       <div class="eq-block"><h3>2. Greedy construction and repair</h3>
         <p>Let \(U\) be the currently unseated students. The next seed has few eligible unseated choices. Closed pods are packed into compatible tables. Repair preserves every already-satisfied submitter and reduces the friendless set \(V\); it may stop before finding feasibility.</p>
@@ -201,31 +209,25 @@
         <p>Minimize this energy over capacity-preserving, grade-compatible group swaps. Reject moves that increase the number of friendless submitters; padded groups are re-closed. Histories are disjoint: \(m_{ab}\) counts incidental meetings, and \(\alpha_{ab}\) counts meetings while either student listed the other.</p>
         <div class="eq">\[ C=1000|V|+\sum_{i:\,L_i\ne\varnothing}\max(0,s_i-1)+\frac1{10}\sum_{\{a,b\}\text{ co-seated}}(5m_{ab}+2\alpha_{ab}) \]</div>
         <div class="eq">\[ P(\text{accept uphill})=e^{-\Delta C/T},\qquad T:2.5\longrightarrow0.02 \]</div>
-        <p>One listed peer is a hard minimum. Exactly one and new acquaintances are optimization preferences, not individual promises.</p>
+        <p>One listed peer is a hard minimum. Exactly one and new acquaintances are optimization preferences, not individual promises. The weight of the extra-peer term is configurable; the default is one.</p>
       </div>
-      <div class="eq-block"><h3>4. Bounded CP-SAT polishing</h3>
-        <p>The annealed chart supplies a complete hint, which need not be feasible. Here \(z_i\) marks two or more listed peers, and \(r_{ab}\) marks a repeat for pairs from the previous rotation \(P_{q-1}\).</p>
-        <div class="eq">\[ \min\ 300\sum_i z_i+100\sum_{\{a,b\}\in P_{q-1}}(5m_{ab}+2\alpha_{ab})r_{ab} \]</div>
-        <p>This surrogate counts affected students rather than every extra peer and considers only previous-round pairs. Accept a polished chart only if it satisfies all guarantees and does not worsen the full-history score. A fallback feasibility solve can run; if no valid chart is found, report failure and export no seating.</p>
+      <div class="eq-block"><h3>4. Bounded CP-SAT on the exact objective</h3>
+        <p>The better of the annealed chart and the validated incumbent supplies a complete hint. Here \(e_i\) is an integer variable counting listed peers beyond the first, and \(r_{ab}\) marks a repeat for every pair with nonzero history \(H\), not only pairs from the previous rotation.</p>
+        <div class="eq">\[ \min\ 10\sum_i e_i+\sum_{\{a,b\}\in H}(5m_{ab}+2\alpha_{ab})r_{ab} \]</div>
+        <p>For every valid chart this equals ten times the annealing objective, so the two stages agree. A returned chart is rescored independently and replaces a valid incumbent only if it is valid and no worse. If every stage fails, the validated fallback chart is released and labelled as such; a chart is called optimal only when CP-SAT proved it. Nothing invalid is ever released.</p>
       </div>
       <div class="scope-grid">
-        <section class="evidence-card"><h3>What screens establish</h3><p>Checks use each rotation’s eligible graph and admissible grade capacities. A proven coercive candidate or capacity shortage requires intervention. An unresolved bounded search requires review or retry. Passing tested candidates is neither a complete anti-collusion guarantee nor a feasibility certificate.</p></section>
-        <section class="evidence-card"><h3>What charts reveal</h3><p id="leakage-summary">Repeated charts can reveal submitted names, even when collection is confidential.</p><p>The inference probe assumes a known submitter set, fixed lists, a public list cap, and access to every chart. It proves necessary names under those assumptions; it does not show that unlisted tablemates are strangers.</p></section>
+        <section class="evidence-card"><h3>What screens establish</h3><p>Checks use each rotation’s eligible graph and admissible grade capacities. High-risk candidates also get a full-model separation test: with the complete assignment model, can the group occupy two or more tables? A validated separating chart, a forcing certificate under the current constraints, or an unresolved result are the three outcomes. A proven coercive candidate or capacity shortage requires intervention. An unresolved bounded search requires review or retry. Passing tested candidates is neither a complete anti-collusion guarantee nor a feasibility certificate, and a forced group is not evidence of intent.</p></section>
+        <section class="evidence-card"><h3>What charts reveal</h3><p id="leakage-summary">Repeated charts can reveal submitted names, even when collection is confidential.</p><p id="exposure-summary"></p><p>The inference probe assumes a known submitter set, fixed lists, a public list cap, and access to every chart. It proves necessary names under those assumptions; it does not show that unlisted tablemates are strangers. Distributing one chart at a time and removing a public cap remove logical forcing but not statistical inference, so no such measure guarantees confidentiality.</p></section>
       </div>
-      <details class="repro-card"><summary>Trace provenance and study scope</summary><p id="trace-provenance"></p><p>These are synthetic examples, not a school trial or a calibrated model of friendships. Outcome rates do not establish fairness, student benefit, complete attack resistance, or success on arbitrary inputs. The paper reports the actual completed experiment inventory.</p><a href="data/honest.json">Inspect the full honest trace and configuration</a></details>
+      <details class="repro-card"><summary>Trace provenance and study scope</summary><p id="trace-provenance"></p><p id="trace-statuses"></p><p>These are synthetic examples, not a school trial or a calibrated model of friendships. Outcome rates do not establish fairness, student benefit, complete attack resistance, or success on arbitrary inputs. The paper reports the actual completed experiment inventory. Student-facing distribution uses a chart-only export; the full trace below is a staff record and is public here only because every student is synthetic.</p><a href="data/honest.json">Inspect the full honest trace and configuration</a> · <a href="policy/data_handling_policy.md">Draft data-handling policy</a> · <a href="policy/submission_notice.md">Draft submission notice</a></details>
+      <p class="reference-links"><a href="article.pdf">Paper (PDF)</a></p>
+      </details>
     </div>
   </section>
 </main>
 
-<footer class="site-footer">
-  <div class="wrap">
-    Synthetic research data only. Proposed charts come from the Python solver; random charts use the same capacities
-    and grade schedule. Familiarity is measured by submitted names, and “met” means seated together.
-    Avatars use anonymous synthetic IDs. Published charts can reveal list information.
-  </div>
-</footer>
-
 <div id="tooltip" class="tooltip" hidden></div>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=20260914-minimal-4"></script>
 </body>
 </html>

@@ -10,7 +10,8 @@ def test_screen_enabled_year_requires_review_of_forced_inputs():
     net = make_cohort(seed=7)
     lists = coalition_lists(net, "stratified", honest_lists(net))
     with pytest.raises(SubmissionReviewRequired):
-        run_year(net, lists, "honest", rotations=1, anneal_iters=10, cpsat_time=0, log=None)
+        # This attack forces the core only in the requested same-grade state.
+        run_year(net, lists, "honest", rotations=2, anneal_iters=10, cpsat_time=0, log=None)
 
 
 def test_shared_anchor_diagnostic_excludes_the_honest_anchor():

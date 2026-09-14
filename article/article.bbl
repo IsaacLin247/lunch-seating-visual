@@ -53,7 +53,7 @@ Noga Alon.
 \newblock High school coalitions.
 \newblock Author-hosted research note,
   \url{https://www.tau.ac.il/~nogaa/PDFS/coalition.pdf}.
-\newblock Undated; accessed 8 September 2026.
+\newblock Undated; accessed 13 September 2026.
 
 \bibitem[Metropolis et~al.(1953)Metropolis, Rosenbluth, Rosenbluth, Teller, and
   Teller]{metropolis1953}
@@ -61,23 +61,25 @@ N.~Metropolis, A.~W. Rosenbluth, M.~N. Rosenbluth, A.~H. Teller, and E.~Teller.
 \newblock Equation of state calculations by fast computing machines.
 \newblock \emph{The Journal of Chemical Physics}, 21\penalty0 (6):\penalty0
   1087--1092, 1953.
+\newblock \url{https://doi.org/10.1063/1.1699114}.
 
 \bibitem[Kirkpatrick et~al.(1983)Kirkpatrick, Gelatt, and
   Vecchi]{kirkpatrick1983annealing}
-S.~Kirkpatrick, C.~D. Gelatt, and M.~P. Vecchi.
+S.~Kirkpatrick, C.~D. Gelatt, Jr., and M.~P. Vecchi.
 \newblock Optimization by simulated annealing.
 \newblock \emph{Science}, 220\penalty0 (4598):\penalty0 671--680, 1983.
+\newblock \url{https://doi.org/10.1126/science.220.4598.671}.
 
 \bibitem[Perron and Furnon(2026)]{ortools}
 Laurent Perron and Vincent Furnon.
 \newblock {OR-Tools}.
 \newblock Google, \url{https://developers.google.com/optimization/}, 2026.
-\newblock Version 9.15, CP-SAT solver.
+\newblock Version 9.15.6755, CP-SAT solver.
 
 \bibitem[{Google}()]{cpsatstatus}
 {Google}.
-\newblock {CP-SAT} solver: Statuses and feasibility.
+\newblock {CP-SAT} solver.
 \newblock \url{https://developers.google.com/optimization/cp/cp_solver}.
-\newblock Accessed 8 September 2026.
+\newblock Accessed 13 September 2026.
 
 \end{thebibliography}

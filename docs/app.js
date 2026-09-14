@@ -1,10 +1,11 @@
 // Entry point: load traces, wire the shared timeline, tabs, keyboard and tooltip.
-import { initAvatars, avatarImg } from './avatars.js';
-import { createTab1 } from './tab1.js';
-import { createTab2 } from './tab2.js';
-import { createTab3 } from './tab3.js';
-import { createTab4 } from './tab4.js';
-import { SCENARIO_NAMES } from './scenarios.js';
+import { initAvatars, avatarImg, directoryPortraitUri } from './avatars.js?v=20260914-minimal-4';
+import { createTab1 } from './tab1.js?v=20260914-minimal-4';
+import { createTab2 } from './tab2.js?v=20260914-minimal-4';
+import { createTab3 } from './tab3.js?v=20260914-minimal-4';
+import { createTab4 } from './tab4.js?v=20260914-minimal-4';
+import { SCENARIO_NAMES } from './scenarios.js?v=20260914-minimal-4';
+import { createPortraitControls } from './portraits.js?v=20260914-minimal-4';
 
 const $ = id => document.getElementById(id);
 
@@ -24,12 +25,13 @@ async function loadTraces() {
 
 const tooltip = $('tooltip');
 function showTooltip(info) {
-  if (!info) { tooltip.hidden = true; return; }
+  if (!info) { tooltip.hidden = true; tooltip.replaceChildren(); return; }
   const listedHere = info.listedHere.length ? info.listedHere.join(', ') : 'none';
   tooltip.innerHTML = '';
   const av = document.createElement('div'); av.className = 't-av'; av.appendChild(avatarImg(info.id));
   const txt = document.createElement('div');
-  txt.innerHTML = `<b>${info.id}</b> · grade ${info.grade}<div class="t-sub">table ${info.table + 1} · listed friends here: ${listedHere}</div>` +
+  const illustrative = directoryPortraitUri(info.id);
+  txt.innerHTML = `${illustrative ? '<div class="t-portrait-note">Illustrative portrait · simulated choices</div>' : ''}<b>${info.id}</b> · grade ${info.grade}<div class="t-sub">table ${info.table + 1} · listed friends here: ${listedHere}</div>` +
     `<div class="t-sub">listed ${info.listed.length}: ${info.listed.join(', ') || 'none'}</div>`;
   tooltip.append(av, txt);
   tooltip.hidden = false;
@@ -50,8 +52,8 @@ async function main() {
   $('scrub').max = nRot;
   $('rot-total').textContent = nRot;
   $('ticks').style.gridTemplateColumns = `repeat(${nRot}, 1fr)`;
-  $('trace-scale').textContent = `${traces.honest.students.length} synthetic students · ${traces.honest.config.tableCapacities.length} tables · ${nRot} rotations`;
-  const ctx = { traces, showTooltip };
+  let portraits = null;
+  const ctx = { traces, showTooltip, onPortraitTable: info => portraits?.inspect(info) };
   const tabs = { room: createTab1(ctx), student: createTab2(ctx), game: createTab3(ctx), math: createTab4(ctx) };
   let active = 'room';
   let rot = 0;
@@ -109,6 +111,7 @@ async function main() {
     Object.values(tabs).forEach(tab => tab.pause?.());
     tabs[active].resize();
     tabs[active].render(rot, false);
+    portraits?.resize();
   }
 
   document.querySelector('.tabs').addEventListener('keydown', e => {
@@ -134,11 +137,29 @@ async function main() {
     else if (e.key === '4') switchTab('math');
   });
 
+  portraits = createPortraitControls({ trace: traces.honest, tabs,
+    stop: () => { stop(); Object.values(tabs).forEach(tab => tab.pause?.()); },
+    hideTooltip: () => showTooltip(null) });
   setRotation(0, false);
 }
 
 main().catch(err => {
   console.error(err);
   $('loading').hidden = false;
+  if (err.code === 'STALE_PORTRAIT_MODULE') {
+    $('portrait-controls').hidden = true;
+    $('loading').textContent = `${err.message} `;
+    const reload = document.createElement('button');
+    reload.id = 'reload-page';
+    reload.type = 'button';
+    reload.textContent = 'Reload page';
+    reload.addEventListener('click', () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('v', String(Date.now()));
+      window.location.replace(url);
+    });
+    $('loading').append(reload);
+    return;
+  }
   $('loading').textContent = `Could not load the simulation data: ${err.message}. Run "python sim/export_traces.py" and serve the docs/ folder.`;
 });

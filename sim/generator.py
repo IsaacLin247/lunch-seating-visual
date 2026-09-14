@@ -172,8 +172,12 @@ def make_cohort(seed: int = 7, n11: int = N11_DEFAULT, n12: int = N12_DEFAULT,
     The reciprocation probability is calibrated (deterministically, on the same
     seed) so that the measured reciprocity lands near ``target_reciprocity``.
     A ``clique`` of ``clique_size`` mid-popularity juniors who are mutual true
-    friends is planted; the coalition scenarios use these six students.
+    friends is planted; the coalition scenarios use these six students. Its
+    members need at least ``clique_size - 1`` nomination slots, so incompatible
+    ``K`` / ``clique_size`` settings are rejected rather than exceeding ``K``.
     """
+    if clique_size > K + 1:
+        raise ValueError("the planted clique requires clique_size - 1 <= K; reduce clique_size or increase K")
     n = n11 + n12
     grade = np.array([11] * n11 + [12] * n12)
     rng0 = np.random.default_rng(seed)
@@ -303,16 +307,33 @@ def submission_report(net: Network, lists: list[list[int]]) -> dict:
             "minSameGradeFriends": min(same), "meanListLength": (sum(len(l) for l in lists) / max(1, sum(1 for l in lists if l)))}
 
 
+RAW_POLICIES = ("review", "approve", "withdraw")   # classification happens in sim.submissions
+
+
 def honest_lists(net: Network, seed: int = 0, nonsubmit_frac: float = 0.0,
-                 short_list_policy: str = "none") -> list[list[int]]:
-    """Every student submits their true friends, subject to the rules."""
+                 short_list_policy: str = "none", list_cap: int | None = None) -> list[list[int]]:
+    """Every student submits their true friends.
+
+    With a policy in ``RAW_POLICIES`` the raw lists are returned unchanged and
+    classified later by ``sim.submissions`` (short lists stay visible requests).
+    The legacy ``"none"`` policy silently empties rule-failing lists and
+    ``"pad"`` pads them; both are kept only for reproducing earlier traces.
+    ``list_cap`` truncates each true-friend list (preference order) to model
+    shorter submissions; ``nonsubmit_frac`` models voluntary nonsubmission.
+    """
     rng = np.random.default_rng([net.seed, 3, seed])
     out = []
     for i in range(net.n):
         if nonsubmit_frac > 0 and rng.random() < nonsubmit_frac:
             out.append([])
             continue
-        out.append(apply_rules(list(net.friends[i]), i, net, rng, short_list_policy=short_list_policy))
+        raw = list(net.friends[i])
+        if list_cap is not None:
+            raw = raw[:list_cap]
+        if short_list_policy in RAW_POLICIES:
+            out.append([j for j in dict.fromkeys(raw) if j != i])
+        else:
+            out.append(apply_rules(raw, i, net, rng, short_list_policy=short_list_policy))
     return out
 
 

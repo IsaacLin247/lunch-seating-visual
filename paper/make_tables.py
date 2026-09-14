@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""Build all manuscript numbers from the finalized, verified experiment ledger.
+"""Build primary-study numbers from the finalized, verified experiment ledger.
+Bench-prefixed macros are separately identified exploratory summary-only evidence.
 
 There is deliberately no fallback to historical summary-only results or old
 website traces. Run assemble_evidence.py first after all attempts terminate.
@@ -33,8 +34,8 @@ def table(name, caption, header, rows, spec):
         r'\bottomrule\end{tabular}\end{table}', ''))
 
 
-def main():
-    path = ROOT / 'results/verified_experiments.json'
+def main(manifest=None):
+    path = Path(manifest) if manifest else ROOT / 'results/revised_experiments.json'
     data = json.loads(path.read_text())
     if data['assembly']['partial'] or any(a['status'] == 'running' for a in data['attempts']):
         raise SystemExit('Finalize evidence assembly before generating publication tables.')
@@ -113,6 +114,61 @@ def main():
     m('Workers',cfg['solver']['workers']); m('CpsatTime',cfg['solver']['cpsatTime'])
     m('AnnealIters', f"{cfg['solver']['annealIters']:,}".replace(',', r'\,'))
     m('Versions', f"Python {cfg['versions']['python']}, NumPy {cfg['versions']['numpy']}, OR-Tools {cfg['versions']['ortools']}")
+    # ----- revised implementation: release statuses, optimality proofs, CP model size, outcomes, exposure
+    primary_traces=[]
+    for row in honest + list(stars.values()):
+        primary_traces.append(json.loads((path.parent / row['traceEvidence']['path']).read_text()))
+    all_rots=[r for t in primary_traces for r in t['rotations']]
+    m('PrimaryRotations', len(all_rots))
+    for status in ('optimized','incumbent','fallback'):
+        m('Release'+status.capitalize(), sum(1 for r in all_rots if r['release']['status']==status))
+    m('ProvenOptimalRotations', sum(1 for r in all_rots if r['release'].get('optimalityProven')))
+    m('CpsatAcceptedRotations', sum(1 for r in all_rots if r['stats']['acceptedPhase']=='cpsat'))
+    m('CpsatFeasibleRotations', sum(1 for r in all_rots if r['stats'].get('cpsatStatus') in ('FEASIBLE','OPTIMAL')))
+    m('CpsatPairVarsMax', max((r['stats'].get('cpsatPairVariables') or 0) for r in all_rots))
+    m('CpsatConstraintsMax', f"{max((r['stats'].get('cpsatConstraints') or 0) for r in all_rots):,}".replace(',', r'\,'))
+    f('CpsatMeanSeconds', sum(r['pipeline'][-1]['seconds'] for r in h['rotations'])/len(h['rotations']), 1)
+    f('MeanSolveSeconds', sum(r['stats']['solveTime'] for r in h['rotations'])/len(h['rotations']), 1)
+    m('ConstructionInfeasibleRotations', sum(1 for r in all_rots if r['pipeline'][1]['cost']['violations']>0))
+    outc=h['outcomes']['proposed']; outr=h['outcomes']['random']
+    m('PeersMin', outc['distinctPeers']['min']); f('PeersPTen', outc['distinctPeers']['p10'], 1); f('PeersMedian', outc['distinctPeers']['median'], 1)
+    m('PeersMinRandom', outr['distinctPeers']['min']); f('PeersPTenRandom', outr['distinctPeers']['p10'], 1)
+    f('RepeatSameMedian', outc['repeatedCompanionship']['maxRepeatWithSameListedPeer']['median'], 1)
+    m('RepeatSameMax', outc['repeatedCompanionship']['maxRepeatWithSameListedPeer']['max'])
+    f('ConcentrationMedian', 100*outc['repeatedCompanionship']['concentration']['median'], 0)
+    f('ExtrasPerObligatedRotation', outc['extraCompanions']['perObligatedRotation'], 4)
+    f('ExactlyOneObligated', outc['coverageAmongObligated']['exactlyOnePct'])
+    sub=cfg['submissions']
+    m('PendingReview', len(sub['pendingReview'])); m('ApprovedExceptions', len(sub['approvedExceptions'])); m('VoluntaryNonsubmission', len(sub['voluntaryNonsubmission']))
+    m('ObligatedStudents', sub['obligated'])
+    expo=h['leakage']['coseatingExposure']
+    f('ExposureTopOne', 100*expo['proposed']['top1ListedRate'], 1); f('ExposureTopOneRandom', 100*expo['random']['top1ListedRate'], 1)
+    f('ExposureTopThree', 100*expo['proposed']['topKListedRate'], 1)
+    m('CurrentOnlyForced', h['leakage']['currentOnlyDistribution']['forcedEdges'])
+    fm=h['config'].get('fullModelScreen', {})
+    m('FullModelExamined', sum((fm.get(st) or {}).get('coverage', {}).get('candidatesExamined', 0) for st in ('mixed','same')))
+    screened=refs['coalition_screened']['config']['screen']
+    fms=screened.get('fullModelScreen', {})
+    m('ScreenedFullModelForced', len(fms.get('forcedGroups', [])))
+    m('ScreenedFullModelExamined', sum((fms.get('perState', {}).get(st) or {}).get('coverage', {}).get('candidatesExamined', 0) for st in ('mixed','same')))
+    m('SourceHash', cfg['provenance']['effectiveSourceHash'][:12])
+    # ----- CP-SAT formulation benchmark (results/benchmarks), measured on the same machine
+    bench_path=ROOT/'results/benchmarks/cpsat_formulation_257.json'
+    if bench_path.exists():
+        bench=json.loads(bench_path.read_text())
+        def stat(key, field):
+            vals=[row['formulations'][key][field] for row in bench if key in row['formulations']]
+            return vals
+        m('BenchRotations', len(bench))
+        f('BenchExactMeanSeconds', sum(stat('exact@3.5','wall'))/len(bench), 1)
+        f('BenchExactMaxSeconds', max(stat('exact@3.5','wall')), 1)
+        f('BenchSurrogateMeanSeconds', sum(stat('legacy@3.5','wall'))/len(bench), 1)
+        m('BenchExactWorsened', sum(1 for v in stat('exact@3.5','improvedTotal') if v<0))
+        m('BenchExactImproved', sum(1 for v in stat('exact@3.5','improvedTotal') if v>0))
+        m('BenchSurrogateWorsened', sum(1 for v in stat('legacy@3.5','improvedTotal') if v<0))
+        m('BenchPreviousCountWorsened', sum(1 for v in stat('previous-count@3.5','improvedTotal') if v<0))
+        m('BenchMaxHistoryPairs', max(row['historyPairs'] for row in bench))
+        m('BenchAnnealIters', '100\\,000')
 
     tables={}
     rows=[]
@@ -147,13 +203,22 @@ def main():
     for name in ('honest','coalition_stratified','coalition_shared_anchor','coalition_screened'):
         t=refs[name]; sc=t['config'].get('diagnosticScreen') or t['config'].get('screen')
         if not sc: continue
-        for state in ('mixed','same'):
-            ss=sc['perState'][state]; cert=[c for c in ss['candidates'] if c['verdict']=='proved-coercive']
-            cov=ss['coverage']
-            screen_rows.append(['Initial screened attack' if name=='coalition_screened' else LABEL[name], state, len(cert),len(ss.get('unresolvedCandidates',[])),
-                f"{cov['targetCandidatesExamined']}/{cov['targetCandidatesDiscovered']}"])
-    tables['screen']=table('screen','Reference diagnostic screening by eligibility state, before any modeled resubmission. Certificates may overlap; they are not counts of distinct students. Target coverage is examined/discovered bounded cores, not recall against all possible attacks. All screens also record closure and capacity checks.',
-        ['Submission','State','Certificates','Unresolved','Target cores'],screen_rows,'llrrr')
+        fm=(t['config'].get('screen') or {}).get('fullModelScreen', {}).get('perState', {}) if name!='coalition_shared_anchor' else {}
+        reports = [(LABEL[name], sc, fm)]
+        if name == 'coalition_screened':
+            reports = [('Initial screened attack', sc, {}),
+                       ('After resubmission', sc['afterResubmission'], fm)]
+        for label, structural, full_model in reports:
+            for state in ('mixed','same'):
+                ss=structural['perState'][state]; cert=[c for c in ss['candidates'] if c['verdict']=='proved-coercive']
+                cov=ss['coverage']; fs=full_model.get(state) or {}
+                full_counts=fs.get('verdictCounts', {})
+                full=(f"{fs['coverage']['candidatesExamined']}/{fs['coverage']['candidatesDiscovered']}"
+                      f"; {full_counts.get('forced',0)}/{full_counts.get('separable',0)}/{full_counts.get('unresolved',0)}") if fs else '--'
+                screen_rows.append([label, state, len(cert),len(ss.get('unresolvedCandidates',[])),
+                    f"{cov['targetCandidatesExamined']}/{cov['targetCandidatesDiscovered']}", full])
+    tables['screen']=table('screen','Reference screening by eligibility state. The initial screened attack and its replacement lists are separate rows: retained full-model tests use the replacement lists. Certificates may overlap and do not count distinct students. Target cores show examined/discovered bounded candidates. Full model shows examined/discovered tests, followed by forced/separable/unresolved counts. These are checks on the archived full-attendance states, not recall against all possible attacks.',
+        ['Submission','State','Certificates','Unresolved','Target cores','Full model'],screen_rows,'llrrrl')
     rows=[]
     settings=[('Reference (16 rotations)',next(r for r in honest if r['populationSeed']==7))]
     for r in data['budgets']:
@@ -162,13 +227,19 @@ def main():
     settings += [(f"Horizon {r['rotations']}",r) for r in data['horizons']]
     settings += [(f"Groups $\\mu={r['mu']:g},\\omega={r['omega']:g}$",r) for r in data['communities']]
     for setting,r in settings:
-        rows.append([setting,r['rotations'],f"{r['pctExactly1Mean']:.2f}",f"{r['meanDistinctMetFinal']:.2f}",f"{r['meanDistinctMetFinalRandom']:.2f}",r['leakageForcedEdges'],r['config']['submission']['nNonSubmitters']])
-    tables['sensitivity']=table('sensitivity','Seed-seven honest sensitivity, with one setting changed at a time. Contact counts and forced entries depend on horizon and should be compared at equal horizons. Nonsubmission includes generated lists rejected by the admission rule; it is distinct from an unmet seating guarantee.',
-        ['Setting','$R$','Exactly 1','Contacts','Random','Forced','No list'],rows,'lrrrrrr')
+        rows.append([setting,r['rotations'],f"{r['pctExactly1Mean']:.2f}",f"{r['meanDistinctMetFinal']:.2f}",f"{r['meanDistinctMetFinalRandom']:.2f}",r['leakageForcedEdges'],
+                     r['config']['submissions']['counts']['voluntary_nonsubmission']+r['config']['submissions']['counts']['pending_review'],
+                     len(r.get('fallbackRotations',[]))+len(r.get('incumbentRotations',[]))])
+    tables['sensitivity']=table('sensitivity','Seed-seven honest sensitivity, with one setting changed at a time. Contact counts and forced entries depend on horizon and should be compared at equal horizons. "No list" counts voluntary nonsubmission and pending requests; it is distinct from an unmet seating guarantee. "Cached" counts rotations that released a validated cached chart (incumbent or fallback) rather than a chart produced by that rotation\'s search.',
+        ['Setting','$R$','Exactly 1','Contacts','Random','Forced','No list','Cached'],rows,'lrrrrrrr')
     net=cfg['network']; run=cfg['solver']
     rows=[['Population',f"{cfg['n']} ({cfg['n11']} grade 11; {cfg['n12']} grade 12)"],
         ['Tables',r'17 $\times$ 7 and 23 $\times$ 6'],['Rotations','16, alternating mixed and same grade'],
-        ['Defended study lists','None or 4--8 names; at least 2 same grade'],['Reference nonsubmitters',cfg['submission']['nNonSubmitters']],
+        ['Defended study lists','None or 4--8 names; at least 2 same grade'],
+        ['Reference submission states',f"{sub['counts']['accepted']} accepted, {len(sub['pendingReview'])} pending, {len(sub['approvedExceptions'])} approved exceptions, {len(sub['voluntaryNonsubmission'])} voluntary nonsubmission"],
+        ['Objective weights',f"extra companion {cfg['objective']['extraWeight']:g}, $\\lambda={cfg['objective']['lambda']:g}$, repeats {cfg['objective']['incidentalRepeat']}/{cfg['objective']['listedRepeat']}; integer scale {cfg['objective']['integerScale']}"],
+        ['CP-SAT formulation',f"{cfg['solver']['cpsatPairs']} history pairs, integer extras ({cfg['solver']['cpsatExtras']})"],
+        ['Attendance',f"absence rate {cfg['attendance']['absenceRate']:g}; conflict policy {cfg['attendance']['conflictPolicy']}"],
         ['Popularity / within-grade weight',f"$\\sigma={net['popularitySigma']}$ / {net['withinBias']:g}"],
         ['Reciprocity target / realized',f"{net['targetReciprocity']} / {net['reciprocity']:.3f}"],
         ['Realized within-grade fraction',f"{net['withinGradeFrac']:.3f}"],['Reference communities',r'$\mu=0,\ \omega=0$'],
@@ -179,11 +250,11 @@ def main():
     tables['parameters']=table('params','Reference configuration. Complete generator, submission, and solver configurations are retained in every trace.', ['Parameter','Value'],rows,'lp{9.2cm}')
     for out in OUTS:
         (out/'generated').mkdir(parents=True,exist_ok=True)
-        (out/'macros.tex').write_text('% Generated exclusively from verified full traces.\n'+'\n'.join(f'\\newcommand{{\\{k}}}{{{v}}}' for k,v in macros.items())+'\n')
+        (out/'macros.tex').write_text('% Study macros derive from verified full traces; Bench macros use the separately disclosed exploratory summary.\n'+'\n'.join(f'\\newcommand{{\\{k}}}{{{v}}}' for k,v in macros.items())+'\n')
         for name,content in tables.items(): (out/'generated'/f'{name}.tex').write_text(content)
         (out/'tables.tex').write_text('\n'.join(tables.values()))
-    (ROOT/'paper/numerical_claims.json').write_text(json.dumps({'manifest':'results/verified_experiments.json','macros':macros,'sourceHashes':sorted({a['source']['effectiveSourceHash'] for a in attempts.values()})},indent=2)+'\n')
+    (ROOT/'paper/numerical_claims.json').write_text(json.dumps({'manifest':str(path.relative_to(ROOT)),'macros':macros,'sourceHashes':sorted({a['source']['effectiveSourceHash'] for a in attempts.values()})},indent=2)+'\n')
     print(f'Generated {len(macros)} numerical macros and {len(tables)} tables from {counts["success"]} verified runs.')
 
 
-if __name__=='__main__': main()
+if __name__=='__main__': main(sys.argv[1] if len(sys.argv) > 1 else None)
