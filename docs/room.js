@@ -1,5 +1,5 @@
 // Canvas room view: 40 tables, 257 students, animated reseating.
-import { avatarBitmap } from './avatars.js?v=20260915-directory-names-1';
+import { avatarBitmap } from './avatars.js?v=20260915-served-directory-1';
 
 const COLORS = { one: '#2e9e5b', two: '#0f6b3a', none: '#c2bcb1', hero: '#f2b134', coal: '#d64545',
   friend: '#e08a2e', anchor: '#f2b134', table: '#efe6d6', tableLine: '#dccfb8', g11: '#dbe9f6', g12: '#f8e2c8',

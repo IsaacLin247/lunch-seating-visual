@@ -1,8 +1,8 @@
 // Tab 2, One Student's Year: follow one student through all 16 rotations.
-import { RoomView } from './room.js?v=20260915-directory-names-1';
-import { avatarImg } from './avatars.js?v=20260915-directory-names-1';
+import { RoomView } from './room.js?v=20260915-served-directory-1';
+import { avatarImg } from './avatars.js?v=20260915-served-directory-1';
 
-import { displayName, studentLabel, escapeHtml } from './names.js?v=20260915-directory-names-1';
+import { displayName, studentLabel, escapeHtml } from './names.js?v=20260915-served-directory-1';
 
 export function createTab2(ctx) {
   const trace = ctx.traces.honest;

@@ -1,9 +1,9 @@
 // Coalition playback: graph annotations are structural; all outcomes are trace data.
-import { RoomView } from './room.js?v=20260915-directory-names-1';
-import { avatarUri } from './avatars.js?v=20260915-directory-names-1';
-import { coalitionModes, EXPLANATIONS, observation } from './scenarios.js?v=20260915-directory-names-1';
+import { RoomView } from './room.js?v=20260915-served-directory-1';
+import { avatarUri } from './avatars.js?v=20260915-served-directory-1';
+import { coalitionModes, EXPLANATIONS, observation } from './scenarios.js?v=20260915-served-directory-1';
 
-import { displayName, studentLabel } from './names.js?v=20260915-directory-names-1';
+import { displayName, studentLabel } from './names.js?v=20260915-served-directory-1';
 
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 

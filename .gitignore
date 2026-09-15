@@ -15,3 +15,7 @@ node_modules/
 *.out
 *.toc
 results/*.json.lock
+
+# Real student directory exports stay local (see serve_local.py).
+directory.zip
+student_directory/

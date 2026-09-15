@@ -2,7 +2,7 @@
 // URLs live only in memory. Names and portrait URL ownership stay with callers.
 // Anonymous DiceBear avatars are bundled locally, with initial badges as fallback.
 
-import { studentLabel } from './names.js?v=20260915-directory-names-1';
+import { studentLabel } from './names.js?v=20260915-served-directory-1';
 
 const LOCAL_AVATARS = './vendor/dicebear.js';
 
