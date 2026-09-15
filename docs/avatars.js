@@ -2,6 +2,8 @@
 // URLs live only in memory. Names and portrait URL ownership stay with callers.
 // Anonymous DiceBear avatars are bundled locally, with initial badges as fallback.
 
+import { studentLabel } from './names.js?v=20260915-directory-names-1';
+
 const LOCAL_AVATARS = './vendor/dicebear.js';
 
 const svgCache = new Map();     // id -> svg string
@@ -100,7 +102,7 @@ export function avatarUri(id) { return directoryPortraitUri(id) || anonymousAvat
 export function avatarImg(id, cls = '') {
   const img = document.createElement('img');
   const portrait = directoryPortraitUri(id);
-  img.alt = portrait ? `Illustrative portrait for simulated student ${id}` : id;
+  img.alt = portrait ? `Illustrative portrait for simulated student ${studentLabel(id)}` : studentLabel(id);
   img.decoding = 'async';
   if (cls) img.className = cls;
   if (portrait) {
@@ -110,7 +112,7 @@ export function avatarImg(id, cls = '') {
       if (img.getAttribute('src') !== portrait) return;
       img.onerror = null;
       img.classList.remove('directory-portrait');
-      img.alt = id;
+      img.alt = studentLabel(id);
       img.src = anonymousAvatarUri(id);
     };
   }

@@ -1,6 +1,8 @@
 // Tab 2, One Student's Year: follow one student through all 16 rotations.
-import { RoomView } from './room.js?v=20260914-minimal-4';
-import { avatarImg } from './avatars.js?v=20260914-minimal-4';
+import { RoomView } from './room.js?v=20260915-directory-names-1';
+import { avatarImg } from './avatars.js?v=20260915-directory-names-1';
+
+import { displayName, studentLabel, escapeHtml } from './names.js?v=20260915-directory-names-1';
 
 export function createTab2(ctx) {
   const trace = ctx.traces.honest;
@@ -14,7 +16,14 @@ export function createTab2(ctx) {
 
   // picker
   const sel = $('hero-select');
-  sel.innerHTML = ids.map(id => `<option value="${id}">${id} · grade ${grade.get(id)}${id === trace.hero ? ' (default)' : ''}</option>`).join('');
+  function updatePicker() {
+    for (const id of ids) {
+      let option = [...sel.options].find(option => option.value === id);
+      if (!option) { option = document.createElement('option'); option.value = id; sel.append(option); }
+      option.textContent = `${studentLabel(id)} · grade ${grade.get(id)}${id === trace.hero ? ' (default)' : ''}`;
+    }
+  }
+  updatePicker();
   sel.value = hero;
   sel.addEventListener('change', () => setHero(sel.value));
   $('hero-random').addEventListener('click', () => { const id = ids[Math.floor(Math.random() * ids.length)]; sel.value = id; setHero(id); });
@@ -30,15 +39,15 @@ export function createTab2(ctx) {
 
   function buildStatic() {
     $('hero-avatar').replaceChildren(avatarImg(hero));
-    $('hero-id').textContent = hero;
-    $('hero-grade').textContent = `Grade ${grade.get(hero)} · listed ${listedOf.get(hero).length} friends`;
+    $('hero-id').textContent = displayName(hero);
+    $('hero-grade').textContent = `${hero} · Grade ${grade.get(hero)} · listed ${listedOf.get(hero).length} friends`;
     const strip = $('friend-strip');
     strip.innerHTML = '';
     listedOf.get(hero).forEach(f => {
       const d = document.createElement('div'); d.className = 'fs-item'; d.dataset.id = f;
       const av = document.createElement('div'); av.className = 'av'; av.appendChild(avatarImg(f));
       d.appendChild(av);
-      d.insertAdjacentHTML('beforeend', `<div class="tick">✓</div><div>${f}</div><div class="uses"></div>`);
+      d.insertAdjacentHTML('beforeend', `<div class="tick">✓</div><div>${escapeHtml(displayName(f))}</div><div class="uses"></div>`);
       strip.appendChild(d);
     });
   }
@@ -84,17 +93,17 @@ export function createTab2(ctx) {
         el.classList.toggle('active', f === cur.anchor);
         const eligible = trace.rotations[rot].state !== 'same' || grade.get(f) === grade.get(hero);
         el.classList.toggle('ineligible', !eligible);
-        el.title = `${f}, grade ${grade.get(f)}: ${eligible ? 'eligible this rotation' : 'ineligible in this same-grade rotation'}`;
+        el.title = `${studentLabel(f)}, grade ${grade.get(f)}: ${eligible ? 'eligible this rotation' : 'ineligible in this same-grade rotation'}`;
         el.querySelector('.uses').textContent = [!eligible ? 'ineligible this round' : '', uses ? `anchor: R${uses.join(', R')}` : ''].filter(Boolean).join(' · ');
       });
       $('anchor-count').textContent = `${Y.anchors.size} of ${L.length} selected as anchors`;
       const others = cur.mates.length - cur.friendsHere.length;
       const freshOthers = cur.fresh.filter(m => !cur.friendsHere.includes(m)).length;
       $('anchor-line').innerHTML = cur.anchor
-        ? `Rotation ${rot + 1} (${trace.rotations[rot].state === 'same' ? 'same grade' : 'mixed grades'}): the guarantee seated ${hero} with <b>${cur.anchor}</b>` +
+        ? `Rotation ${rot + 1} (${trace.rotations[rot].state === 'same' ? 'same grade' : 'mixed grades'}): the guarantee seated ${escapeHtml(displayName(hero))} with <b>${escapeHtml(displayName(cur.anchor))}</b>` +
           (cur.friendsHere.length > 1 ? ` (plus ${cur.friendsHere.length - 1} more listed friend${cur.friendsHere.length > 2 ? 's' : ''})` : '') +
           `. The other ${others} tablemates were not on their list; ${freshOthers} of them ${freshOthers === 1 ? 'is' : 'are'} first-time tablemates in these saved charts.`
-        : `Rotation ${rot + 1}: ${hero} listed no friends, so no guarantee applies.`;
+        : `Rotation ${rot + 1}: ${escapeHtml(displayName(hero))} listed no friends, so no guarantee applies.`;
 
       // wall of people met
       const wall = $('avatar-wall');
@@ -104,7 +113,7 @@ export function createTab2(ctx) {
       order.forEach(([m, r]) => {
         const d = document.createElement('div'); d.className = 'w-av' + (Lset.has(m) ? ' friend' : '');
         if (r !== rot) d.style.animation = 'none';
-        d.title = `${m} · first met in rotation ${r + 1}`;
+        d.title = `${studentLabel(m)} · first met in rotation ${r + 1}`;
         d.appendChild(avatarImg(m)); wall.appendChild(d);
       });
       $('wall-count').textContent = `${Y.met.size} met`;
@@ -117,7 +126,7 @@ export function createTab2(ctx) {
         pr.matesR.forEach(m => {
           const d = document.createElement('div'); d.className = 'w-av' + (Lset.has(m) ? ' friend' : '');
           if (r !== rot) d.style.animation = 'none';
-          d.title = `${m} · rotation ${r + 1}${Lset.has(m) ? ' · a listed friend!' : ''}`;
+          d.title = `${studentLabel(m)} · rotation ${r + 1}${Lset.has(m) ? ' · a listed friend!' : ''}`;
           d.appendChild(avatarImg(m)); ghost.appendChild(d);
         });
       });
@@ -138,6 +147,7 @@ export function createTab2(ctx) {
       room.setOpts({ portraitProvider: portraits.size ? id => portraits.get(id) || null : null, showAvatars: true });
       // The shared avatar service is updated first by the app. Rebuild even
       // hidden DOM and bypass the render cache without changing the hero.
+      updatePicker();
       buildStatic();
       api.render(Math.max(lastRot, 0), false, true);
       room.draw();

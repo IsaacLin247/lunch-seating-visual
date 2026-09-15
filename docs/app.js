@@ -1,11 +1,13 @@
 // Entry point: load traces, wire the shared timeline, tabs, keyboard and tooltip.
-import { initAvatars, avatarImg, directoryPortraitUri } from './avatars.js?v=20260914-minimal-4';
-import { createTab1 } from './tab1.js?v=20260914-minimal-4';
-import { createTab2 } from './tab2.js?v=20260914-minimal-4';
-import { createTab3 } from './tab3.js?v=20260914-minimal-4';
-import { createTab4 } from './tab4.js?v=20260914-minimal-4';
-import { SCENARIO_NAMES } from './scenarios.js?v=20260914-minimal-4';
-import { createPortraitControls } from './portraits.js?v=20260914-minimal-4';
+import { initAvatars, avatarImg, directoryPortraitUri } from './avatars.js?v=20260915-directory-names-1';
+import { createTab1 } from './tab1.js?v=20260915-directory-names-1';
+import { createTab2 } from './tab2.js?v=20260915-directory-names-1';
+import { createTab3 } from './tab3.js?v=20260915-directory-names-1';
+import { createTab4 } from './tab4.js?v=20260915-directory-names-1';
+import { SCENARIO_NAMES } from './scenarios.js?v=20260915-directory-names-1';
+import { createPortraitControls } from './portraits.js?v=20260915-directory-names-1';
+
+import { studentLabel, escapeHtml } from './names.js?v=20260915-directory-names-1';
 
 const $ = id => document.getElementById(id);
 
@@ -26,16 +28,18 @@ async function loadTraces() {
 const tooltip = $('tooltip');
 function showTooltip(info) {
   if (!info) { tooltip.hidden = true; tooltip.replaceChildren(); return; }
-  const listedHere = info.listedHere.length ? info.listedHere.join(', ') : 'none';
+  const listedHere = info.listedHere.length ? info.listedHere.map(studentLabel).join(', ') : 'none';
   tooltip.innerHTML = '';
   const av = document.createElement('div'); av.className = 't-av'; av.appendChild(avatarImg(info.id));
   const txt = document.createElement('div');
   const illustrative = directoryPortraitUri(info.id);
-  txt.innerHTML = `${illustrative ? '<div class="t-portrait-note">Illustrative portrait · simulated choices</div>' : ''}<b>${info.id}</b> · grade ${info.grade}<div class="t-sub">table ${info.table + 1} · listed friends here: ${listedHere}</div>` +
-    `<div class="t-sub">listed ${info.listed.length}: ${info.listed.join(', ') || 'none'}</div>`;
+  txt.innerHTML = `${illustrative ? '<div class="t-portrait-note">Illustrative portrait · simulated choices</div>' : ''}<b>${escapeHtml(studentLabel(info.id))}</b> · grade ${info.grade}<div class="t-sub">table ${info.table + 1} · listed friends here: ${escapeHtml(listedHere)}</div>` +
+    `<div class="t-sub">listed ${info.listed.length}: ${escapeHtml(info.listed.map(studentLabel).join(', ') || 'none')}</div>`;
   tooltip.append(av, txt);
   tooltip.hidden = false;
-  const x = Math.min(window.innerWidth - 280, info.x + 16), y = Math.min(window.innerHeight - 90, info.y + 16);
+  const bounds = tooltip.getBoundingClientRect();
+  const x = Math.max(8, Math.min(window.innerWidth - bounds.width - 8, info.x + 16));
+  const y = Math.max(8, Math.min(window.innerHeight - bounds.height - 8, info.y + 16));
   tooltip.style.left = `${x}px`; tooltip.style.top = `${y}px`;
 }
 

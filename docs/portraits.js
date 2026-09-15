@@ -1,23 +1,16 @@
 // Optional, in-memory presentation layer. Trace records are never changed.
-import { loadDirectory } from './portrait-data.js?v=20260914-minimal-4';
-import { avatarImg, anonymousAvatarUri, setDirectoryPortraits, clearDirectoryPortraits } from './avatars.js?v=20260914-minimal-4';
+import { loadDirectory } from './portrait-data.js?v=20260915-directory-names-1';
+import { avatarImg, anonymousAvatarUri, setDirectoryPortraits, clearDirectoryPortraits } from './avatars.js?v=20260915-directory-names-1';
+
+import { mapDirectoryStudents, setDirectoryNames, displayName, studentLabel } from './names.js?v=20260915-directory-names-1';
 
 const $ = id => document.getElementById(id);
 
 /** Match each synthetic slot once, within its grade. Missing images stay empty. */
 export function mapPortraits(simulated, directory) {
-  const map = new Map();
-  const grades = [...new Set(simulated.map(student => student.grade))];
-  for (const grade of grades) {
-    const compare = (a, b) => String(a.id).localeCompare(String(b.id), 'en');
-    const slots = simulated.filter(student => student.grade === grade).sort(compare);
-    const people = directory.filter(student => student.grade === grade).sort(compare);
-    slots.forEach((slot, index) => {
-      const url = people[index]?.photoUrl;
-      if (typeof url === 'string' && url.startsWith('blob:')) map.set(slot.id, url);
-    });
-  }
-  return map;
+  return new Map([...mapDirectoryStudents(simulated, directory)]
+    .filter(([, person]) => typeof person.photoUrl === 'string' && person.photoUrl.startsWith('blob:'))
+    .map(([id, person]) => [id, person.photoUrl]));
 }
 
 export function createPortraitControls({ trace, tabs, stop, hideTooltip }) {
@@ -46,6 +39,7 @@ export function createPortraitControls({ trace, tabs, stop, hideTooltip }) {
   const originalLegend = legend.textContent;
   const grades = new Map(trace.students.map(student => [student.id, student.grade]));
   let urls = new Map();
+  let names = new Map();
   let dispose = null;
   let generation = 0;
 
@@ -58,12 +52,13 @@ export function createPortraitControls({ trace, tabs, stop, hideTooltip }) {
 
   function setLoading(loading) {
     load.disabled = loading;
-    load.textContent = loading ? 'Loading…' : urls.size ? 'Change directory' : 'Load directory';
-    clear.hidden = !loading && !urls.size;
+    load.textContent = loading ? 'Loading…' : names.size ? 'Change directory' : 'Load directory';
+    clear.hidden = !loading && !names.size;
     controls.setAttribute('aria-busy', String(loading));
   }
 
-  function updateTabs(map) {
+  function updateTabs(map, labels = names) {
+    setDirectoryNames(labels);
     if (map.size) setDirectoryPortraits(map);
     else clearDirectoryPortraits();
     portraitTabs.forEach(tab => tab.setPortraits(map));
@@ -86,7 +81,7 @@ export function createPortraitControls({ trace, tabs, stop, hideTooltip }) {
 
   function inspect(info) {
     seats.replaceChildren();
-    if (!info || !urls.size) {
+    if (!info || !names.size) {
       inspection.hidden = true;
       table.value = '';
       return;
@@ -100,19 +95,20 @@ export function createPortraitControls({ trace, tabs, stop, hideTooltip }) {
     for (const id of info.ids) {
       const card = document.createElement('div');
       card.className = 'portrait-seat';
+      card.dataset.id = id;
       const url = urls.get(id);
       const img = url ? new Image() : avatarImg(id);
       if (url) img.src = url;
-      img.alt = url ? `Illustrative portrait for simulated student ${id}` : `Anonymous avatar for simulated student ${id}`;
+      img.alt = url ? `Illustrative portrait for simulated student ${studentLabel(id)}` : `Anonymous avatar for ${studentLabel(id)}`;
       img.width = 80; img.height = 80;
       img.addEventListener('error', () => {
         const fallback = new Image(); fallback.src = anonymousAvatarUri(id);
-        fallback.alt = `Anonymous avatar for simulated student ${id}`;
+        fallback.alt = `Anonymous avatar for ${studentLabel(id)}`;
         fallback.width = 80; fallback.height = 80;
         img.replaceWith(fallback);
       }, { once: true });
-      const label = document.createElement('strong'); label.textContent = id;
-      const grade = document.createElement('span'); grade.textContent = `Grade ${grades.get(id)}`;
+      const label = document.createElement('strong'); label.textContent = displayName(id);
+      const grade = document.createElement('span'); grade.textContent = `${id} · Grade ${grades.get(id)}`;
       card.append(img, label, grade);
       if (!url) {
         const caption = document.createElement('small'); caption.textContent = 'No photo';
@@ -137,6 +133,7 @@ export function createPortraitControls({ trace, tabs, stop, hideTooltip }) {
     generation++;
     stop(); hideTooltip();
     urls = new Map();
+    names = new Map();
     updateTabs(urls);
     inspect(null);
     dispose?.(); dispose = null;
@@ -153,7 +150,7 @@ export function createPortraitControls({ trace, tabs, stop, hideTooltip }) {
     legend.textContent = originalLegend;
     input.value = '';
     showNotes([]);
-    status.textContent = 'Photos removed';
+    status.textContent = 'Directory removed';
     status.classList.remove('error');
     setLoading(false);
   }
@@ -177,15 +174,18 @@ export function createPortraitControls({ trace, tabs, stop, hideTooltip }) {
       } });
       if (current !== generation) { result.dispose(); return; }
       const mapped = mapPortraits(trace.students, result.students);
-      if (!mapped.size) throw new Error('No usable photos matched this demo’s grades. Choose a directory folder containing grades 11 and 12 and their saved image folders.');
+      const labels = new Map([...mapDirectoryStudents(trace.students, result.students)].map(([id, person]) => [id, person.name]));
+      if (!labels.size) throw new Error('No students matched this demo’s grades. Choose a directory folder containing grades 11 and 12.');
       const previousDispose = dispose;
-      try { updateTabs(mapped); }
+      try { updateTabs(mapped, labels); }
       catch (error) { updateTabs(urls); throw error; }
       urls = mapped;
+      names = labels;
+      inspect(null);
       dispose = result.dispose;
       previousDispose?.();
       showNotes(result.warnings);
-      status.textContent = `${urls.size} photos · ${trace.students.length - urls.size} missing`;
+      status.textContent = `${names.size} names · ${urls.size} photos · ${trace.students.length - urls.size} missing photos`;
       document.body.classList.add('portrait-mode');
       tools.hidden = false;
       $('portrait-zoom-control').hidden = false;
@@ -195,7 +195,7 @@ export function createPortraitControls({ trace, tabs, stop, hideTooltip }) {
     } catch (error) {
       result?.dispose();
       if (current !== generation) return;
-      status.textContent = `${error.message || 'The directory could not be read.'}${urls.size ? ' Your previous portrait view is still loaded.' : ''}`;
+      status.textContent = `${error.message || 'The directory could not be read.'}${names.size ? ' Your previous directory view is still loaded.' : ''}`;
       status.classList.add('error');
     } finally {
       if (current === generation) setLoading(false);

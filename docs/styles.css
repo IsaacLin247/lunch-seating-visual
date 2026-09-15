@@ -310,3 +310,11 @@ img.directory-portrait { object-fit: cover; object-position: center; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+
+/* Full directory names wrap without changing the simulation layout. */
+.directory-note { flex-basis: 100%; font-size: .72rem; color: var(--ink-2); margin: 0; }
+.portrait-seat { width: 145px; max-width: 100%; text-align: center; overflow-wrap: anywhere; }
+.fs-item { overflow-wrap: anywhere; }
+.tooltip { max-width: min(420px, calc(100vw - 24px)); overflow-wrap: anywhere; }
+.hero-card > div { min-width: 0; }
+.hero-id, .anchor-line { overflow-wrap: anywhere; }

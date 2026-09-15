@@ -1,7 +1,9 @@
 // Coalition playback: graph annotations are structural; all outcomes are trace data.
-import { RoomView } from './room.js?v=20260914-minimal-4';
-import { avatarUri } from './avatars.js?v=20260914-minimal-4';
-import { coalitionModes, EXPLANATIONS, observation } from './scenarios.js?v=20260914-minimal-4';
+import { RoomView } from './room.js?v=20260915-directory-names-1';
+import { avatarUri } from './avatars.js?v=20260915-directory-names-1';
+import { coalitionModes, EXPLANATIONS, observation } from './scenarios.js?v=20260915-directory-names-1';
+
+import { displayName, studentLabel } from './names.js?v=20260915-directory-names-1';
 
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 
@@ -53,7 +55,7 @@ export function createTab3(ctx) {
       const color = !eligible ? '#a49e96' : mset.has(b) ? '#c53d45' : '#217a55';
       const marker = !eligible ? 'inactive' : mset.has(b) ? 'internal' : 'external';
       const d = Math.hypot(q.x - p.x, q.y - p.y), ux = (q.x - p.x) / d, uy = (q.y - p.y) / d;
-      paths += `<line x1="${p.x + ux * 18}" y1="${p.y + uy * 18}" x2="${q.x - ux * 21}" y2="${q.y - uy * 21}" stroke="${color}" stroke-width="1.6" ${eligible ? '' : 'stroke-dasharray="4 4"'} marker-end="url(#${marker}-${suffix})" opacity=".7"><title>${esc(a)} lists ${esc(b)}: ${eligible ? 'eligible' : 'ineligible this rotation'}</title></line>`;
+      paths += `<line x1="${p.x + ux * 18}" y1="${p.y + uy * 18}" x2="${q.x - ux * 21}" y2="${q.y - uy * 21}" stroke="${color}" stroke-width="1.6" ${eligible ? '' : 'stroke-dasharray="4 4"'} marker-end="url(#${marker}-${suffix})" opacity=".7"><title>${esc(studentLabel(a))} lists ${esc(studentLabel(b))}: ${eligible ? 'eligible' : 'ineligible this rotation'}</title></line>`;
     }
     let nodes = '';
     for (const [id, p] of positions) {
@@ -61,7 +63,7 @@ export function createTab3(ctx) {
       nodes += `<clipPath id="${clip}"><circle cx="${p.x}" cy="${p.y}" r="15"/></clipPath>` +
         `<image href="${esc(avatarUri(id))}" x="${p.x - 15}" y="${p.y - 15}" width="30" height="30" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip})"/>` +
         `<circle cx="${p.x}" cy="${p.y}" r="16" fill="none" stroke="${member ? '#c53d45' : '#217a55'}" stroke-width="2"/>` +
-        `<text x="${member ? p.x : p.x + 23}" y="${member ? p.y + 29 : p.y + 4}" text-anchor="${member ? 'middle' : 'start'}" font-size="10" fill="#605a52">${esc(id)}${member ? '' : ` · G${grade.get(id)}`}</text>`;
+        `<text x="${member ? p.x : p.x + 23}" y="${member ? p.y + 29 : p.y + 4}" text-anchor="${member ? 'middle' : 'start'}" font-size="10" fill="#605a52">${esc(displayName(id).length > 16 ? displayName(id).slice(0, 15) + '…' : displayName(id))}<title>${esc(studentLabel(id))} · Grade ${grade.get(id)}</title></text>`;
     }
     const markers = [['internal', '#c53d45'], ['external', '#217a55'], ['inactive', '#a49e96']].map(([id, color]) => `<marker id="${id}-${suffix}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,1 L9,5 L0,9 z" fill="${color}"/></marker>`).join('');
     return `<svg viewBox="0 0 465 315" role="img" aria-label="${esc(caption)}: directed submitted names, with ineligible cross-grade edges dashed"><defs>${markers}</defs>${paths}${nodes}<text x="232" y="307" text-anchor="middle" font-size="12" font-weight="600" fill="#605a52">${esc(caption)}</text></svg>`;

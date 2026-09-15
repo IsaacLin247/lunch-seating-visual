@@ -1,5 +1,5 @@
 // Tab 4, The Algorithm: recorded stages and explanations typeset with local KaTeX.
-import { RoomView } from './room.js?v=20260914-minimal-4';
+import { RoomView } from './room.js?v=20260915-directory-names-1';
 
 export function createTab4(ctx) {
   const trace = ctx.traces.honest;

@@ -6,7 +6,7 @@
 <title>Lunch seating</title>
 <meta name="description" content="Animated simulation of a guaranteed-friend lunch seating system, played back from real solver traces on synthetic data.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%23e8c9a3'/%3E%3Ccircle cx='50' cy='50' r='26' fill='%23fff7ea'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css?v=20260914-minimal-4">
+<link rel="stylesheet" href="styles.css?v=20260915-directory-names-1">
 <script src="vendor/d3.min.js"></script>
 <link rel="stylesheet" href="vendor/katex/katex.min.css">
 <script defer src="vendor/katex/katex.min.js"></script>
@@ -52,13 +52,14 @@
 <main class="wrap">
   <div id="loading" class="loading">Loading…</div>
 
-  <section id="portrait-controls" class="portrait-controls" aria-label="Directory photos">
+  <section id="portrait-controls" class="portrait-controls" aria-label="Directory names and photos">
     <div class="portrait-actions">
       <button type="button" id="portrait-load" class="portrait-button" title="Choose the student_directory folder with grade HTML files and saved images" disabled>Load directory</button>
-      <button type="button" id="portrait-clear" class="portrait-button secondary" hidden>Remove photos</button>
+      <button type="button" id="portrait-clear" class="portrait-button secondary" hidden>Remove directory</button>
       <label id="portrait-zoom-control" class="portrait-zoom-control" hidden><span class="portrait-sr-only">Room zoom</span><select id="portrait-zoom"><option value="1">Fit room</option><option value="1.5">150%</option><option value="2">200%</option><option value="3">300%</option></select></label>
       <input type="file" id="portrait-folder" webkitdirectory multiple hidden aria-label="Choose the saved student directory folder">
     </div>
+    <p class="directory-note">Load a directory to show names and photos. Seating and choices are simulated.</p>
     <p id="portrait-status" class="portrait-status" role="status" aria-live="polite"></p>
     <details id="portrait-warnings" class="portrait-warnings" hidden><summary>Import notes</summary><ul id="portrait-warning-list"></ul></details>
   </section>
@@ -228,6 +229,6 @@
 </main>
 
 <div id="tooltip" class="tooltip" hidden></div>
-<script type="module" src="app.js?v=20260914-minimal-4"></script>
+<script type="module" src="app.js?v=20260915-directory-names-1"></script>
 </body>
 </html>

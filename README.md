@@ -112,14 +112,14 @@ The current simulation has 257 synthetic slots: 132 in grade 11 and 125 in grade
 
 - One folder selection supplies the same portrait for each simulation ID across the whole room, student profiles and companion lists, met/ghost rows, coalition rooms and diagrams, and algorithm-stage playback.
 - **Room zoom** enlarges canvas faces on every tab. Scroll within a room when zoomed.
-- Click or tap a table, or use the table selectors, to view large portraits with synthetic IDs. Canvas keyboard controls also support arrows, Enter/Space, and Escape. The initial view fits the room and keeps the enlarged table closed.
-- **Remove photos** is available from every tab. It clears all portrait views, including hidden tabs, and revokes their image URLs. Refreshing or leaving the page clears the local selection as well.
+- Click or tap a table, or use the table selectors, to view large portraits with directory names and their simulation IDs. Canvas keyboard controls also support arrows, Enter/Space, and Escape. The initial view fits the room and keeps the enlarged table closed.
+- **Remove directory** is available from every tab. It clears all names and portrait views, including hidden tabs, and revokes their image URLs. Refreshing or leaving the page clears the local selection as well.
 
-The photos are visual stand-ins in a page labeled **Simulation**. Seating, companion choices, and outcome statistics remain the original simulated data. No real names, contact details, or submitted lists are displayed. Companion lists and coalition behavior are generated examples, never claims about the pictured students. Simulation IDs remain the labels, with no real names. Clearing or replacing photos preserves the selected student, scenario, rotation, and algorithm stage. Saved directory scripts are never run; photos are decoded into new JPEGs without their original metadata.
+The photos are visual stand-ins in a page labeled **Simulation**. Seating, companion choices, and outcome statistics remain the original simulated data. Directory names are displayed locally alongside their matching portraits; contact details and real submitted lists are not displayed. Companion lists and coalition behavior are generated examples, never claims about the pictured students. Names and portraits use the same stable ordering: sort simulation IDs and directory IDs separately within each grade, then pair corresponding positions. Missing images retain their names and never shift subsequent matches. Names appear in table cards, student pickers, profiles, companion lists, tooltips, and coalition diagrams; simulation IDs remain available for reference. This is a presentation mapping, not a claim that the synthetic network describes those students. Clearing or replacing a directory preserves the selected student, scenario, rotation, and algorithm stage. Saved directory scripts are never run; photos are decoded into new JPEGs without their original metadata.
 
 The compact interface puts charts and controls first. Directory status is a short photo count, with import notes expandable when needed. Rotation, scenario, and algorithm explanations are available in closed details panels; the paper and trace references are under **Algorithm → How it works**.
 
-Only website code and library assets belong in `docs/`. Do not copy the school directory or generated portrait files into the public repository. The dean loads the directory locally on the presentation computer; the public link does not contain the photos.
+Only website code and library assets belong in `docs/`. Do not copy the school directory or generated portrait files into the public repository. The dean loads the directory locally on the presentation computer; the public link does not contain the names or photos.
 
 Optional browser checks use synthetic directory fixtures, verify that the portrait layer does not change solver results, and check cleanup and network boundaries:
 
@@ -129,6 +129,7 @@ Optional browser checks use synthetic directory fixtures, verify that the portra
 .venv/bin/python -m pytest tests/test_site.py tests/test_site_assets.py tests/test_room_portraits.py -q
 .venv/bin/python tests/browser_portraits.py
 node tests/test_avatar_mapping.mjs
+node tests/test_directory_names.mjs
 ```
 
 The browser script can also check aggregate counts from the uploaded folder with `--real-directory ../student_directory`. It does not save photographs or names. Renderer browser tests skip when Playwright or Chromium is unavailable.

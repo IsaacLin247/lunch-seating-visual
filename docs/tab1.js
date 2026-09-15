@@ -1,6 +1,6 @@
 // Tab 1, The Whole Room: random status quo vs. proposed system, side by side.
-import { RoomView, COLORS } from './room.js?v=20260914-minimal-4';
-import { renderSparkline } from './sparkline.js?v=20260914-minimal-4';
+import { RoomView, COLORS } from './room.js?v=20260915-directory-names-1';
+import { renderSparkline } from './sparkline.js?v=20260915-directory-names-1';
 
 export function createTab1(ctx) {
   const trace = ctx.traces.honest;

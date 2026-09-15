@@ -160,7 +160,7 @@ def simulation_context(page):
     assert label.is_visible()
     assert "simulat" in label.inner_text().lower()
     assert label.evaluate("element => !element.closest('[role=tabpanel]')"), "Simulation context should remain visible across tabs"
-    assert CANARY not in page.locator("body").text_content()
+    assert CANARY in page.locator("body").text_content()
     assert "PRIVATE_CONTACT" not in page.locator("body").text_content()
 
 
@@ -218,6 +218,7 @@ def no_remaining_portraits(page):
     assert not page.evaluate("window.__portraitAudit.violations")
     assert page.evaluate("window.__portraitAudit.xss") is False
     assert page.evaluate("async () => { const entry=new URL(document.querySelector('script[type=module][src]').src); const avatars=await import('./avatars.js'+entry.search); return ['S001','S015','S133'].every(id => !avatars.directoryPortraitUri(id)); }")
+    assert CANARY not in page.locator("body").text_content()
     painted = page.evaluate("({...window.__portraitAudit.drawCounts})")
     for tab in ("nav-room", "nav-student", "nav-game", "nav-math"):
         page.locator(f"#{tab}").click()
@@ -400,14 +401,18 @@ def run(args):
                 page.wait_for_timeout(300)
                 assert stats(page) == initial_stats
                 assert canvas_hash(page, "room-proposed") != initial_canvas
-                assert CANARY not in page.locator("body").text_content()
+                assert CANARY in page.locator("body").text_content()
                 assert "PRIVATE_CONTACT" not in page.locator("body").text_content()
                 assert page.evaluate("window.__portraitAudit.xss") is False
                 assert page.locator("#portrait-status").get_attribute("role") == "status"
                 assert len(requests) == request_count, "Local import unexpectedly requested another HTTP resource"
                 import_requests = len(requests) - request_count
-                assert [int(number) for number in re.findall(r"\d+", page.locator("#portrait-status").inner_text())] == [expected_photos, len(trace["students"]) - expected_photos]
+                assert [int(number) for number in re.findall(r"\d+", page.locator("#portrait-status").inner_text())] == [17, expected_photos, len(trace["students"]) - expected_photos]
                 assert not page.evaluate("window.__portraitAudit.violations"), "Imported HTML attempted a blocked resource or script"
+                assert page.locator('#hero-select option[value="S001"]').inner_text().startswith(f"{CANARY} g11-001 (S001)")
+                # A missing photo must not shift this or any later student's name.
+                assert page.locator('#hero-select option[value="S005"]').inner_text().startswith(f"{CANARY} g11-005 (S005)")
+                assert page.locator('#hero-select option[value="S015"]').inner_text().startswith(f"{CANARY} g11-015 (S015)")
                 mapped_first = next(s["id"] for s in trace["students"] if s["grade"] == 11)
                 table_index = next(index for index, table in enumerate(trace["rotations"][0]["tables"]) if mapped_first in table)
                 assert inspect_table(page, trace, 0, "tables", table_index) >= 1
@@ -425,7 +430,7 @@ def run(args):
                         identifier = slots[offset]
                         index = next(i for i, table in enumerate(trace["rotations"][0]["tables"]) if identifier in table)
                         inspect_table(page, trace, 0, "tables", index)
-                        card = page.locator(".portrait-seat").filter(has=page.locator("strong", has_text=re.compile(f"^{identifier}$")))
+                        card = page.locator(f'.portrait-seat[data-id="{identifier}"]')
                         known_urls[identifier] = card.locator('img[src^="blob:"]').get_attribute("src")
                         pixel = card.locator('img[src^="blob:"]').evaluate("async image => { await image.decode(); const canvas=document.createElement('canvas'); canvas.width=canvas.height=1; const ctx=canvas.getContext('2d'); ctx.drawImage(image,0,0,1,1); return [...ctx.getImageData(0,0,1,1).data].slice(0,3); }")
                         value = offset + 1
