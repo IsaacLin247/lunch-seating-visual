@@ -1,0 +1,1 @@
+var Bb=Backbone,Bbc=Backbone.Collection,Bbm=Backbone.Model,Hb=Handlebars;(function(a){var b=p3.module("lms/resourceboard");p3.router().route("parenthome","parenthome",function(c){p3.renderMainPage(new b.Vs.ResourceBoards({editMode:false,header:""}))})}(p3.module("parent/parent")));var podiumApp=p3,aP=p3.Config.ApiRootPath;p3.Utilities=p3.Us;
